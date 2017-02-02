@@ -179,7 +179,7 @@ static bool contextWasUpdated = false;
 static SDL_Window* gSDLWindow = NULL;
 static int32_t gViewport[4] = {0, 0, 0, 0}; // {x, y, width, height}
 //static ARGL_CONTEXT_SETTINGS_REF gArglSettings = NULL;
-static int gDisplayOrientation = 0; // range [0-3]. 1=landscape.
+static int gDisplayOrientation = 1; // range [0-3]. 1=landscape.
 static float gDisplayDPI = 72.0f;
 
 // Main state.
@@ -336,103 +336,6 @@ int main(int argc, char *argv[])
         }
         
         if (vs->isOpen()) {
-            if (!postVideoSetupDone) {
-                
-                // TODO: replace this with camera selection from source info list.
-                gCameraIndex = 0;
-                gCameraIsFrontFacing = false;
-                //#if __APPLE__
-                //                int frontCamera;
-                //                if (ar2VideoGetParami(gVid, AR_VIDEO_PARAM_AVFOUNDATION_CAMERA_POSITION, &frontCamera) >= 0) {
-                //                    gCameraIsFrontFacing = (frontCamera == AR_VIDEO_AVFOUNDATION_CAMERA_POSITION_FRONT);
-                //                }
-                //#endif
-                bool contentRotate90, contentFlipV, contentFlipH;
-                if (gDisplayOrientation == 1) { // Landscape with top of device at left.
-                    contentRotate90 = false;
-                    contentFlipV = gCameraIsFrontFacing;
-                    contentFlipH = gCameraIsFrontFacing;
-                } else if (gDisplayOrientation == 2) { // Portrait upside-down.
-                    contentRotate90 = true;
-                    contentFlipV = !gCameraIsFrontFacing;
-                    contentFlipH = true;
-                } else if (gDisplayOrientation == 3) { // Landscape with top of device at right.
-                    contentRotate90 = false;
-                    contentFlipV = !gCameraIsFrontFacing;
-                    contentFlipH = (!gCameraIsFrontFacing);
-                } else /*(gDisplayOrientation == 0)*/ { // Portait
-                    contentRotate90 = true;
-                    contentFlipV = gCameraIsFrontFacing;
-                    contentFlipH = false;
-                }
-                
-                // Setup a route for rendering the colour background image.
-                vv = new ARView;
-                if (!vv) {
-                    ARLOGe("Error: unable to create video view.\n");
-                    quit(-1);
-                }
-                vv->setRotate90(contentRotate90);
-                vv->setFlipH(contentFlipH);
-                vv->setFlipV(contentFlipV);
-                vv->setScalingMode(ARView::ScalingMode::SCALE_MODE_FIT);
-                vv->initWithVideoSource(*vs, contextWidth, contextHeight);
-#ifdef DEBUG
-                ARLOGe("Content %dx%d (wxh) will display in GL context %dx%d%s.\n", vs->getVideoWidth(), vs->getVideoHeight(), contextWidth, contextHeight, (contentRotate90 ? " rotated" : ""));
-#endif
-                vv->getViewport(gViewport);
-                
-                // Setup a route for rendering the mono background image.
-                ARParam idealParam;
-                arParamClear(&idealParam, vs->getVideoWidth(), vs->getVideoHeight(), AR_DIST_FUNCTION_VERSION_DEFAULT);
-                if ((gArglSettingsCornerFinderImage = arglSetupForCurrentContext(&idealParam, AR_PIXEL_FORMAT_MONO)) == NULL) {
-                    ARLOGe("Unable to setup argl.\n");
-                    quit(-1);
-                }
-                if (!arglDistortionCompensationSet(gArglSettingsCornerFinderImage, FALSE)) {
-                    ARLOGe("Unable to setup argl.\n");
-                    quit(-1);
-                }
-                arglSetRotate90(gArglSettingsCornerFinderImage, contentRotate90);
-                arglSetFlipV(gArglSettingsCornerFinderImage, contentFlipV);
-                arglSetFlipH(gArglSettingsCornerFinderImage, contentFlipH);
-                
-                //
-                // Calibration init.
-                //
-                
-                //
-                // Corner finder inputs and outputs.
-                //
-                CORNER_FINDER_DATA_T* cornerFinderDataPtr;
-                arMallocClear(cornerFinderDataPtr, CORNER_FINDER_DATA_T, 1);
-                cornerFinderDataPtr->chessboardCornerNumX = gChessboardCornerNumX;
-                cornerFinderDataPtr->chessboardCornerNumY = gChessboardCornerNumY;
-                arMalloc(cornerFinderDataPtr->corners, CvPoint2D32f, cornerFinderDataPtr->chessboardCornerNumX * cornerFinderDataPtr->chessboardCornerNumY);
-                arMalloc(cornerFinderDataPtr->videoFrame, ARUint8, vs->getVideoWidth()*vs->getVideoHeight());
-                cornerFinderDataPtr->calibImage = cvCreateImageHeader(cvSize(vs->getVideoWidth(), vs->getVideoHeight()), IPL_DEPTH_8U, 1);
-                cvSetData(cornerFinderDataPtr->calibImage, cornerFinderDataPtr->videoFrame, vs->getVideoWidth()); // Last parameter is rowBytes.
-                
-                // Spawn the corner finder worker thread.
-                cornerFinderThread = threadInit(0, (void*)(cornerFinderDataPtr), cornerFinder);
-                
-                // Corner finder results copy, for display to user.
-                arMalloc(gCorners, CvPoint2D32f, gChessboardCornerNumX*gChessboardCornerNumY);
-                arMalloc(gCornerFinderImage, ARUint8, vs->getVideoWidth()*vs->getVideoHeight());
-                pthread_mutex_init(&gCornerFinderResultLock, NULL);
-                
-                if (!flowInitAndStart(gCalibImageNum)) {
-                    ARLOGe("Error: Could not initialise and start flow.\n");
-                    quit(-1);
-                }
-                
-                // For FPS statistics.
-                arUtilTimerReset();
-                gCallCountMarkerDetect = 0;
-                
-                postVideoSetupDone = true;
-            } // !postVideoSetupDone
-            
             if (vs->captureFrame()) {
                 gCallCountMarkerDetect++; // Increment ARToolKit FPS counter.
 #ifdef DEBUG
@@ -442,7 +345,103 @@ int main(int argc, char *argv[])
                     arUtilTimerReset();
                 }
 #endif
-                
+                if (!postVideoSetupDone) {
+                    
+                    // TODO: replace this with camera selection from source info list.
+                    gCameraIndex = 0;
+                    gCameraIsFrontFacing = false;
+                    //#if __APPLE__
+                    //                int frontCamera;
+                    //                if (ar2VideoGetParami(gVid, AR_VIDEO_PARAM_AVFOUNDATION_CAMERA_POSITION, &frontCamera) >= 0) {
+                    //                    gCameraIsFrontFacing = (frontCamera == AR_VIDEO_AVFOUNDATION_CAMERA_POSITION_FRONT);
+                    //                }
+                    //#endif
+                    bool contentRotate90, contentFlipV, contentFlipH;
+                    if (gDisplayOrientation == 1) { // Landscape with top of device at left.
+                        contentRotate90 = false;
+                        contentFlipV = gCameraIsFrontFacing;
+                        contentFlipH = gCameraIsFrontFacing;
+                    } else if (gDisplayOrientation == 2) { // Portrait upside-down.
+                        contentRotate90 = true;
+                        contentFlipV = !gCameraIsFrontFacing;
+                        contentFlipH = true;
+                    } else if (gDisplayOrientation == 3) { // Landscape with top of device at right.
+                        contentRotate90 = false;
+                        contentFlipV = !gCameraIsFrontFacing;
+                        contentFlipH = (!gCameraIsFrontFacing);
+                    } else /*(gDisplayOrientation == 0)*/ { // Portait
+                        contentRotate90 = true;
+                        contentFlipV = gCameraIsFrontFacing;
+                        contentFlipH = false;
+                    }
+                    
+                    // Setup a route for rendering the colour background image.
+                    vv = new ARView;
+                    if (!vv) {
+                        ARLOGe("Error: unable to create video view.\n");
+                        quit(-1);
+                    }
+                    vv->setRotate90(contentRotate90);
+                    vv->setFlipH(contentFlipH);
+                    vv->setFlipV(contentFlipV);
+                    vv->setScalingMode(ARView::ScalingMode::SCALE_MODE_FIT);
+                    vv->initWithVideoSource(*vs, contextWidth, contextHeight);
+#ifdef DEBUG
+                    ARLOGe("Content %dx%d (wxh) will display in GL context %dx%d%s.\n", vs->getVideoWidth(), vs->getVideoHeight(), contextWidth, contextHeight, (contentRotate90 ? " rotated" : ""));
+#endif
+                    vv->getViewport(gViewport);
+                    
+                    // Setup a route for rendering the mono background image.
+                    ARParam idealParam;
+                    arParamClear(&idealParam, vs->getVideoWidth(), vs->getVideoHeight(), AR_DIST_FUNCTION_VERSION_DEFAULT);
+                    if ((gArglSettingsCornerFinderImage = arglSetupForCurrentContext(&idealParam, AR_PIXEL_FORMAT_MONO)) == NULL) {
+                        ARLOGe("Unable to setup argl.\n");
+                        quit(-1);
+                    }
+                    if (!arglDistortionCompensationSet(gArglSettingsCornerFinderImage, FALSE)) {
+                        ARLOGe("Unable to setup argl.\n");
+                        quit(-1);
+                    }
+                    arglSetRotate90(gArglSettingsCornerFinderImage, contentRotate90);
+                    arglSetFlipV(gArglSettingsCornerFinderImage, contentFlipV);
+                    arglSetFlipH(gArglSettingsCornerFinderImage, contentFlipH);
+                    
+                    //
+                    // Calibration init.
+                    //
+                    
+                    //
+                    // Corner finder inputs and outputs.
+                    //
+                    CORNER_FINDER_DATA_T* cornerFinderDataPtr;
+                    arMallocClear(cornerFinderDataPtr, CORNER_FINDER_DATA_T, 1);
+                    cornerFinderDataPtr->chessboardCornerNumX = gChessboardCornerNumX;
+                    cornerFinderDataPtr->chessboardCornerNumY = gChessboardCornerNumY;
+                    arMalloc(cornerFinderDataPtr->corners, CvPoint2D32f, cornerFinderDataPtr->chessboardCornerNumX * cornerFinderDataPtr->chessboardCornerNumY);
+                    arMalloc(cornerFinderDataPtr->videoFrame, ARUint8, vs->getVideoWidth()*vs->getVideoHeight());
+                    cornerFinderDataPtr->calibImage = cvCreateImageHeader(cvSize(vs->getVideoWidth(), vs->getVideoHeight()), IPL_DEPTH_8U, 1);
+                    cvSetData(cornerFinderDataPtr->calibImage, cornerFinderDataPtr->videoFrame, vs->getVideoWidth()); // Last parameter is rowBytes.
+                    
+                    // Spawn the corner finder worker thread.
+                    cornerFinderThread = threadInit(0, (void*)(cornerFinderDataPtr), cornerFinder);
+                    
+                    // Corner finder results copy, for display to user.
+                    arMalloc(gCorners, CvPoint2D32f, gChessboardCornerNumX*gChessboardCornerNumY);
+                    arMalloc(gCornerFinderImage, ARUint8, vs->getVideoWidth()*vs->getVideoHeight());
+                    pthread_mutex_init(&gCornerFinderResultLock, NULL);
+                    
+                    if (!flowInitAndStart(gCalibImageNum)) {
+                        ARLOGe("Error: Could not initialise and start flow.\n");
+                        quit(-1);
+                    }
+                    
+                    // For FPS statistics.
+                    arUtilTimerReset();
+                    gCallCountMarkerDetect = 0;
+                    
+                    postVideoSetupDone = true;
+                } // !postVideoSetupDone
+                                
                 FLOW_STATE state = flowStateGet();
                 if (state == FLOW_STATE_WELCOME || state == FLOW_STATE_DONE || state == FLOW_STATE_CALIBRATING) {
                     
