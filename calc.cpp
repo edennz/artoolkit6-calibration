@@ -1,5 +1,5 @@
 /*
- *  calc.c
+ *  calc.cpp
  *  ARToolKit6
  *
  *  This file is part of ARToolKit.
@@ -37,11 +37,36 @@
 
 #include "calc.h"
 
-#include <opencv2/core/core_c.h>
-#include <opencv2/calib3d/calib3d_c.h>
+#include <opencv2/calib3d/calib3d.hpp>
 
 static ARdouble getSizeFactor(ARdouble dist_factor[], int xsize, int ysize, int dist_function_version);
 static void convParam(float intr[3][4], float dist[4], int xsize, int ysize, ARParam *param);
+
+enum Pattern { CHESSBOARD, CIRCLES_GRID, ASYMMETRIC_CIRCLES_GRID };
+
+static void calcChessboardCorners(cv::Size boardSize, float squareSize, std::vector<cv::Point3f>& corners, Pattern patternType = CHESSBOARD)
+{
+    corners.resize(0);
+    
+    switch(patternType) {
+        case CHESSBOARD:
+        case CIRCLES_GRID:
+            for (int i = 0; i < boardSize.width; i++)
+                for (int j = 0; j < boardSize.height; j++)
+                    corners.push_back(cv::Point3f(float(i*squareSize), float(j*squareSize), 0));
+            break;
+            
+        case ASYMMETRIC_CIRCLES_GRID:
+            for (int i = 0; i < boardSize.width; i++)
+                for (int j = 0; j < boardSize.height; j++)
+                    corners.push_back(cv::Point3f(float((2*i + j % 2)*squareSize), float(j*squareSize), 0));
+            break;
+            
+        default:
+            CV_Error(cv::Error::StsBadArg, "Unknown pattern type.\n");
+    }
+}
+
 
 void calc(const int capturedImageNum,
 		  const int chessboardCornerNumX,
@@ -55,100 +80,107 @@ void calc(const int capturedImageNum,
 		  ARdouble *err_avg_out,
 		  ARdouble *err_max_out)
 {
-    ARParam         param;
-    CvMat          *objectPoints;
-    CvMat          *imagePoints;
-    CvMat          *pointCounts;
-    CvMat          *intrinsics;
-    CvMat          *distortionCoeff;
-    CvMat          *rotationVectors;
-    CvMat          *translationVectors;
-    CvMat          *rotationVector;
-    CvMat          *rotationMatrix;
-    float           intr[3][4];
-    float           dist[4];
-    double          trans[3][4];
-    ARdouble        cx, cy, cz, hx, hy, h, sx, sy, ox, oy, err;
-    int             i, j, k, l;
-    ARdouble        err_min = 1000000.0f, err_avg = 0.0f, err_max = 0.0f;
+    int i, j, k, l;
 
-    objectPoints       = cvCreateMat(capturedImageNum*chessboardCornerNumX*chessboardCornerNumY, 3, CV_32FC1);
-    imagePoints        = cvCreateMat(capturedImageNum*chessboardCornerNumX*chessboardCornerNumY, 2, CV_32FC1);
-    pointCounts        = cvCreateMat(capturedImageNum, 1, CV_32SC1);
-    intrinsics         = cvCreateMat(3, 3, CV_32FC1);
-    distortionCoeff    = cvCreateMat(1, 4, CV_32FC1);
-    rotationVectors    = cvCreateMat(capturedImageNum, 3, CV_32FC1);
-    translationVectors = cvCreateMat(capturedImageNum, 3, CV_32FC1);
-    rotationVector     = cvCreateMat(1, 3, CV_32FC1);
-    rotationMatrix     = cvCreateMat(3, 3, CV_32FC1);
+    // Options.
+    int flags = 0;
+    double aspectRatio = 1.0;
+    //flags |= cv::CALIB_USE_INTRINSIC_GUESS;
+    //flags |= cv::CALIB_FIX_ASPECT_RATIO;
+    //flags |= cv::CALIB_FIX_PRINCIPAL_POINT;
+    //flags |= cv::CALIB_ZERO_TANGENT_DIST;
 
-    l=0;
-    for( k = 0; k < capturedImageNum; k++ ) {
-        for( i = 0; i < chessboardCornerNumX; i++ ) {
-            for( j = 0; j < chessboardCornerNumY; j++ ) {
-                ((float*)(objectPoints->data.ptr + objectPoints->step*l))[0] = chessboardSquareWidth*i;
-                ((float*)(objectPoints->data.ptr + objectPoints->step*l))[1] = chessboardSquareWidth*j;
-                ((float*)(objectPoints->data.ptr + objectPoints->step*l))[2] = 0.0f;
-
-                ((float*)(imagePoints->data.ptr + imagePoints->step*l))[0] = cornerSet[l].x;
-                ((float*)(imagePoints->data.ptr + imagePoints->step*l))[1] = cornerSet[l].y;
-
+    // Set up object points.
+    std::vector<std::vector<cv::Point3f> > objectPoints(1);
+    calcChessboardCorners(cv::Size(chessboardCornerNumX, chessboardCornerNumY), chessboardSquareWidth, objectPoints[0], CHESSBOARD);
+    objectPoints.resize(capturedImageNum, objectPoints[0]);
+    
+    // Set up image points.
+    std::vector<std::vector<cv::Point2f> > imagePoints;
+    l = 0;
+    for (k = 0; k < capturedImageNum; k++) {
+        std::vector<cv::Point2f> corners;
+        for (i = 0; i < chessboardCornerNumX; i++) {
+            for (j = 0; j < chessboardCornerNumY; j++) {
+                corners.push_back(cornerSet[l]);
                 l++;
             }
         }
-        ((int*)(pointCounts->data.ptr))[k] = chessboardCornerNumX*chessboardCornerNumY;
+        imagePoints.push_back(corners);
     }
+    
+    cv::Mat intrinsics = cv::Mat::eye(3, 3, CV_64F);
+    if (flags & cv::CALIB_FIX_ASPECT_RATIO)
+       intrinsics.at<double>(0,0) = aspectRatio;
+    
+    cv::Mat distortionCoeff = cv::Mat::zeros(4, 1, CV_64F);
+    std::vector<cv::Mat> rotationVectors;
+    std::vector<cv::Mat> translationVectors;
+    
+    double rms = calibrateCamera(objectPoints, imagePoints, cv::Size(width, height), intrinsics,
+                                 distortionCoeff, rotationVectors, translationVectors, flags|cv::CALIB_FIX_K3|cv::CALIB_FIX_K4|cv::CALIB_FIX_K5);
+    
+    ARLOGd("RMS error reported by calibrateCamera: %g\n", rms);
+    
+    bool ok = checkRange(intrinsics) && checkRange(distortionCoeff);
+    if (!ok) ARLOGe("cv::checkRange(intrinsics) && cv::checkRange(distortionCoeff) reported not OK.\n");
+    
+    
+    float           intr[3][4];
+    float           dist[4];
+    ARParam         param;
 
-    cvCalibrateCamera2(objectPoints, imagePoints, pointCounts, cvSize(width, height),
-                       intrinsics, distortionCoeff, rotationVectors, translationVectors, 0
-                       ,cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,30,DBL_EPSILON)
-                       );
-
-    for( j = 0; j < 3; j++ ) {
-        for( i = 0; i < 3; i++ ) {
-            intr[j][i] = ((float*)(intrinsics->data.ptr + intrinsics->step*j))[i];
+    for (j = 0; j < 3; j++) {
+        for (i = 0; i < 3; i++) {
+            intr[j][i] =  (float)intrinsics.at<double>(j, i);
         }
         intr[j][3] = 0.0f;
     }
-    for( i = 0; i < 4; i++ ) {
-        dist[i] = ((float*)(distortionCoeff->data.ptr))[i];
+    for (i = 0; i < 4; i++) {
+        dist[i] = (float)distortionCoeff.at<double>(i);
     }
     convParam(intr, dist, width, height, &param);
     arParamDisp(&param);
 
-    l = 0;
-    for( k = 0; k < capturedImageNum; k++ ) {
-        for( i = 0; i < 3; i++ ) {
-            ((float*)(rotationVector->data.ptr))[i] = ((float*)(rotationVectors->data.ptr + rotationVectors->step*k))[i];
+    CvMat          *rotationVector;
+    CvMat          *rotationMatrix;
+    double          trans[3][4];
+    ARdouble        cx, cy, cz, hx, hy, h, sx, sy, ox, oy, err;
+    ARdouble        err_min = 1000000.0f, err_avg = 0.0f, err_max = 0.0f;
+    rotationVector     = cvCreateMat(1, 3, CV_32FC1);
+    rotationMatrix     = cvCreateMat(3, 3, CV_32FC1);
+
+    for (k = 0; k < capturedImageNum; k++) {
+        for (i = 0; i < 3; i++) {
+            ((float*)(rotationVector->data.ptr))[i] = (float)rotationVectors.at(k).at<double>(i);
         }
-        cvRodrigues2( rotationVector, rotationMatrix
+        cvRodrigues2(rotationVector, rotationMatrix
         		, 0
         		);
-        for( j = 0; j < 3; j++ ) {
-            for( i = 0; i < 3; i++ ) {
+        for (j = 0; j < 3; j++) {
+            for (i = 0; i < 3; i++) {
                 trans[j][i] = ((float*)(rotationMatrix->data.ptr + rotationMatrix->step*j))[i];
             }
-            trans[j][3] = ((float*)(translationVectors->data.ptr + translationVectors->step*k))[j];
+            trans[j][3] = (float)translationVectors.at(k).at<double>(j);
         }
         //arParamDispExt(trans);
 
         err = 0.0;
-        for( i = 0; i < chessboardCornerNumX; i++ ) {
-            for( j = 0; j < chessboardCornerNumY; j++ ) {
+        for (i = 0; i < chessboardCornerNumX; i++) {
+            for (j = 0; j < chessboardCornerNumY; j++) {
                 cx = trans[0][0] * chessboardSquareWidth*i + trans[0][1] * chessboardSquareWidth*j + trans[0][3];
                 cy = trans[1][0] * chessboardSquareWidth*i + trans[1][1] * chessboardSquareWidth*j + trans[1][3];
                 cz = trans[2][0] * chessboardSquareWidth*i + trans[2][1] * chessboardSquareWidth*j + trans[2][3];
                 hx = param.mat[0][0] * cx + param.mat[0][1] * cy + param.mat[0][2] * cz + param.mat[0][3];
                 hy = param.mat[1][0] * cx + param.mat[1][1] * cy + param.mat[1][2] * cz + param.mat[1][3];
                 h  = param.mat[2][0] * cx + param.mat[2][1] * cy + param.mat[2][2] * cz + param.mat[2][3];
-                if( h == 0.0 ) continue;
+                if (h == 0.0) continue;
                 sx = hx / h;
                 sy = hy / h;
                 arParamIdeal2Observ(param.dist_factor, sx, sy, &ox, &oy, param.dist_function_version);
-                sx = ((float*)(imagePoints->data.ptr + imagePoints->step*l))[0];
-                sy = ((float*)(imagePoints->data.ptr + imagePoints->step*l))[1];
+                sx = (ARdouble)imagePoints.at(k).at(i*chessboardCornerNumY + j).x;
+                sy = (ARdouble)imagePoints.at(k).at(i*chessboardCornerNumY + j).y;
                 err += (ox - sx)*(ox - sx) + (oy - sy)*(oy - sy);
-                l++;
             }
         }
         err = sqrtf(err/(chessboardCornerNumX*chessboardCornerNumY));
@@ -166,13 +198,6 @@ void calc(const int capturedImageNum,
 
     *param_out = param;
 
-    cvReleaseMat(&objectPoints);
-    cvReleaseMat(&imagePoints);
-    cvReleaseMat(&pointCounts);
-    cvReleaseMat(&intrinsics);
-    cvReleaseMat(&distortionCoeff);
-    cvReleaseMat(&rotationVectors);
-    cvReleaseMat(&translationVectors);
     cvReleaseMat(&rotationVector);
     cvReleaseMat(&rotationMatrix);
 }
@@ -196,8 +221,8 @@ void convParam(float intr[3][4], float dist[4], int xsize, int ysize, ARParam *p
     param->dist_factor[7] = (ARdouble)intr[1][2];  /* y0  */
     param->dist_factor[8] = (ARdouble)1.0;         /* s   */
 
-    for( j = 0; j < 3; j++ ) {
-        for( i = 0; i < 4; i++ ) {
+    for (j = 0; j < 3; j++) {
+        for (i = 0; i < 4; i++) {
             param->mat[j][i] = (ARdouble)intr[j][i];
         }
     }
@@ -221,121 +246,121 @@ ARdouble getSizeFactor(ARdouble dist_factor[], int xsize, int ysize, int dist_fu
     ox = 0.0f;
     oy = dist_factor[7];
     olen = dist_factor[6];
-    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    arParamObserv2Ideal(dist_factor, ox, oy, &ix, &iy, dist_function_version);
     ilen = dist_factor[6] - ix;
     //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
-    if( ilen > 0.0f ) {
+    if (ilen > 0.0f) {
         sf1 = ilen / olen;
-        if( sf1 < sf ) sf = sf1;
+        if (sf1 < sf) sf = sf1;
     }
 
     ox = xsize;
     oy = dist_factor[7];
     olen = xsize - dist_factor[6];
-    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    arParamObserv2Ideal(dist_factor, ox, oy, &ix, &iy, dist_function_version);
     ilen = ix - dist_factor[6];
     //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
-    if( ilen > 0.0f ) {
+    if (ilen > 0.0f) {
         sf1 = ilen / olen;
-        if( sf1 < sf ) sf = sf1;
+        if (sf1 < sf) sf = sf1;
     }
 
     ox = dist_factor[6];
     oy = 0.0;
     olen = dist_factor[7];
-    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    arParamObserv2Ideal(dist_factor, ox, oy, &ix, &iy, dist_function_version);
     ilen = dist_factor[7] - iy;
     //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
-    if( ilen > 0.0f ) {
+    if (ilen > 0.0f) {
         sf1 = ilen / olen;
-        if( sf1 < sf ) sf = sf1;
+        if (sf1 < sf) sf = sf1;
     }
 
     ox = dist_factor[6];
     oy = ysize;
     olen = ysize - dist_factor[7];
-    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    arParamObserv2Ideal(dist_factor, ox, oy, &ix, &iy, dist_function_version);
     ilen = iy - dist_factor[7];
     //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
-    if( ilen > 0.0f ) {
+    if (ilen > 0.0f) {
         sf1 = ilen / olen;
-        if( sf1 < sf ) sf = sf1;
+        if (sf1 < sf) sf = sf1;
     }
 
 
     ox = 0.0f;
     oy = 0.0f;
-    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    arParamObserv2Ideal(dist_factor, ox, oy, &ix, &iy, dist_function_version);
     ilen = dist_factor[6] - ix;
     olen = dist_factor[6];
     //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
-    if( ilen > 0.0f ) {
+    if (ilen > 0.0f) {
         sf1 = ilen / olen;
-        if( sf1 < sf ) sf = sf1;
+        if (sf1 < sf) sf = sf1;
     }
     ilen = dist_factor[7] - iy;
     olen = dist_factor[7];
     //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
-    if( ilen > 0.0f ) {
+    if (ilen > 0.0f) {
         sf1 = ilen / olen;
-        if( sf1 < sf ) sf = sf1;
+        if (sf1 < sf) sf = sf1;
     }
 
     ox = xsize;
     oy = 0.0f;
-    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    arParamObserv2Ideal(dist_factor, ox, oy, &ix, &iy, dist_function_version);
     ilen = ix - dist_factor[6];
     olen = xsize - dist_factor[6];
     //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
-    if( ilen > 0.0f ) {
+    if (ilen > 0.0f) {
         sf1 = ilen / olen;
-        if( sf1 < sf ) sf = sf1;
+        if (sf1 < sf) sf = sf1;
     }
     ilen = dist_factor[7] - iy;
     olen = dist_factor[7];
     //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
-    if( ilen > 0.0f ) {
+    if (ilen > 0.0f) {
         sf1 = ilen / olen;
-        if( sf1 < sf ) sf = sf1;
+        if (sf1 < sf) sf = sf1;
     }
 
     ox = 0.0f;
     oy = ysize;
-    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    arParamObserv2Ideal(dist_factor, ox, oy, &ix, &iy, dist_function_version);
     ilen = dist_factor[6] - ix;
     olen = dist_factor[6];
     //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
-    if( ilen > 0.0f ) {
+    if (ilen > 0.0f) {
         sf1 = ilen / olen;
-        if( sf1 < sf ) sf = sf1;
+        if (sf1 < sf) sf = sf1;
     }
     ilen = iy - dist_factor[7];
     olen = ysize - dist_factor[7];
     //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
-    if( ilen > 0.0f ) {
+    if (ilen > 0.0f) {
         sf1 = ilen / olen;
-        if( sf1 < sf ) sf = sf1;
+        if (sf1 < sf) sf = sf1;
     }
 
     ox = xsize;
     oy = ysize;
-    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    arParamObserv2Ideal(dist_factor, ox, oy, &ix, &iy, dist_function_version);
     ilen = ix - dist_factor[6];
     olen = xsize - dist_factor[6];
     //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
-    if( ilen > 0.0f ) {
+    if (ilen > 0.0f) {
         sf1 = ilen / olen;
-        if( sf1 < sf ) sf = sf1;
+        if (sf1 < sf) sf = sf1;
     }
     ilen = iy - dist_factor[7];
     olen = ysize - dist_factor[7];
     //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
-    if( ilen > 0.0f ) {
+    if (ilen > 0.0f) {
         sf1 = ilen / olen;
-        if( sf1 < sf ) sf = sf1;
+        if (sf1 < sf) sf = sf1;
     }
 
-    if( sf == 100.0f ) sf = 1.0f;
+    if (sf == 100.0f) sf = 1.0f;
 
     return sf;
 }

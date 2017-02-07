@@ -202,9 +202,6 @@ static CvPoint2D32f        *gCorners = NULL;
 // ============================================================================
 
 static void *cornerFinder(THREAD_HANDLE_T *threadHandle);
-static void start2(void *userData);
-static void processFrame(void *userData);
-static void mainLoop(void);
 static void quit(int rc);
 static void reshape(int w, int h);
 static void drawView(void);
@@ -228,8 +225,6 @@ static void drawView(void);
 
 static void          init(int argc, char *argv[]);
 static void          usage(char *com);
-static void          cleanup(void);
-static void          mainLoop(void);
 
 
 int main(int argc, char *argv[])
@@ -350,12 +345,13 @@ int main(int argc, char *argv[])
                     // TODO: replace this with camera selection from source info list.
                     gCameraIndex = 0;
                     gCameraIsFrontFacing = false;
-                    //#if __APPLE__
-                    //                int frontCamera;
-                    //                if (ar2VideoGetParami(gVid, AR_VIDEO_PARAM_AVFOUNDATION_CAMERA_POSITION, &frontCamera) >= 0) {
-                    //                    gCameraIsFrontFacing = (frontCamera == AR_VIDEO_AVFOUNDATION_CAMERA_POSITION_FRONT);
-                    //                }
-                    //#endif
+                    AR2VideoParamT *vid = vs->getAR2VideoParam();
+                    if (vid->module == AR_VIDEO_MODULE_AVFOUNDATION) {
+                        int frontCamera;
+                        if (ar2VideoGetParami(vid, AR_VIDEO_PARAM_AVFOUNDATION_CAMERA_POSITION, &frontCamera) >= 0) {
+                            gCameraIsFrontFacing = (frontCamera == AR_VIDEO_AVFOUNDATION_CAMERA_POSITION_FRONT);
+                        }
+                    }
                     bool contentRotate90, contentFlipV, contentFlipH;
                     if (gDisplayOrientation == 1) { // Landscape with top of device at left.
                         contentRotate90 = false;
@@ -821,7 +817,7 @@ void drawView(void)
     int i;
     struct timeval time;
     float left, right, bottom, top;
-    GLfloat *vertices;
+    GLfloat *vertices = NULL;
     GLint vertexCount;
     
     // Get frame time.
@@ -1061,12 +1057,11 @@ extern "C" void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_a
     
     // Check for QUEUE_DIR and create if not already existing.
     if (!fileUploaderCreateQueueDir(fileUploadHandle)) {
-        //if (![self createQueueDir(QUEUE_DIR)])
         return;
     }
     
     // Save the parameter file.
-    snprintf(paramPathname, SAVEPARAM_PATHNAME_LEN, "%s/%06d-camera_para.dat", QUEUE_DIR, ID);
+    snprintf(paramPathname, SAVEPARAM_PATHNAME_LEN, "%s/%s/%06d-camera_para.dat", arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_APP_CACHE_DIR), QUEUE_DIR, ID);
     
     //if (arParamSave(strcat(strcat(docsPath,"/"),paramPathname), 1, param) < 0) {
     if (arParamSave(paramPathname, 1, param) < 0) {
@@ -1082,7 +1077,7 @@ extern "C" void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_a
         bool goodWrite = true;
         
         // Open the file.
-        snprintf(indexPathname, SAVEPARAM_PATHNAME_LEN, "%s/%06d-index", QUEUE_DIR, ID);
+        snprintf(indexPathname, SAVEPARAM_PATHNAME_LEN, "%s/%s/%06d-index", arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_APP_CACHE_DIR), QUEUE_DIR, ID);
         FILE *fp;
         if (!(fp = fopen(indexPathname, "wb"))) {
             ARLOGe("Error opening upload index file '%s'.\n", indexPathname);
@@ -1128,10 +1123,35 @@ extern "C" void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_a
         }
         
         // Focal length in metres.
-        // Not known at present, so just send 0.000.
         if (goodWrite) {
-            char focal_length[] = "0.000";
+            char *focal_length = NULL;
+            AR2VideoParamT *vid = vs->getAR2VideoParam();
+            if (vid->module == AR_VIDEO_MODULE_AVFOUNDATION) {
+                int focalPreset;
+                ar2VideoGetParami(vid, AR_VIDEO_PARAM_AVFOUNDATION_FOCUS_PRESET, &focalPreset);
+                switch (focalPreset) {
+                    case AR_VIDEO_AVFOUNDATION_FOCUS_MACRO:
+                        focal_length = strdup("0.01");
+                        break;
+                    case AR_VIDEO_AVFOUNDATION_FOCUS_0_3M:
+                        focal_length = strdup("0.3");
+                        break;
+                    case AR_VIDEO_AVFOUNDATION_FOCUS_1_0M:
+                        focal_length = strdup("1.0");
+                        break;
+                    case AR_VIDEO_AVFOUNDATION_FOCUS_INF:
+                        focal_length = strdup("1000000.0");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if (!focal_length) {
+                // Not known at present, so just send 0.000.
+                focal_length = strdup("0.000");
+            }
             fprintf(fp, "focal_length,%s\n", focal_length);
+            free(focal_length);
         }
         
         // Camera index.

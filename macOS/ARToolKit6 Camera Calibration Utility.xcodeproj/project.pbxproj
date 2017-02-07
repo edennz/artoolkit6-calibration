@@ -388,7 +388,7 @@
 				4A5FA0BF1DFE160500795630 /* calib_camera.h */,
 				4A9142181DF645A900DF4FEE /* calib_camera.cpp */,
 				4A9142171DF645A900DF4FEE /* calc.h */,
-				4A9142161DF645A900DF4FEE /* calc.c */,
+				4A9142161DF645A900DF4FEE /* calc.cpp */,
 				4A91421A1DF645A900DF4FEE /* fileUploader.h */,
 				4A9142191DF645A900DF4FEE /* fileUploader.c */,
 				4A9143511DF6660700DF4FEE /* flow.h */,
@@ -947,7 +947,7 @@
 				4A91436E1DF666E200DF4FEE /* glut_9x15.c in Sources */,
 				4A91436D1DF666E200DF4FEE /* glut_8x13.c in Sources */,
 				4A9143701DF666E200DF4FEE /* glut_bwidth.c in Sources */,
-				4A91421B1DF645A900DF4FEE /* calc.c in Sources */,
+				4A91421B1DF645A900DF4FEE /* calc.cpp in Sources */,
 				4A91436C1DF666E200DF4FEE /* EdenSurfaces.c in Sources */,
 				4A91436B1DF666E200DF4FEE /* EdenGLFont.c in Sources */,
 			);
@@ -1070,6 +1070,7 @@
 				DEVELOPMENT_TEAM = 7DJXLNF77X;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				OTHER_CODE_SIGN_FLAGS = "--deep";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.artoolkit.ar6.calib-camera";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1083,6 +1084,7 @@
 				DEVELOPMENT_TEAM = 7DJXLNF77X;
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				OTHER_CODE_SIGN_FLAGS = "--deep";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.artoolkit.ar6.calib-camera";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

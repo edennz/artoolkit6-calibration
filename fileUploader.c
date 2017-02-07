@@ -228,16 +228,14 @@ static void *fileUploader(THREAD_HANDLE_T *threadHandle)
 	long http_response;
 
 
-    ARLOG("Start fileUploader thread.\n");
+    ARLOGi("Start fileUploader thread.\n");
     fileUploaderHandle = (FILE_UPLOAD_HANDLE_t *)threadGetArg(threadHandle);
     arMalloc(indexUploadPathname, char, MAXPATHLEN);
     arMalloc(filePathname, char, MAXPATHLEN);
     arMalloc(buf, char, BUFSIZE);
 
     while (threadStartWait(threadHandle) == 0) {
-#ifdef DEBUG
-    	ARLOGe("file uploader is GO\n");
-#endif
+    	ARLOGd("file uploader is GO\n");
     	pthread_mutex_lock(&(fileUploaderHandle->uploadStatusLock));
     	snprintf(fileUploaderHandle->uploadStatus, UPLOAD_STATUS_BUFFER_LEN, "Looking for files to upload...");
     	pthread_mutex_unlock(&(fileUploaderHandle->uploadStatusLock));
@@ -410,9 +408,7 @@ static void *fileUploader(THREAD_HANDLE_T *threadHandle)
         }
         pthread_mutex_unlock(&(fileUploaderHandle->uploadStatusLock));
 
-#ifdef DEBUG
-       	ARLOGe("file uploader is DONE\n");
-#endif
+       	ARLOGd("file uploader is DONE\n");
         threadEndSignal(threadHandle);
     }
 
@@ -425,7 +421,7 @@ static void *fileUploader(THREAD_HANDLE_T *threadHandle)
     free(buf);
     free(filePathname);
     free(indexUploadPathname);
-    ARLOG("End fileUploader thread.\n");
+    ARLOGi("End fileUploader thread.\n");
     return (NULL);
 }
 

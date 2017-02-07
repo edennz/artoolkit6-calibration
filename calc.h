@@ -39,8 +39,7 @@
 #define CALC_H
 
 #include <AR6/AR/ar.h>
-#include <opencv2/core/fast_math.hpp>
-#include <opencv2/core/types_c.h>
+#include <opencv2/core/core_c.h>
 
 #ifdef __cplusplus
 extern "C" {
