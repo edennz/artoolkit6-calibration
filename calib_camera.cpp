@@ -129,7 +129,7 @@ unsigned char *MD5(const unsigned char *d, size_t n, unsigned char *md);
 
 #define VCONF ""
 
-#define FONT_SIZE 6.8f
+#define FONT_SIZE 18.0f
 
 // ============================================================================
 //	Global variables.
@@ -287,6 +287,8 @@ int main(int argc, char *argv[])
     // Library setup.
     int contextsActiveCount = 1;
     EdenMessageInit(contextsActiveCount);
+    EdenGLFontInit(contextsActiveCount);
+    EdenGLFontSetSize(FONT_SIZE);
     
     // Get start time.
     gettimeofday(&gStartTime, NULL);
@@ -437,7 +439,12 @@ int main(int argc, char *argv[])
                     
                     postVideoSetupDone = true;
                 } // !postVideoSetupDone
-                                
+                
+                if (contextWasUpdated) {
+                    vv->setContextSize({contextWidth, contextHeight});
+                    vv->getViewport(gViewport);
+                }
+                
                 FLOW_STATE state = flowStateGet();
                 if (state == FLOW_STATE_WELCOME || state == FLOW_STATE_DONE || state == FLOW_STATE_CALIBRATING) {
                     

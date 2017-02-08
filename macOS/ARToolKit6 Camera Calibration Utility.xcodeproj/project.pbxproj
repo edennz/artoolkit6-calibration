@@ -12,7 +12,7 @@
 		4A5FA0BB1DFE140000795630 /* EdenTime.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0BA1DFE140000795630 /* EdenTime.c */; };
 		4A5FA0BD1DFE155D00795630 /* EdenUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0BC1DFE155D00795630 /* EdenUtil.c */; };
 		4A91420A1DF6450200DF4FEE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A9142091DF6450200DF4FEE /* Assets.xcassets */; };
-		4A91421B1DF645A900DF4FEE /* calc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9142161DF645A900DF4FEE /* calc.c */; };
+		4A91421B1DF645A900DF4FEE /* calc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A9142161DF645A900DF4FEE /* calc.cpp */; };
 		4A91421C1DF645A900DF4FEE /* calib_camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A9142181DF645A900DF4FEE /* calib_camera.cpp */; };
 		4A91421D1DF645A900DF4FEE /* fileUploader.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9142191DF645A900DF4FEE /* fileUploader.c */; };
 		4A9143531DF6660700DF4FEE /* flow.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143521DF6660700DF4FEE /* flow.c */; };
@@ -100,7 +100,7 @@
 		4A9142001DF6450200DF4FEE /* ARToolKit6 Camera Calibration Utility.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ARToolKit6 Camera Calibration Utility.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A9142091DF6450200DF4FEE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4A91420E1DF6450200DF4FEE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		4A9142161DF645A900DF4FEE /* calc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = calc.c; path = ../calc.c; sourceTree = "<group>"; };
+		4A9142161DF645A900DF4FEE /* calc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = calc.cpp; path = ../calc.cpp; sourceTree = "<group>"; };
 		4A9142171DF645A900DF4FEE /* calc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = calc.h; path = ../calc.h; sourceTree = "<group>"; };
 		4A9142181DF645A900DF4FEE /* calib_camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = calib_camera.cpp; path = ../calib_camera.cpp; sourceTree = "<group>"; };
 		4A9142191DF645A900DF4FEE /* fileUploader.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fileUploader.c; path = ../fileUploader.c; sourceTree = "<group>"; };
