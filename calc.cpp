@@ -63,7 +63,7 @@ static void calcChessboardCorners(cv::Size boardSize, float squareSize, std::vec
             break;
             
         default:
-            CV_Error(cv::Error::StsBadArg, "Unknown pattern type.\n");
+            ARLOGe("Unknown pattern type.\n");
     }
 }
 

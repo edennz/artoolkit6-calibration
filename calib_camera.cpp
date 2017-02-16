@@ -56,7 +56,7 @@
 #elif defined(__linux) || defined(_WIN32)
 #  include <GL/gl.h>
 #endif
-#include <opencv2/calib3d.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/imgproc/imgproc_c.h>
 #include <AR6/AR/ar.h>
 //#include <AR6/ARVideo/video.h>
