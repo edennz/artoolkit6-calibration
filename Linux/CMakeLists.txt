@@ -8,7 +8,7 @@
 #
 
 #
-# Packages required: libjpeg-dev libopencv-calib3d-dev libcurl4-gnutls-dev
+# Packages required: libjpeg-dev libopencv-calib3d-dev libssl-dev libcurl4-openssl-dev
 #
 
 cmake_minimum_required( VERSION 3.2 )
@@ -71,6 +71,9 @@ find_library(OPENCV_FLANN_LIBRARY NAMES opencv_flann)
 find_library(OPENCV_CORE_LIBRARY NAMES opencv_core)
 
 find_package(CURL REQUIRED)
+include_directories(${CURL_INCLUDE_DIRS})
+
+find_package(OpenSSL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
 include_directories(${ARTOOLKIT6_HOME}/Source/depends/linux/include)
@@ -137,7 +140,7 @@ target_link_libraries(artoolkit6_calib_camera
     ${SDL2_LIBRARIES}
     ${JPEG_LIBRARIES}
     ${OPENCV_CALIB3D_LIBRARY} ${OPENCV_FEATURES2D_LIBRARY} ${OPENCV_IMGPROC_LIBRARY} ${OPENCV_FLANN_LIBRARY} ${OPENCV_CORE_LIBRARY}
-    ${CURL_LIBRARIES}
+    ${CURL_LIBRARIES} ${OPENSSL_LIBRARIES}
     pthread
     m
 )

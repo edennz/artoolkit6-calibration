@@ -35,8 +35,11 @@
  *
  */
 
+#define _GNU_SOURCE // asprintf()
+
 #include "flow.h"
 
+#include <stdio.h> // asprintf()
 #include <pthread.h>
 #include <Eden/EdenMessage.h>
 #include <AR6/AR/ar.h>
