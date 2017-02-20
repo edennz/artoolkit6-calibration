@@ -109,11 +109,13 @@ typedef struct {
 #  include <CommonCrypto/CommonDigest.h>
 #  define MD5 CC_MD5
 #  define MD5_DIGEST_LENGTH CC_MD5_DIGEST_LENGTH
+#  define MD5_COUNT_t CC_LONG
 #else
 //#include <openssl/md5.h>
 // Rather than including full OpenSSL header tree, just provide prototype for MD5().
-// Usage is here: http://www.openssl.org/docs/crypto/md5.html.
+// Usage is here: https://www.openssl.org/docs/manmaster/man3/MD5.html .
 #  define MD5_DIGEST_LENGTH 16
+#  define MD5_COUNT_t size_t
 #  ifdef __cplusplus
 extern "C" {
 #  endif
@@ -201,6 +203,7 @@ static CvPoint2D32f        *gCorners = NULL;
 //	Function prototypes
 // ============================================================================
 
+static void stop(void);
 static void *cornerFinder(THREAD_HANDLE_T *threadHandle);
 static void quit(int rc);
 static void reshape(int w, int h);
@@ -264,11 +267,18 @@ int main(int argc, char *argv[])
     
     char *queuePath = NULL;
     asprintf(&queuePath, "%s/%s", arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_APP_CACHE_DIR), QUEUE_DIR);
+    
     fileUploadHandle = fileUploaderInit(queuePath, QUEUE_INDEX_FILE_EXTENSION, UPLOAD_POST_URL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
     if (!fileUploadHandle) {
         ARLOGe("Error: Could not initialise fileUploadHandle.\n");
+        exit(-1);
     }
     free(queuePath);
+    // Check for QUEUE_DIR and create if not already existing.
+    if (!fileUploaderCreateQueueDir(fileUploadHandle)) {
+        ARLOGe("Error: Could not create queue directory.\n");
+        exit(-1);
+    }
     fileUploaderTickle(fileUploadHandle);
     
     // Calibration prefs.
@@ -505,6 +515,8 @@ int main(int argc, char *argv[])
         arUtilSleep(1); // 1 millisecond.
     }
     
+    stop();
+    
     quit(0);
 }
 
@@ -556,7 +568,7 @@ static void *cornerFinder(THREAD_HANDLE_T *threadHandle)
     return (NULL);
 }
 
-void stop(void)
+static void stop(void)
 {
     // Stop calibration flow.
     flowStopAndFinal();
@@ -1062,11 +1074,6 @@ extern "C" void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_a
     }
     int ID = timeptr->tm_hour*10000 + timeptr->tm_min*100 + timeptr->tm_sec;
     
-    // Check for QUEUE_DIR and create if not already existing.
-    if (!fileUploaderCreateQueueDir(fileUploadHandle)) {
-        return;
-    }
-    
     // Save the parameter file.
     snprintf(paramPathname, SAVEPARAM_PATHNAME_LEN, "%s/%s/%06d-camera_para.dat", arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_APP_CACHE_DIR), QUEUE_DIR, ID);
     
@@ -1205,7 +1212,7 @@ extern "C" void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_a
             char ss[] = SHARED_SECRET;
             unsigned char ss_md5[MD5_DIGEST_LENGTH];
             char ss_ascii[MD5_DIGEST_LENGTH*2 + 1]; // space for null terminator.
-            if (!MD5((unsigned char *)ss, strlen(ss), ss_md5)) {
+            if (!MD5((unsigned char *)ss, (MD5_COUNT_t)strlen(ss), ss_md5)) {
                 ARLOGe("Error calculating md5.\n");
                 goodWrite = false;
             } else {

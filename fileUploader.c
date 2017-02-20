@@ -48,6 +48,7 @@
 
 #include <AR6/AR/ar.h>
 #include <AR6/ARUtil/thread_sub.h>
+#include <AR6/ARUtil/file_utils.h> // mkdir_p()
 
 
 static void *fileUploader(THREAD_HANDLE_T *threadHandle);
@@ -95,6 +96,7 @@ static bool getNextFileInQueueWithExtension(const char *queueDir, const char *ex
 
 	if (!(dirp = opendir(queueDir))) {
 		ARLOGe("Error opening upload queue dir '%s'.\n", queueDir);
+        ARLOGperror(NULL);
     	return (false);
 	}
 
@@ -195,7 +197,7 @@ bool fileUploaderCreateQueueDir(FILE_UPLOAD_HANDLE_t *handle)
     		return false;
     	} else {
     		// Create the directory.
-    		if (mkdir(handle->queueDirPath, S_IRWXU|S_IRWXG)) {
+    		if (mkdir_p(handle->queueDirPath) == -1) {
     			ARLOGe("Error creating queue directory '%s'.\n", handle->queueDirPath);
         		ARLOGperror(NULL);
         		return false;
