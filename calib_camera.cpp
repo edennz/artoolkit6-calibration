@@ -67,13 +67,17 @@
 #include <AR6/ARUtil/time.h>
 #include <AR6/ARG/arg.h>
 
-#include <SDL2/SDL.h>
-
 #include "fileUploader.h"
 #include "calc.h"
 #include "flow.h"
 #include "Eden/EdenMessage.h"
 #include "Eden/EdenGLFont.h"
+
+#if TARGET_PLATFORM_MACOS
+#  include "macOS/PrefsWindowController.h"
+#endif
+
+#include "calib_camera.h"
 
 // ============================================================================
 //	Types
@@ -147,6 +151,9 @@ static int                  gChessboardCornerNumY = 0;
 static int                  gCalibImageNum = 0;
 static float                gChessboardSquareWidth = 0.0f;
 
+static void *gPreferences = NULL;
+Uint32 gSDLEventPreferencesChanged = 0;
+
 static int                  gCameraIndex = 0;
 static bool                 gCameraIsFrontFacing = false;
 
@@ -166,12 +173,12 @@ FILE_UPLOAD_HANDLE_t *fileUploadHandle = NULL;
 
 // Video acquisition and rendering.
 //AR2VideoParamT *gVid = NULL;
-ARVideoSource *vs = nullptr;
-ARView *vv = nullptr;
+static ARVideoSource *vs = nullptr;
+static ARView *vv = nullptr;
 
 
 // Marker detection.
-long            gCallCountMarkerDetect = 0;
+static long            gCallCountMarkerDetect = 0;
 
 // Window and GL context.
 static SDL_GLContext gSDLContext = NULL;
@@ -238,6 +245,7 @@ int main(int argc, char *argv[])
         return -1;
     }
     
+    
     // Create a window.
     gSDLWindow = SDL_CreateWindow("ARToolKit6 Camera Calibration Utility",
                                   SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -280,6 +288,13 @@ int main(int argc, char *argv[])
         exit(-1);
     }
     fileUploaderTickle(fileUploadHandle);
+    
+#if TARGET_PLATFORM_MACOS
+    // Preferences.
+    gPreferences = initPreferences();
+    gCameraIndex = getCameraIndex();
+#endif
+    gSDLEventPreferencesChanged = SDL_RegisterEvents(1);
     
     // Calibration prefs.
     if( gChessboardCornerNumX == 0 ) gChessboardCornerNumX = CHESSBOARD_CORNER_NUM_X;
@@ -338,7 +353,11 @@ int main(int argc, char *argv[])
                     flowHandleEvent(EVENT_BACK_BUTTON);
                 } else if (ev.key.keysym.sym == SDLK_SPACE) {
                     flowHandleEvent(EVENT_TOUCH);
+                } else if ((ev.key.keysym.sym == SDLK_COMMA && (ev.key.keysym.mod & KMOD_LGUI)) || ev.key.keysym.sym == SDLK_p) {
+                    showPreferences(gPreferences);
                 }
+            } else if (gSDLEventPreferencesChanged != 0 && ev.type == gSDLEventPreferencesChanged) {
+                // Re-read preferences.
             }
         }
         
@@ -358,6 +377,15 @@ int main(int argc, char *argv[])
                     gCameraIndex = 0;
                     gCameraIsFrontFacing = false;
                     AR2VideoParamT *vid = vs->getAR2VideoParam();
+                    ARVideoSourceInfoListT *sil = ar2VideoCreateSourceInfoList(VCONF);
+                    if (!sil) ARLOGe("No video source info list returned.\n");
+                    else {
+                        for (int sil_i = 0; sil_i < sil->count; sil_i++) {
+                            ARVideoSourceInfoT si = sil->info[sil_i];
+                            ARLOGe("Source %d name:'%s', model:'%s', UID:'%s'.\n", sil_i, si.name, si.model, si.UID);
+                        }
+                    }
+                    
                     if (vid->module == AR_VIDEO_MODULE_AVFOUNDATION) {
                         int frontCamera;
                         if (ar2VideoGetParami(vid, AR_VIDEO_PARAM_AVFOUNDATION_CAMERA_POSITION, &frontCamera) >= 0) {
@@ -394,9 +422,7 @@ int main(int argc, char *argv[])
                     vv->setFlipV(contentFlipV);
                     vv->setScalingMode(ARView::ScalingMode::SCALE_MODE_FIT);
                     vv->initWithVideoSource(*vs, contextWidth, contextHeight);
-#ifdef DEBUG
-                    ARLOGe("Content %dx%d (wxh) will display in GL context %dx%d%s.\n", vs->getVideoWidth(), vs->getVideoHeight(), contextWidth, contextHeight, (contentRotate90 ? " rotated" : ""));
-#endif
+                    ARLOGi("Content %dx%d (wxh) will display in GL context %dx%d%s.\n", vs->getVideoWidth(), vs->getVideoHeight(), contextWidth, contextHeight, (contentRotate90 ? " rotated" : ""));
                     vv->getViewport(gViewport);
                     
                     // Setup a route for rendering the mono background image.

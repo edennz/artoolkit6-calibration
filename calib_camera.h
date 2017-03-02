@@ -40,6 +40,8 @@
  */
 
 #include "fileUploader.h"
+#include <SDL2/SDL.h>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +52,7 @@ extern bool capture(const int capturedImageNum);
 extern void calib(ARParam *param_out, ARdouble *err_min_out, ARdouble *err_avg_out, ARdouble *err_max_out);
 extern void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max);
 
+extern Uint32 gSDLEventPreferencesChanged;
 #ifdef __cplusplus
 }
 #endif

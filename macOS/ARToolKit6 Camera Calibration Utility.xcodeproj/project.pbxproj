@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4A0720F91E6637FE00084FB6 /* PrefsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4A0720F81E6637FE00084FB6 /* PrefsWindow.xib */; };
+		4A0720FC1E663EBA00084FB6 /* PrefsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A0720FB1E663EBA00084FB6 /* PrefsWindowController.m */; };
 		4A5FA0B41DFE138D00795630 /* readtex.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0B31DFE138D00795630 /* readtex.c */; };
 		4A5FA0B71DFE13B300795630 /* EdenMessage.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0B61DFE13B300795630 /* EdenMessage.c */; };
 		4A5FA0BB1DFE140000795630 /* EdenTime.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0BA1DFE140000795630 /* EdenTime.c */; };
@@ -88,6 +90,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4A0720F81E6637FE00084FB6 /* PrefsWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PrefsWindow.xib; sourceTree = "<group>"; };
+		4A0720FA1E663EBA00084FB6 /* PrefsWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrefsWindowController.h; sourceTree = "<group>"; };
+		4A0720FB1E663EBA00084FB6 /* PrefsWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrefsWindowController.m; sourceTree = "<group>"; };
 		4A5FA0B31DFE138D00795630 /* readtex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = readtex.c; sourceTree = "<group>"; };
 		4A5FA0B51DFE139F00795630 /* readtex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = readtex.h; sourceTree = "<group>"; };
 		4A5FA0B61DFE13B300795630 /* EdenMessage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EdenMessage.c; sourceTree = "<group>"; };
@@ -376,6 +381,7 @@
 		4A9142141DF6453500DF4FEE /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				4A0720F81E6637FE00084FB6 /* PrefsWindow.xib */,
 				4A9142091DF6450200DF4FEE /* Assets.xcassets */,
 				4A91420E1DF6450200DF4FEE /* Info.plist */,
 			);
@@ -393,6 +399,8 @@
 				4A9142191DF645A900DF4FEE /* fileUploader.c */,
 				4A9143511DF6660700DF4FEE /* flow.h */,
 				4A9143521DF6660700DF4FEE /* flow.c */,
+				4A0720FA1E663EBA00084FB6 /* PrefsWindowController.h */,
+				4A0720FB1E663EBA00084FB6 /* PrefsWindowController.m */,
 				4A9143541DF666E200DF4FEE /* Eden */,
 			);
 			name = Source;
@@ -915,6 +923,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A0720F91E6637FE00084FB6 /* PrefsWindow.xib in Resources */,
 				4A91420A1DF6450200DF4FEE /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -949,6 +958,7 @@
 				4A9143701DF666E200DF4FEE /* glut_bwidth.c in Sources */,
 				4A91421B1DF645A900DF4FEE /* calc.cpp in Sources */,
 				4A91436C1DF666E200DF4FEE /* EdenSurfaces.c in Sources */,
+				4A0720FC1E663EBA00084FB6 /* PrefsWindowController.m in Sources */,
 				4A91436B1DF666E200DF4FEE /* EdenGLFont.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -983,7 +993,10 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				FRAMEWORK_SEARCH_PATHS = ../depends/macos/Frameworks;
+				FRAMEWORK_SEARCH_PATHS = (
+					../depends/macos/Frameworks,
+					../../artoolkit6/SDK/Frameworks,
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -1038,7 +1051,10 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				FRAMEWORK_SEARCH_PATHS = ../depends/macos/Frameworks;
+				FRAMEWORK_SEARCH_PATHS = (
+					../depends/macos/Frameworks,
+					../../artoolkit6/SDK/Frameworks,
+				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
