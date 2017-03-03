@@ -9,6 +9,7 @@
 #import "PrefsWindowController.h"
 #import <AR6/ARVideo/video.h>
 #import "../calib_camera.h"
+#import "../prefs.h"
 
 @interface PrefsWindowController ()
 
@@ -41,18 +42,27 @@
     if (!sil) {
         ARLOGe("Unable to get ARVideoSourceInfoListT.\n");
         cameraInputPopup.enabled = FALSE;
+    } else if (sil->count == 0) {
+        ARLOGe("No video sources connected.\n");
+        cameraInputPopup.enabled = FALSE;
     } else {
-        NSMutableArray *names = [NSMutableArray arrayWithCapacity:sil->count];
+        NSString *cot = [defaults stringForKey:@"cameraOpenToken"];
+        int selectedItemIndex = 0;
         for (int i = 0; i < sil->count; i++) {
-            [names addObject:[NSString stringWithCString:sil->info[i].name encoding:NSUTF8StringEncoding]];
+            [cameraInputPopup addItemWithTitle:[NSString stringWithUTF8String:sil->info[i].name]];
+            [[cameraInputPopup itemAtIndex:i] setRepresentedObject:[NSString stringWithUTF8String:sil->info[i].open_token]];
+            if (cot && sil->info[i].open_token && strcmp(cot.UTF8String, sil->info[i].open_token) == 0) {
+                selectedItemIndex = i;
+            }
         }
-        [cameraInputPopup addItemsWithTitles:names];
-        [cameraInputPopup selectItemAtIndex:MIN([defaults integerForKey:@"cameraDeviceNumber"], sil->count - 1)];
+        [cameraInputPopup selectItemAtIndex:selectedItemIndex];
         cameraInputPopup.enabled = TRUE;
     }
     
-    NSString *cs = [defaults stringForKey:@"calibrationServerDNSNameOrIPAddress"];
-    calibrationServerDNSNameOrIPAddress.stringValue = (cs ? cs : @"");
+    NSString *csuu = [defaults stringForKey:@"calibrationServerUploadURL"];
+    calibrationServerUploadURL.stringValue = (csuu ? csuu : @"");
+    NSString *csat = [defaults stringForKey:@"calibrationServerAuthenticationToken"];
+    calibrationServerAuthenticationToken.stringValue = (csat ? csat : @"");
     
     showPrefsOnStartup.state = [defaults boolForKey:@"showPrefsOnStartup"];
 }
@@ -70,8 +80,10 @@
 - (IBAction)okSelected:(NSButton *)sender {
     
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setInteger:cameraInputPopup.selectedTag forKey:@"cameraDeviceNumber"];
-    [defaults setObject:calibrationServerDNSNameOrIPAddress.stringValue forKey:@"calibrationServerDNSNameOrIPAddress"];
+    NSString *cot = cameraInputPopup.selectedItem.representedObject;
+    [defaults setObject:cot forKey:@"cameraOpenToken"];
+    [defaults setObject:calibrationServerUploadURL.stringValue forKey:@"calibrationServerUploadURL"];
+    [defaults setObject:calibrationServerAuthenticationToken.stringValue forKey:@"calibrationServerAuthenticationToken"];
     [defaults setBool:showPrefsOnStartup.state forKey:@"showPrefsOnStartup"];
     
     [NSApp stopModal];
@@ -88,17 +100,19 @@
 
 @end
 
+//
+// C interface to our ObjC preferences class.
+//
+
 void *initPreferences(void)
 {
-    ARLOGi("initPreferences\n");
-    
     // Register the preference defaults early.
     NSDictionary *appDefaults = [NSDictionary dictionaryWithObjectsAndKeys:
                                  [NSNumber numberWithBool:YES], @"showPrefsOnStartup",
                                  nil];
     [[NSUserDefaults standardUserDefaults] registerDefaults:appDefaults];
 
-    NSLog(@"showPrefsOnStartup=%s.\n", ([[NSUserDefaults standardUserDefaults] boolForKey:@"showPrefsOnStartup"] ? "true" : "false"));
+    //NSLog(@"showPrefsOnStartup=%s.\n", ([[NSUserDefaults standardUserDefaults] boolForKey:@"showPrefsOnStartup"] ? "true" : "false"));
     
     PrefsWindowController *pwc = [[PrefsWindowController alloc] initWithWindowNibName:@"PrefsWindow"];
     
@@ -123,16 +137,42 @@ void showPreferences(void *preferences)
 {
     PrefsWindowController *pwc = (__bridge PrefsWindowController *)preferences;
     if (pwc) {
-        [pwc showWindow:nil];
+        [pwc showWindow:pwc];
+        [pwc.window makeKeyAndOrderFront:pwc];
         //[NSApp runModalForWindow:pwc.window];
         //NSLog(@"Back from modal\n");
     }
 }
 
-int getCameraIndex(void)
+char *getPreferenceCameraOpenToken(void)
 {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    return ((int)[defaults integerForKey:@"cameraDeviceNumber"]);
+    NSString *cot = [defaults stringForKey:@"cameraOpenToken"];
+    if (cot) return (strdup(cot.UTF8String));
+    return NULL;
 }
 
+char *getPreferenceCalibrationServerUploadURL(void)
+{
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    NSString *csuu = [defaults stringForKey:@"calibrationServerUploadURL"];
+    if (csuu) return (strdup(csuu.UTF8String));
+    return NULL;
+}
+
+char *getPreferenceCalibrationServerAuthenticationToken(void)
+{
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    NSString *csat = [defaults stringForKey:@"calibrationServerAuthenticationToken"];
+    if (csat) return (strdup(csat.UTF8String));
+    return NULL;
+}
+
+void preferencesFinal(void **preferences_p)
+{
+    if (preferences_p) {
+        CFRelease(*preferences_p);
+        *preferences_p = NULL;
+    }
+}
 

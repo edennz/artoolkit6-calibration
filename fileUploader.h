@@ -69,15 +69,16 @@ extern "C" {
 
 #define UPLOAD_STATUS_BUFFER_LEN 128
 
+// Check for existence of queue directory, and create if not already existing.
+// Returns false if directory could not be created, true otherwise.
+// This needs to be done no later than before the first call to fileUploaderTickle().
+bool fileUploaderCreateQueueDir(const char *queueDirPath);
+    
 typedef struct _FILE_UPLOAD_HANDLE FILE_UPLOAD_HANDLE_t;
 
 FILE_UPLOAD_HANDLE_t *fileUploaderInit(const char *queueDirPath, const char *formExtension, const char *formPostURL, const float statusHideAfterSecs);
 
 void fileUploaderFinal(FILE_UPLOAD_HANDLE_t **handle_p);
-
-// Check for existence of queue directory, and create if not already existing.
-// Returns false if directory could not be created, true otherwise.
-bool fileUploaderCreateQueueDir(FILE_UPLOAD_HANDLE_t *handle);
 
 bool fileUploaderTickle(FILE_UPLOAD_HANDLE_t *handle);
 

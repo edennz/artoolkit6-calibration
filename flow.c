@@ -222,7 +222,7 @@ static void *flowThread(void *arg)
 	while (!gStop) {
 
 		if (flowStateGet() == FLOW_STATE_WELCOME) {
-			EdenMessageShow((const unsigned char *)"Welcome to ARToolKit Camera Calibrator\n(c)2015 DAQRI LLC.\n\nTap '+' to begin a calibration run.\n\nTap the menu button for settings and help.");
+			EdenMessageShow((const unsigned char *)"Welcome to ARToolKit Camera Calibrator\n(c)2015 DAQRI LLC.\n\nPress 'space' to begin a calibration run.\n\nPress 'p' for settings and help.");
 		} else {
 			EdenMessageShow((const unsigned char *)"Tap '+' to begin a calibration run.\n\nTap the menu button for settings and help.");
 		}

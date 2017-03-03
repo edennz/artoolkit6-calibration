@@ -16,25 +16,12 @@
 @interface PrefsWindowController : NSWindowController
 {
     IBOutlet NSButton *showPrefsOnStartup;
-    IBOutlet NSTextField *calibrationServerDNSNameOrIPAddress;
+    IBOutlet NSTextField *calibrationServerUploadURL;
+    IBOutlet NSTextField *calibrationServerAuthenticationToken;
     IBOutlet NSPopUpButton *cameraInputPopup;
 }
 - (IBAction)okSelected:(NSButton *)sender;
 @end
 
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void *initPreferences(void);
-void showPreferences(void *preferences);
-
-int getCameraIndex(void);
-
-
-#ifdef __cplusplus
-}
-#endif
+#endif // __OBJC__
 #endif // !__PrefsWindowController_h__

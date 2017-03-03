@@ -73,9 +73,8 @@
 #include "Eden/EdenMessage.h"
 #include "Eden/EdenGLFont.h"
 
-#if TARGET_PLATFORM_MACOS
-#  include "macOS/PrefsWindowController.h"
-#endif
+#include "prefs.h"
+
 
 #include "calib_camera.h"
 
@@ -133,8 +132,6 @@ unsigned char *MD5(const unsigned char *d, size_t n, unsigned char *md);
 // The shared secret itself needs to be hidden in the binary.
 #define SHARED_SECRET "com.artoolworks.utils.calib_camera.116D5A95-E17B-266E-39E4-E5DED6C07C53" // SHARED_SECRET_MD5 = {0x32, 0x57, 0x5a, 0x6f, 0x69, 0xa4, 0x11, 0x5a, 0x25, 0x49, 0xae, 0x55, 0x6b, 0xd2, 0x2a, 0xda}
 
-#define VCONF ""
-
 #define FONT_SIZE 18.0f
 
 // ============================================================================
@@ -153,8 +150,10 @@ static float                gChessboardSquareWidth = 0.0f;
 
 static void *gPreferences = NULL;
 Uint32 gSDLEventPreferencesChanged = 0;
+static char *gPreferenceCameraOpenToken = NULL;
+static char *gCalibrationServerUploadURL = NULL;
+static char *gCalibrationServerAuthenticationToken = NULL;
 
-static int                  gCameraIndex = 0;
 static bool                 gCameraIsFrontFacing = false;
 
 static THREAD_HANDLE_T     *cornerFinderThread = NULL;
@@ -169,13 +168,13 @@ static CvPoint2D32f        *gCornerSet = NULL;
 // Data upload.
 //
 
+static char *gFileUploadQueuePath = NULL;
 FILE_UPLOAD_HANDLE_t *fileUploadHandle = NULL;
 
 // Video acquisition and rendering.
-//AR2VideoParamT *gVid = NULL;
 static ARVideoSource *vs = nullptr;
 static ARView *vv = nullptr;
-
+static bool gPostVideoSetupDone = false;
 
 // Marker detection.
 static long            gCallCountMarkerDetect = 0;
@@ -236,9 +235,43 @@ static void drawView(void);
 static void          init(int argc, char *argv[]);
 static void          usage(char *com);
 
+static void startVideo(void)
+{
+    char buf[256];
+    snprintf(buf, sizeof(buf), "%s", (gPreferenceCameraOpenToken ? gPreferenceCameraOpenToken : ""));
+    
+    vs = new ARVideoSource;
+    if (!vs) {
+        ARLOGe("Error: Unable to create video source.\n");
+        quit(-1);
+    }
+    vs->configure(buf, true, NULL, NULL, 0);
+    if (!vs->open()) {
+        ARLOGe("Error: Unable to open video source.\n");
+        quit(-1);
+    }
+    gPostVideoSetupDone = false;
+}
+
+static void stopVideo(void)
+{
+    delete vv;
+    vv = nullptr;
+    delete vs;
+    vs = nullptr;
+}
 
 int main(int argc, char *argv[])
 {
+    // Preferences.
+    gPreferences = initPreferences();
+    gPreferenceCameraOpenToken = getPreferenceCameraOpenToken();
+    gCalibrationServerUploadURL = getPreferenceCalibrationServerUploadURL();
+    if (!gCalibrationServerUploadURL) gCalibrationServerUploadURL = strdup(UPLOAD_POST_URL);
+    gCalibrationServerAuthenticationToken = getPreferenceCalibrationServerAuthenticationToken();
+    if (!gCalibrationServerAuthenticationToken) gCalibrationServerAuthenticationToken = strdup(SHARED_SECRET);
+    gSDLEventPreferencesChanged = SDL_RegisterEvents(1);
+    
     // Initialize SDL.
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         ARLOGe("Error: SDL initialisation failed. SDL error: '%s'.\n", SDL_GetError());
@@ -272,29 +305,19 @@ int main(int argc, char *argv[])
     SDL_GL_GetDrawableSize(SDL_GL_GetCurrentWindow(), &w, &h);
     reshape(w, h);
     
+    asprintf(&gFileUploadQueuePath, "%s/%s", arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_APP_CACHE_DIR), QUEUE_DIR);
+    // Check for QUEUE_DIR and create if not already existing.
+    if (!fileUploaderCreateQueueDir(gFileUploadQueuePath)) {
+        ARLOGe("Error: Could not create queue directory.\n");
+        exit(-1);
+    }
     
-    char *queuePath = NULL;
-    asprintf(&queuePath, "%s/%s", arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_APP_CACHE_DIR), QUEUE_DIR);
-    
-    fileUploadHandle = fileUploaderInit(queuePath, QUEUE_INDEX_FILE_EXTENSION, UPLOAD_POST_URL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
+    fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
     if (!fileUploadHandle) {
         ARLOGe("Error: Could not initialise fileUploadHandle.\n");
         exit(-1);
     }
-    free(queuePath);
-    // Check for QUEUE_DIR and create if not already existing.
-    if (!fileUploaderCreateQueueDir(fileUploadHandle)) {
-        ARLOGe("Error: Could not create queue directory.\n");
-        exit(-1);
-    }
     fileUploaderTickle(fileUploadHandle);
-    
-#if TARGET_PLATFORM_MACOS
-    // Preferences.
-    gPreferences = initPreferences();
-    gCameraIndex = getCameraIndex();
-#endif
-    gSDLEventPreferencesChanged = SDL_RegisterEvents(1);
     
     // Calibration prefs.
     if( gChessboardCornerNumX == 0 ) gChessboardCornerNumX = CHESSBOARD_CORNER_NUM_X;
@@ -318,19 +341,9 @@ int main(int argc, char *argv[])
     // Get start time.
     gettimeofday(&gStartTime, NULL);
     
-    vs = new ARVideoSource;
-    if (!vs) {
-        ARLOGe("Error: Unable to create video source.\n");
-        quit(-1);
-    }
-    vs->configure(VCONF, true, NULL, NULL, 0);
-    if (!vs->open()) {
-        ARLOGe("Error: Unable to open video source.\n");
-        quit(-1);
-    }
+    startVideo();
     
     // Main loop.
-    bool postVideoSetupDone = false;
     bool done = false;
     while (!done) {
         
@@ -357,7 +370,37 @@ int main(int argc, char *argv[])
                     showPreferences(gPreferences);
                 }
             } else if (gSDLEventPreferencesChanged != 0 && ev.type == gSDLEventPreferencesChanged) {
+                
                 // Re-read preferences.
+                char *csuu = getPreferenceCalibrationServerUploadURL();
+                if (csuu && gCalibrationServerUploadURL && strcmp(gCalibrationServerUploadURL, csuu) == 0) {
+                    free(csuu);
+                } else {
+                    free(gCalibrationServerUploadURL);
+                    gCalibrationServerUploadURL = csuu;
+                    fileUploaderFinal(&fileUploadHandle);
+                    fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
+                }
+                char *csat = getPreferenceCalibrationServerAuthenticationToken();
+                if (csat && gCalibrationServerAuthenticationToken && strcmp(gCalibrationServerAuthenticationToken, csat) == 0) {
+                    free(csat);
+                } else {
+                    free(gCalibrationServerAuthenticationToken);
+                    gCalibrationServerAuthenticationToken = csat;
+                }
+                char *cot = getPreferenceCameraOpenToken();
+                if (cot && gPreferenceCameraOpenToken && strcmp(gPreferenceCameraOpenToken, cot) == 0) {
+                    free(cot);
+                } else {
+                    free(gPreferenceCameraOpenToken);
+                    gPreferenceCameraOpenToken = cot;
+                    // Changing camera requires complete cancelation of calibration flow,
+                    // closing of video source, and re-init.
+                    flowStopAndFinal();
+                    stopVideo();
+                    startVideo();
+                }
+                
             }
         }
         
@@ -371,20 +414,10 @@ int main(int argc, char *argv[])
                     arUtilTimerReset();
                 }
 #endif
-                if (!postVideoSetupDone) {
+                if (!gPostVideoSetupDone) {
                     
-                    // TODO: replace this with camera selection from source info list.
-                    gCameraIndex = 0;
                     gCameraIsFrontFacing = false;
                     AR2VideoParamT *vid = vs->getAR2VideoParam();
-                    ARVideoSourceInfoListT *sil = ar2VideoCreateSourceInfoList(VCONF);
-                    if (!sil) ARLOGe("No video source info list returned.\n");
-                    else {
-                        for (int sil_i = 0; sil_i < sil->count; sil_i++) {
-                            ARVideoSourceInfoT si = sil->info[sil_i];
-                            ARLOGe("Source %d name:'%s', model:'%s', UID:'%s'.\n", sil_i, si.name, si.model, si.UID);
-                        }
-                    }
                     
                     if (vid->module == AR_VIDEO_MODULE_AVFOUNDATION) {
                         int frontCamera;
@@ -473,8 +506,8 @@ int main(int argc, char *argv[])
                     arUtilTimerReset();
                     gCallCountMarkerDetect = 0;
                     
-                    postVideoSetupDone = true;
-                } // !postVideoSetupDone
+                    gPostVideoSetupDone = true;
+                } // !gPostVideoSetupDone
                 
                 if (contextWasUpdated) {
                     vv->setContextSize({contextWidth, contextHeight});
@@ -637,11 +670,7 @@ static void stop(void)
         gArglSettingsCornerFinderImage = NULL;
     }
     
-    delete vv;
-    vv = nullptr;
-    
-    delete vs;
-    vs = nullptr;
+    stopVideo();
 }
 
 static void quit(int rc)
@@ -654,6 +683,12 @@ static void quit(int rc)
     fileUploaderFinal(&fileUploadHandle);
     
     SDL_Quit();
+    
+    free(gPreferenceCameraOpenToken);
+    free(gCalibrationServerUploadURL);
+    free(gCalibrationServerAuthenticationToken);
+    preferencesFinal(&gPreferences);
+    
     exit(rc);
 }
 
@@ -1006,7 +1041,7 @@ void drawView(void)
     
     EdenGLFontSetViewSize(right, top);
     EdenMessageSetViewSize(right, top);
-    EdenMessageSetBoxParams(350.0f, 20.0f);
+    EdenMessageSetBoxParams(600.0f, 20.0f);
     
     // Draw status bar with centred status message.
     float statusBarHeight = EdenGLFontGetHeight() + 4.0f; // 2 pixels above, 2 below.
@@ -1197,7 +1232,7 @@ extern "C" void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_a
         // Camera index.
         if (goodWrite) {
             char camera_index[12]; // 10 digits in INT32_MAX, plus sign, plus null.
-            snprintf(camera_index, 12, "%d", gCameraIndex);
+            snprintf(camera_index, 12, "%d", 0); // Always zero for desktop platforms.
             fprintf(fp, "camera_index,%s\n", camera_index);
         }
         

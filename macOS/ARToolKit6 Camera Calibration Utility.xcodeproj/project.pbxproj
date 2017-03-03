@@ -33,6 +33,7 @@
 		4A9143771DF666E200DF4FEE /* glut_swidth.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143651DF666E200DF4FEE /* glut_swidth.c */; };
 		4A9143781DF666E200DF4FEE /* glut_tr10.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143661DF666E200DF4FEE /* glut_tr10.c */; };
 		4A9143791DF666E200DF4FEE /* glut_tr24.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143671DF666E200DF4FEE /* glut_tr24.c */; };
+		4AB6B1881E68B89C0034F03C /* prefs.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AB6B1871E68B89C0034F03C /* prefs.c */; };
 		4AEB0DC41E418FAD00765B3B /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AEB0DC31E418FAD00765B3B /* libcurl.tbd */; };
 		4AEB0DCA1E41900600765B3B /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AEB0DC91E41900600765B3B /* libjpeg.a */; };
 		4AEB0DCB1E41940A00765B3B /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AEB0DC71E418FF000765B3B /* SDL2.framework */; };
@@ -332,6 +333,8 @@
 		4A91436A1DF666E200DF4FEE /* gluttext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gluttext.h; sourceTree = "<group>"; };
 		4A91437A1DF6676F00DF4FEE /* EdenError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EdenError.h; sourceTree = "<group>"; };
 		4A91437B1DF6677600DF4FEE /* EdenGLFont.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EdenGLFont.h; sourceTree = "<group>"; };
+		4AB6B1861E68B7C60034F03C /* prefs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = prefs.h; path = ../prefs.h; sourceTree = "<group>"; };
+		4AB6B1871E68B89C0034F03C /* prefs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = prefs.c; path = ../prefs.c; sourceTree = "<group>"; };
 		4AEB0DC31E418FAD00765B3B /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
 		4AEB0DC71E418FF000765B3B /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
 		4AEB0DC91E41900600765B3B /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libjpeg.a; sourceTree = "<group>"; };
@@ -399,6 +402,8 @@
 				4A9142191DF645A900DF4FEE /* fileUploader.c */,
 				4A9143511DF6660700DF4FEE /* flow.h */,
 				4A9143521DF6660700DF4FEE /* flow.c */,
+				4AB6B1861E68B7C60034F03C /* prefs.h */,
+				4AB6B1871E68B89C0034F03C /* prefs.c */,
 				4A0720FA1E663EBA00084FB6 /* PrefsWindowController.h */,
 				4A0720FB1E663EBA00084FB6 /* PrefsWindowController.m */,
 				4A9143541DF666E200DF4FEE /* Eden */,
@@ -935,6 +940,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4AB6B1881E68B89C0034F03C /* prefs.c in Sources */,
 				4A9143731DF666E200DF4FEE /* glut_hel18.c in Sources */,
 				4A91436F1DF666E200DF4FEE /* glut_bitmap.c in Sources */,
 				4AEC04B21DFF6FB8008678C3 /* glStateCache.c in Sources */,
