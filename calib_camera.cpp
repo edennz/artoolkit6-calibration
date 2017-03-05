@@ -151,6 +151,7 @@ static float                gChessboardSquareWidth = 0.0f;
 static void *gPreferences = NULL;
 Uint32 gSDLEventPreferencesChanged = 0;
 static char *gPreferenceCameraOpenToken = NULL;
+static char *gPreferenceCameraResolutionToken = NULL;
 static char *gCalibrationServerUploadURL = NULL;
 static char *gCalibrationServerAuthenticationToken = NULL;
 
@@ -238,7 +239,7 @@ static void          usage(char *com);
 static void startVideo(void)
 {
     char buf[256];
-    snprintf(buf, sizeof(buf), "%s", (gPreferenceCameraOpenToken ? gPreferenceCameraOpenToken : ""));
+    snprintf(buf, sizeof(buf), "%s %s", (gPreferenceCameraOpenToken ? gPreferenceCameraOpenToken : ""), (gPreferenceCameraResolutionToken ? gPreferenceCameraResolutionToken : ""));
     
     vs = new ARVideoSource;
     if (!vs) {
@@ -266,6 +267,7 @@ int main(int argc, char *argv[])
     // Preferences.
     gPreferences = initPreferences();
     gPreferenceCameraOpenToken = getPreferenceCameraOpenToken();
+    gPreferenceCameraResolutionToken = getPreferenceCameraResolutionToken();
     gCalibrationServerUploadURL = getPreferenceCalibrationServerUploadURL();
     if (!gCalibrationServerUploadURL) gCalibrationServerUploadURL = strdup(UPLOAD_POST_URL);
     gCalibrationServerAuthenticationToken = getPreferenceCalibrationServerAuthenticationToken();
@@ -388,19 +390,30 @@ int main(int argc, char *argv[])
                     free(gCalibrationServerAuthenticationToken);
                     gCalibrationServerAuthenticationToken = csat;
                 }
+                bool changedCameraSettings = false;
+                char *crt = getPreferenceCameraResolutionToken();
+                if (crt && gPreferenceCameraResolutionToken && strcmp(gPreferenceCameraResolutionToken, crt) == 0) {
+                    free(crt);
+                } else {
+                    free(gPreferenceCameraResolutionToken);
+                    gPreferenceCameraResolutionToken = crt;
+                    changedCameraSettings = true;
+                }
                 char *cot = getPreferenceCameraOpenToken();
                 if (cot && gPreferenceCameraOpenToken && strcmp(gPreferenceCameraOpenToken, cot) == 0) {
                     free(cot);
                 } else {
                     free(gPreferenceCameraOpenToken);
                     gPreferenceCameraOpenToken = cot;
-                    // Changing camera requires complete cancelation of calibration flow,
+                    changedCameraSettings = true;
+                }
+                if (changedCameraSettings) {
+                    // Changing camera settings requires complete cancelation of calibration flow,
                     // closing of video source, and re-init.
                     flowStopAndFinal();
                     stopVideo();
                     startVideo();
                 }
-                
             }
         }
         
@@ -685,6 +698,7 @@ static void quit(int rc)
     SDL_Quit();
     
     free(gPreferenceCameraOpenToken);
+    free(gPreferenceCameraResolutionToken);
     free(gCalibrationServerUploadURL);
     free(gCalibrationServerAuthenticationToken);
     preferencesFinal(&gPreferences);
@@ -1042,14 +1056,15 @@ void drawView(void)
     EdenGLFontSetViewSize(right, top);
     EdenMessageSetViewSize(right, top);
     EdenMessageSetBoxParams(600.0f, 20.0f);
+    float statusBarHeight = EdenGLFontGetHeight() + 4.0f; // 2 pixels above, 2 below.
     
     // Draw status bar with centred status message.
-    float statusBarHeight = EdenGLFontGetHeight() + 4.0f; // 2 pixels above, 2 below.
-    drawBackground(right, statusBarHeight, 0.0f, 0.0f, false);
-    glDisable(GL_BLEND);
-    glColor4ub(255, 255, 255, 255);
-    EdenGLFontDrawLine(0, statusBarMessage, 0.0f, 2.0f, H_OFFSET_VIEW_CENTER_TO_TEXT_CENTER, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
-    
+    if (statusBarMessage[0]) {
+        drawBackground(right, statusBarHeight, 0.0f, 0.0f, false);
+        glDisable(GL_BLEND);
+        glColor4ub(255, 255, 255, 255);
+        EdenGLFontDrawLine(0, statusBarMessage, 0.0f, 2.0f, H_OFFSET_VIEW_CENTER_TO_TEXT_CENTER, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
+    }
     
     // If background tasks are proceeding, draw a status box.
     char uploadStatus[UPLOAD_STATUS_BUFFER_LEN];

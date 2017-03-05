@@ -18,6 +18,7 @@ void showPreferences(void *preferences);
 void preferencesFinal(void **preferences_p);
 
 char *getPreferenceCameraOpenToken(void);
+char *getPreferenceCameraResolutionToken(void);
 char *getPreferenceCalibrationServerUploadURL(void);
 char *getPreferenceCalibrationServerAuthenticationToken(void);
 

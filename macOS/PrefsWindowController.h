@@ -19,6 +19,7 @@
     IBOutlet NSTextField *calibrationServerUploadURL;
     IBOutlet NSTextField *calibrationServerAuthenticationToken;
     IBOutlet NSPopUpButton *cameraInputPopup;
+    IBOutlet NSPopUpButton *cameraPresetPopup;
 }
 - (IBAction)okSelected:(NSButton *)sender;
 @end

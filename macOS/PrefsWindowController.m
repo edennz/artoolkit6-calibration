@@ -59,6 +59,9 @@
         cameraInputPopup.enabled = TRUE;
     }
     
+    NSString *cp = [defaults stringForKey:@"cameraPreset"];
+    if (cp) [cameraPresetPopup selectItemWithTitle:cp];
+    
     NSString *csuu = [defaults stringForKey:@"calibrationServerUploadURL"];
     calibrationServerUploadURL.stringValue = (csuu ? csuu : @"");
     NSString *csat = [defaults stringForKey:@"calibrationServerAuthenticationToken"];
@@ -81,6 +84,7 @@
     
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
     NSString *cot = cameraInputPopup.selectedItem.representedObject;
+    [defaults setObject:cameraPresetPopup.selectedItem.title forKey:@"cameraPreset"];
     [defaults setObject:cot forKey:@"cameraOpenToken"];
     [defaults setObject:calibrationServerUploadURL.stringValue forKey:@"calibrationServerUploadURL"];
     [defaults setObject:calibrationServerAuthenticationToken.stringValue forKey:@"calibrationServerAuthenticationToken"];
@@ -146,24 +150,35 @@ void showPreferences(void *preferences)
 
 char *getPreferenceCameraOpenToken(void)
 {
-    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    NSString *cot = [defaults stringForKey:@"cameraOpenToken"];
+    NSString *cot = [[NSUserDefaults standardUserDefaults] stringForKey:@"cameraOpenToken"];
     if (cot) return (strdup(cot.UTF8String));
+    return NULL;
+}
+
+char *getPreferenceCameraResolutionToken(void)
+{
+    NSString *cp = [[NSUserDefaults standardUserDefaults] stringForKey:@"cameraPreset"];
+    if (cp) {
+        char *ret;
+        if (asprintf(&ret, "-preset=%s", cp.UTF8String) < 0) {
+            ARLOGperror(NULL);
+            return NULL;
+        }
+        return ret;
+    }
     return NULL;
 }
 
 char *getPreferenceCalibrationServerUploadURL(void)
 {
-    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    NSString *csuu = [defaults stringForKey:@"calibrationServerUploadURL"];
+    NSString *csuu = [[NSUserDefaults standardUserDefaults] stringForKey:@"calibrationServerUploadURL"];
     if (csuu) return (strdup(csuu.UTF8String));
     return NULL;
 }
 
 char *getPreferenceCalibrationServerAuthenticationToken(void)
 {
-    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    NSString *csat = [defaults stringForKey:@"calibrationServerAuthenticationToken"];
+    NSString *csat = [[NSUserDefaults standardUserDefaults] stringForKey:@"calibrationServerAuthenticationToken"];
     if (csat) return (strdup(csat.UTF8String));
     return NULL;
 }

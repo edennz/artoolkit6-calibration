@@ -89,6 +89,8 @@ set(SOURCE
     ../fileUploader.h
     ../flow.c
     ../flow.h
+    ../prefs.c
+    ../prefs.h
     ../Eden/Eden.h
     ../Eden/EdenError.h
     ../Eden/EdenGLFont.c

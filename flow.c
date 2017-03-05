@@ -110,14 +110,14 @@ bool flowStopAndFinal()
 	pthread_cancel(gThread); // Not implemented on Android.
 #endif
 #ifdef DEBUG
-	ARLOGe("flowStopAndFinal(): Waiting for flowThread() to exit...\n");
+	ARLOGi("flowStopAndFinal(): Waiting for flowThread() to exit...\n");
 #endif
 	pthread_join(gThread, &exit_status_p);
 #ifdef DEBUG
 #  ifndef ANDROID
-	ARLOGe("  done. Exit status was %d.\n",((exit_status_p == PTHREAD_CANCELED) ? 0 : *(int *)(exit_status_p))); // Contents of gThreadExitStatus.
+	ARLOGi("  done. Exit status was %d.\n",((exit_status_p == PTHREAD_CANCELED) ? 0 : *(int *)(exit_status_p))); // Contents of gThreadExitStatus.
 #  else
-	ARLOGe("  done. Exit status was %d.\n", *(int *)(exit_status_p)); // Contents of gThreadExitStatus.
+	ARLOGi("  done. Exit status was %d.\n", *(int *)(exit_status_p)); // Contents of gThreadExitStatus.
 #  endif
 #endif
 
@@ -202,6 +202,8 @@ static EVENT_t flowWaitForEvent(void)
 static void flowThreadCleanup(void *arg)
 {
 	pthread_mutex_unlock(&gStateLock);
+    // Clear status bar.
+    statusBarMessage[0] = '\0';
 }
 
 static void *flowThread(void *arg)
@@ -211,7 +213,7 @@ static void *flowThread(void *arg)
 	EVENT_t event;
 	// TYPE* TYPE_INSTANCE = (TYPE *)arg; // Cast the thread start arg to the correct type.
 
-    ARLOG("Start flow thread.\n");
+    ARLOGi("Start flow thread.\n");
 
     // Register our cleanup function, with no arg.
 	pthread_cleanup_push(flowThreadCleanup, NULL);
@@ -224,7 +226,7 @@ static void *flowThread(void *arg)
 		if (flowStateGet() == FLOW_STATE_WELCOME) {
 			EdenMessageShow((const unsigned char *)"Welcome to ARToolKit Camera Calibrator\n(c)2015 DAQRI LLC.\n\nPress 'space' to begin a calibration run.\n\nPress 'p' for settings and help.");
 		} else {
-			EdenMessageShow((const unsigned char *)"Tap '+' to begin a calibration run.\n\nTap the menu button for settings and help.");
+			EdenMessageShow((const unsigned char *)"Press 'space' to begin a calibration run.\n\nPress 'p' for settings and help.");
 		}
 		flowSetEventMask(EVENT_TOUCH);
 		event = flowWaitForEvent();
@@ -295,15 +297,14 @@ static void *flowThread(void *arg)
 			if (gStop) break;
 			EdenMessageHide();
 
-
-		} // while (!gStop);
+		}
 
 		//pthread_testcancel(); // Not implemented on Android.
-	}
-
+	} // while (!gStop);
+    
 	pthread_cleanup_pop(1); // Unlocks gStateLock.
 
-    ARLOG("End flow thread.\n");
+    ARLOGi("End flow thread.\n");
 
 	gThreadExitStatus = 1; // Put the exit status into a global
 	return (&gThreadExitStatus); // Pass a pointer to the global as our exit status.

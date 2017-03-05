@@ -11,6 +11,7 @@
                 <outlet property="calibrationServerAuthenticationToken" destination="Vx9-zf-SZR" id="Cr3-Dr-FvI"/>
                 <outlet property="calibrationServerUploadURL" destination="CeU-9l-p2K" id="67f-OI-sCB"/>
                 <outlet property="cameraInputPopup" destination="aMP-Am-gla" id="AWV-A1-fhy"/>
+                <outlet property="cameraPresetPopup" destination="gMt-Y3-7ei" id="iJZ-GI-Kin"/>
                 <outlet property="showPrefsOnStartup" destination="10P-u0-X5C" id="1qf-WH-mU0"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="xhk-27-pWa"/>
             </connections>
@@ -26,27 +27,27 @@
                 <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CeU-9l-p2K">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CeU-9l-p2K">
                         <rect key="frame" x="20" y="127" width="440" height="22"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="https://omega.artoolworks.com/app/calib_camera/upload.php" drawsBackground="YES" id="4cU-vH-g5T">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aMP-Am-gla">
+                    <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aMP-Am-gla">
                         <rect key="frame" x="18" y="201" width="248" height="26"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="243" id="Q6e-Yf-5hN"/>
+                        </constraints>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="cH2-si-7nG">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="menu"/>
                             <menu key="menu" id="0wG-GD-5aV"/>
                         </popUpButtonCell>
                     </popUpButton>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ANx-b9-auz">
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ANx-b9-auz">
                         <rect key="frame" x="20" y="233" width="245" height="17"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Camera input" id="VII-xJ-dCN">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -69,9 +70,8 @@ DQ
                             <action selector="okSelected:" target="-2" id="iht-Gx-MdU"/>
                         </connections>
                     </button>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ZFG-1D-LRf">
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ZFG-1D-LRf">
                         <rect key="frame" x="18" y="157" width="185" height="17"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Calibration server upload URL" id="XDh-Pm-b6p">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -85,29 +85,84 @@ DQ
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                     </button>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gxJ-Fx-Kcu">
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gxJ-Fx-Kcu">
                         <rect key="frame" x="20" y="102" width="239" height="17"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Calibration server authentication token" id="Pqb-8G-zzm">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Vx9-zf-SZR">
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Vx9-zf-SZR">
                         <rect key="frame" x="20" y="72" width="440" height="22"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="com.artoolworks.utils.calib_camera.116D5A95-E17B-266E-39E4-E5DED6C07C53" drawsBackground="YES" id="lHj-EQ-ybQ">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
+                    <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="gMt-Y3-7ei">
+                        <rect key="frame" x="281" y="201" width="182" height="26"/>
+                        <popUpButtonCell key="cell" type="push" title="medium" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="ZdO-fg-buA" id="a73-LX-uQq">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" title="Resolution" id="OWv-T1-eM5">
+                                <items>
+                                    <menuItem title="1080p" enabled="NO" id="ejj-gZ-Egf"/>
+                                    <menuItem title="720p" id="LQ5-5E-Ok6"/>
+                                    <menuItem title="540p" id="liX-uT-vTG"/>
+                                    <menuItem title="vga" id="pr3-IX-XN2"/>
+                                    <menuItem title="cif" id="TUl-6B-Bvx"/>
+                                    <menuItem title="qvga" id="buo-pH-3p4"/>
+                                    <menuItem isSeparatorItem="YES" id="0BD-GT-CcV"/>
+                                    <menuItem title="photo" id="chr-EY-cfQ">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                    <menuItem title="high" id="D7w-9n-cn2">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                    <menuItem title="medium" state="on" id="ZdO-fg-buA">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                    <menuItem title="low" id="zur-eZ-jWA">
+                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                    </menuItem>
+                                </items>
+                            </menu>
+                        </popUpButtonCell>
+                    </popUpButton>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rb9-3f-5BO">
+                        <rect key="frame" x="280" y="233" width="68" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Resolution" id="OgZ-Vy-oKm">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                 </subviews>
                 <constraints>
+                    <constraint firstItem="aMP-Am-gla" firstAttribute="top" secondItem="EiT-Mj-1SZ" secondAttribute="top" constant="45" id="50H-kS-Egz"/>
+                    <constraint firstItem="aMP-Am-gla" firstAttribute="leading" secondItem="CeU-9l-p2K" secondAttribute="leading" id="8MS-Ii-ZC7"/>
+                    <constraint firstItem="gxJ-Fx-Kcu" firstAttribute="leading" secondItem="ANx-b9-auz" secondAttribute="leading" id="8p8-SC-SY2"/>
+                    <constraint firstItem="aMP-Am-gla" firstAttribute="leading" secondItem="Vx9-zf-SZR" secondAttribute="leading" id="9qf-8a-2Pf"/>
+                    <constraint firstItem="aMP-Am-gla" firstAttribute="top" secondItem="gMt-Y3-7ei" secondAttribute="top" id="AUL-Lu-vdZ"/>
+                    <constraint firstItem="CeU-9l-p2K" firstAttribute="top" secondItem="ZFG-1D-LRf" secondAttribute="bottom" constant="8" symbolic="YES" id="CCh-ib-TAC"/>
+                    <constraint firstItem="aMP-Am-gla" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="20" symbolic="YES" id="KOH-Ti-RIk"/>
+                    <constraint firstItem="aMP-Am-gla" firstAttribute="leading" secondItem="ZFG-1D-LRf" secondAttribute="leading" id="U1B-Yv-y9D"/>
+                    <constraint firstAttribute="trailing" secondItem="gMt-Y3-7ei" secondAttribute="trailing" constant="20" id="Uvh-w8-bW8"/>
+                    <constraint firstItem="gMt-Y3-7ei" firstAttribute="leading" secondItem="aMP-Am-gla" secondAttribute="trailing" constant="20" id="cU8-78-E4G"/>
+                    <constraint firstItem="Vx9-zf-SZR" firstAttribute="top" secondItem="gxJ-Fx-Kcu" secondAttribute="bottom" constant="8" symbolic="YES" id="gY1-xi-ljU"/>
+                    <constraint firstItem="ZFG-1D-LRf" firstAttribute="top" secondItem="aMP-Am-gla" secondAttribute="bottom" constant="30" id="kMK-34-U7e"/>
                     <constraint firstItem="0nN-qx-E1Q" firstAttribute="leading" secondItem="10P-u0-X5C" secondAttribute="trailing" constant="20" id="kTJ-Hj-kGE"/>
+                    <constraint firstItem="aMP-Am-gla" firstAttribute="trailing" secondItem="ANx-b9-auz" secondAttribute="trailing" id="lUm-ex-2YI"/>
+                    <constraint firstItem="gxJ-Fx-Kcu" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="22" id="miR-wH-SCw"/>
+                    <constraint firstItem="aMP-Am-gla" firstAttribute="top" secondItem="ANx-b9-auz" secondAttribute="bottom" constant="8" symbolic="YES" id="rwb-6d-fSa"/>
+                    <constraint firstItem="Vx9-zf-SZR" firstAttribute="trailing" secondItem="CeU-9l-p2K" secondAttribute="trailing" id="s92-uD-coT"/>
+                    <constraint firstItem="0nN-qx-E1Q" firstAttribute="top" secondItem="Vx9-zf-SZR" secondAttribute="bottom" constant="31" id="u69-tN-PhK"/>
                     <constraint firstAttribute="bottom" secondItem="0nN-qx-E1Q" secondAttribute="bottom" constant="20" id="u7D-2T-F0w"/>
                     <constraint firstAttribute="trailing" secondItem="0nN-qx-E1Q" secondAttribute="trailing" constant="20" id="xud-Mt-fno"/>
+                    <constraint firstItem="Vx9-zf-SZR" firstAttribute="trailing" secondItem="0nN-qx-E1Q" secondAttribute="trailing" id="z7u-vJ-HyN"/>
                     <constraint firstItem="10P-u0-X5C" firstAttribute="centerY" secondItem="0nN-qx-E1Q" secondAttribute="centerY" id="zyj-W7-mAE"/>
                 </constraints>
             </view>

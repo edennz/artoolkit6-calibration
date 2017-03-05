@@ -24,7 +24,12 @@ char *getPreferenceCameraOpenToken(void)
     return NULL;
 }
 
-char *getPreferenceCalibrationServerURL(void)
+char *getPreferenceCameraResolutionToken(void)
+{
+    return NULL;
+}
+
+char *getPreferenceCalibrationServerUploadURL(void)
 {
     return NULL;
 }
