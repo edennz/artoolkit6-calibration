@@ -7,8 +7,10 @@
 //
 
 #include <stdio.h>
+#include <AR6/AR/config.h>
+#include "prefs.h"
 
-#if !TARGET_PLATFORM_MACOS
+#if !TARGET_PLATFORM_MACOS && !TARGET_PLATFORM_LINUX
 
 void *initPreferences(void)
 {

@@ -76,6 +76,10 @@ include_directories(${CURL_INCLUDE_DIRS})
 find_package(OpenSSL REQUIRED)
 include_directories(${CURL_INCLUDE_DIRS})
 
+find_package(PkgConfig)
+pkg_check_modules(LIBCONFIG REQUIRED libconfig)
+include_directories(${LIBCONFIG_INCLUDE_DIRS})
+
 include_directories(${ARTOOLKIT6_HOME}/Source/depends/linux/include)
 
 include(${ARTOOLKIT6_HOME}/SDK/lib/AR6/AR6.cmake)
@@ -89,8 +93,9 @@ set(SOURCE
     ../fileUploader.h
     ../flow.c
     ../flow.h
-    ../prefs.c
     ../prefs.h
+    ../prefsLibConfig.c
+    ../prefsNull.c
     ../Eden/Eden.h
     ../Eden/EdenError.h
     ../Eden/EdenGLFont.c
@@ -143,6 +148,7 @@ target_link_libraries(artoolkit6_calib_camera
     ${JPEG_LIBRARIES}
     ${OPENCV_CALIB3D_LIBRARY} ${OPENCV_FEATURES2D_LIBRARY} ${OPENCV_IMGPROC_LIBRARY} ${OPENCV_FLANN_LIBRARY} ${OPENCV_CORE_LIBRARY}
     ${CURL_LIBRARIES} ${OPENSSL_LIBRARIES}
+    ${LIBCONFIG_LIBRARIES}
     pthread
     m
 )
