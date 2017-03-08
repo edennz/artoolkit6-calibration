@@ -153,9 +153,9 @@ static EDEN_GL_FONT_VIEW_SETTINGS gViewSettings = {
     72.0f
 };
 static EDEN_GL_FONT_FORMATTING_SETTINGS gFormattingSettings = {
-    0.0625f,
-    1.125f,
-    1.0f
+    0.0625f,    // characterSpacing
+    1.125f,     // lineSpacing
+    0.0f        // wordExtraSpacing
 };
 static EDEN_GL_FONT_FONT_SETTINGS gFontSettings = {
     &monoroman,

@@ -338,6 +338,7 @@ int main(int argc, char *argv[])
     int contextsActiveCount = 1;
     EdenMessageInit(contextsActiveCount);
     EdenGLFontInit(contextsActiveCount);
+    EdenGLFontSetFont(EDEN_GL_FONT_ID_Stroke_Roman);
     EdenGLFontSetSize(FONT_SIZE);
     
     // Get start time.
