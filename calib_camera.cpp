@@ -365,7 +365,9 @@ int main(int argc, char *argv[])
                     reshape(w, h);
                 }
             } else if (ev.type == SDL_KEYDOWN) {
-                if        (ev.key.keysym.sym == SDLK_ESCAPE) {
+                if (gEdenMessageKeyboardRequired) {
+                    EdenMessageInputKeyboard(ev.key.keysym.sym);
+                } else if (ev.key.keysym.sym == SDLK_ESCAPE) {
                     flowHandleEvent(EVENT_BACK_BUTTON);
                 } else if (ev.key.keysym.sym == SDLK_SPACE) {
                     flowHandleEvent(EVENT_TOUCH);

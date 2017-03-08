@@ -12,7 +12,6 @@
 		4A5FA0B71DFE13B300795630 /* EdenMessage.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0B61DFE13B300795630 /* EdenMessage.c */; };
 		4A5FA0BB1DFE140000795630 /* EdenTime.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0BA1DFE140000795630 /* EdenTime.c */; };
 		4A5FA0BD1DFE155D00795630 /* EdenUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0BC1DFE155D00795630 /* EdenUtil.c */; };
-		4A6223D01E6CFBA8002F0096 /* prefsLibConfig.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A6223CF1E6CFBA8002F0096 /* prefsLibConfig.c */; };
 		4A6FD7281E42C7A900C6471A /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A6FD7271E42C7A900C6471A /* OpenCL.framework */; };
 		4A6FD72A1E42C7C200C6471A /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A6FD7291E42C7C200C6471A /* Accelerate.framework */; };
 		4A7FEB3E1E43F35E003783F7 /* libopencv_world.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A7FEB3D1E43F35E003783F7 /* libopencv_world.a */; };
@@ -39,6 +38,8 @@
 		4A9143781DF666E200DF4FEE /* glut_tr10.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143661DF666E200DF4FEE /* glut_tr10.c */; };
 		4A9143791DF666E200DF4FEE /* glut_tr24.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143671DF666E200DF4FEE /* glut_tr24.c */; };
 		4AB6B1881E68B89C0034F03C /* prefsNull.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AB6B1871E68B89C0034F03C /* prefsNull.c */; };
+		4AD419991E6FB37300DC036C /* PrefsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A0720FB1E663EBA00084FB6 /* PrefsWindowController.m */; };
+		4AD4199A1E6FB3C000DC036C /* prefsLibConfig.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A6223CF1E6CFBA8002F0096 /* prefsLibConfig.c */; };
 		4AEB0DC41E418FAD00765B3B /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AEB0DC31E418FAD00765B3B /* libcurl.tbd */; };
 		4AEB0DCA1E41900600765B3B /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AEB0DC91E41900600765B3B /* libjpeg.a */; };
 		4AEB0DCB1E41940A00765B3B /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AEB0DC71E418FF000765B3B /* SDL2.framework */; };
@@ -890,6 +891,7 @@
 				4A5FA0BD1DFE155D00795630 /* EdenUtil.c in Sources */,
 				4A9143711DF666E200DF4FEE /* glut_hel10.c in Sources */,
 				4A9143721DF666E200DF4FEE /* glut_hel12.c in Sources */,
+				4AD419991E6FB37300DC036C /* PrefsWindowController.m in Sources */,
 				4A5FA0BB1DFE140000795630 /* EdenTime.c in Sources */,
 				4A9143751DF666E200DF4FEE /* glut_roman.c in Sources */,
 				4A9143781DF666E200DF4FEE /* glut_tr10.c in Sources */,
@@ -904,7 +906,7 @@
 				4A9143701DF666E200DF4FEE /* glut_bwidth.c in Sources */,
 				4A91421B1DF645A900DF4FEE /* calc.cpp in Sources */,
 				4A91436C1DF666E200DF4FEE /* EdenSurfaces.c in Sources */,
-				4A6223D01E6CFBA8002F0096 /* prefsLibConfig.c in Sources */,
+				4AD4199A1E6FB3C000DC036C /* prefsLibConfig.c in Sources */,
 				4A91436B1DF666E200DF4FEE /* EdenGLFont.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

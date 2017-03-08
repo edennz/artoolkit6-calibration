@@ -58,6 +58,7 @@ typedef enum {
 	EVENT_NONE = 0,
 	EVENT_TOUCH = 1,
 	EVENT_BACK_BUTTON = 2,
+    EVENT_MODAL = 4
 } EVENT_t;
 
 bool flowInitAndStart(const int calibImageNum);

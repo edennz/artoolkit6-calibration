@@ -228,10 +228,17 @@ static void *flowThread(void *arg)
 		} else {
 			EdenMessageShow((const unsigned char *)"Press 'space' to begin a calibration run.\n\nPress 'p' for settings and help.");
 		}
-		flowSetEventMask(EVENT_TOUCH);
+		flowSetEventMask(EVENT_TOUCH | EVENT_MODAL);
 		event = flowWaitForEvent();
 		if (gStop) break;
-		EdenMessageHide();
+        
+        if (event == EVENT_MODAL) {
+            flowSetEventMask(EVENT_MODAL);
+            event = flowWaitForEvent();
+            continue;
+        } else {
+            EdenMessageHide();
+        }
 
 		// Start capturing.
 		capturedImageNum = 0;

@@ -611,7 +611,7 @@ EDEN_BOOL EdenMessageInputKeyboard(const unsigned char keyAsciiCode)
             case EDEN_ASCII_DEL:
                 if (gInputLength > 0) {
                     gInputLength--;
-                    gInput[gInputLength] = '\0';
+                    gInputPtr[gInputLength] = '\0';
                     if (EdenMessageShow(gInput) != EDEN_E_NONE) {
                         ret = FALSE;
                         goto done;
@@ -624,9 +624,9 @@ EDEN_BOOL EdenMessageInputKeyboard(const unsigned char keyAsciiCode)
                 if (gInputFPOnly && (keyAsciiCode < '0' || keyAsciiCode > '9') && keyAsciiCode != '.') break;
                 if (gInputAlphaOnly && (keyAsciiCode < 'A' || keyAsciiCode > 'Z') && (keyAsciiCode < 'a' || keyAsciiCode > 'z')) break;
                 if (gInputLength < gInputLengthMax) {
-                    gInput[gInputLength] = keyAsciiCode;
+                    gInputPtr[gInputLength] = keyAsciiCode;
                     gInputLength++;
-                    gInput[gInputLength] = '\0';
+                    gInputPtr[gInputLength] = '\0';
                     if (EdenMessageShow(gInput) != EDEN_E_NONE) {
                         ret = FALSE;
                         goto done;
