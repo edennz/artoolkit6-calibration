@@ -178,31 +178,21 @@ void fileUploaderFinal(FILE_UPLOAD_HANDLE_t **handle_p)
 
 bool fileUploaderCreateQueueDir(const char *queueDirPath)
 {
-    struct stat dirstat;
+    if (!queueDirPath) return (false);
 
-	if (!queueDirPath) return (false);
-
-	int err = stat(queueDirPath, &dirstat);
-    if (!err) {
-    	// Path found. Check that it's a directory.
-    	if (!dirstat.st_mode & S_IFDIR) {
-    		ARLOGe("Non-directory found at queue directory path '%s'.\n", queueDirPath);
-    		return false;
-    	}
-    } else {
-    	if (errno != ENOENT) {
-    		// Some error other than "not found" occurred. Fail.
-    		ARLOGe("Error looking for queue directory '%s'.\n", queueDirPath);
-    		ARLOGperror(NULL);
-    		return false;
-    	} else {
-    		// Create the directory.
-    		if (mkdir_p(queueDirPath) == -1) {
-    			ARLOGe("Error creating queue directory '%s'.\n", queueDirPath);
-        		ARLOGperror(NULL);
-        		return false;
-    		}
-    	}
+    int queueDirExists = test_d(queueDirPath);
+    if (queueDirExists == -1) {
+        // Some error other than "not found" occurred. Fail.
+        ARLOGe("Error looking for queue directory '%s'.\n", queueDirPath);
+        ARLOGperror(NULL);
+        return false;
+    } else if (!queueDirExists) {
+        // Create the directory.
+        if (mkdir_p(queueDirPath) == -1) {
+            ARLOGe("Error creating queue directory '%s'.\n", queueDirPath);
+            ARLOGperror(NULL);
+            return false;
+        }
     }
 
     return (true);
