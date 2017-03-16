@@ -12,15 +12,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
+
 void *initPreferences(void);
 void showPreferences(void *preferences);
 void preferencesFinal(void **preferences_p);
 
-char *getPreferenceCameraOpenToken(void);
-char *getPreferenceCameraResolutionToken(void);
-char *getPreferenceCalibrationServerUploadURL(void);
-char *getPreferenceCalibrationServerAuthenticationToken(void);
+char *getPreferenceCameraOpenToken(void *preferences);
+char *getPreferenceCameraResolutionToken(void *preferences);
+char *getPreferenceCalibrationServerUploadURL(void *preferences);
+char *getPreferenceCalibrationServerAuthenticationToken(void *preferences);
 
 #ifdef __cplusplus
 }

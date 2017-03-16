@@ -17,12 +17,12 @@
 
 @implementation PrefsWindowController
 
-- (id)initWithWindowNibName:(NSString *)windowNibName
+- (instancetype)initWithWindowNibName:(NSString *)windowNibName
 {
     return [super initWithWindowNibName:windowNibName];
 }
 
-- (id)initWithWindow:(NSWindow *)window
+- (instancetype)initWithWindow:(NSWindow *)window
 {
     id ret;
     if ((ret = [super initWithWindow:window])) {
@@ -49,8 +49,8 @@
         NSString *cot = [defaults stringForKey:@"cameraOpenToken"];
         int selectedItemIndex = 0;
         for (int i = 0; i < sil->count; i++) {
-            [cameraInputPopup addItemWithTitle:[NSString stringWithUTF8String:sil->info[i].name]];
-            [[cameraInputPopup itemAtIndex:i] setRepresentedObject:[NSString stringWithUTF8String:sil->info[i].open_token]];
+            [cameraInputPopup addItemWithTitle:@(sil->info[i].name)];
+            [cameraInputPopup itemAtIndex:i].representedObject = @(sil->info[i].open_token);
             if (cot && sil->info[i].open_token && strcmp(cot.UTF8String, sil->info[i].open_token) == 0) {
                 selectedItemIndex = i;
             }
@@ -111,9 +111,7 @@
 void *initPreferences(void)
 {
     // Register the preference defaults early.
-    NSDictionary *appDefaults = [NSDictionary dictionaryWithObjectsAndKeys:
-                                 [NSNumber numberWithBool:YES], @"showPrefsOnStartup",
-                                 nil];
+    NSDictionary *appDefaults = @{@"showPrefsOnStartup": @YES};
     [[NSUserDefaults standardUserDefaults] registerDefaults:appDefaults];
 
     //NSLog(@"showPrefsOnStartup=%s.\n", ([[NSUserDefaults standardUserDefaults] boolForKey:@"showPrefsOnStartup"] ? "true" : "false"));
@@ -121,7 +119,7 @@ void *initPreferences(void)
     PrefsWindowController *pwc = [[PrefsWindowController alloc] initWithWindowNibName:@"PrefsWindow"];
     
     // Register the Preferences menu item in the app menu.
-    NSMenu *appMenu = [[[NSApp mainMenu] itemAtIndex: 0] submenu];
+    NSMenu *appMenu = [NSApp.mainMenu itemAtIndex: 0].submenu;
     for (NSMenuItem *mi in appMenu.itemArray) {
         if ([mi.title isEqualToString:@"Preferences…"]) {
             mi.target = pwc;
@@ -148,14 +146,14 @@ void showPreferences(void *preferences)
     }
 }
 
-char *getPreferenceCameraOpenToken(void)
+char *getPreferenceCameraOpenToken(void *preferences)
 {
     NSString *cot = [[NSUserDefaults standardUserDefaults] stringForKey:@"cameraOpenToken"];
     if (cot) return (strdup(cot.UTF8String));
     return NULL;
 }
 
-char *getPreferenceCameraResolutionToken(void)
+char *getPreferenceCameraResolutionToken(void *preferences)
 {
     NSString *cp = [[NSUserDefaults standardUserDefaults] stringForKey:@"cameraPreset"];
     if (cp) {
@@ -169,14 +167,14 @@ char *getPreferenceCameraResolutionToken(void)
     return NULL;
 }
 
-char *getPreferenceCalibrationServerUploadURL(void)
+char *getPreferenceCalibrationServerUploadURL(void *preferences)
 {
     NSString *csuu = [[NSUserDefaults standardUserDefaults] stringForKey:@"calibrationServerUploadURL"];
     if (csuu) return (strdup(csuu.UTF8String));
     return NULL;
 }
 
-char *getPreferenceCalibrationServerAuthenticationToken(void)
+char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
 {
     NSString *csat = [[NSUserDefaults standardUserDefaults] stringForKey:@"calibrationServerAuthenticationToken"];
     if (csat) return (strdup(csat.UTF8String));

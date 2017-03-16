@@ -21,22 +21,22 @@ void showPreferences(void *preferences)
 {
 }
 
-char *getPreferenceCameraOpenToken(void)
+char *getPreferenceCameraOpenToken(void *preferences)
 {
     return NULL;
 }
 
-char *getPreferenceCameraResolutionToken(void)
+char *getPreferenceCameraResolutionToken(void *preferences)
 {
     return NULL;
 }
 
-char *getPreferenceCalibrationServerUploadURL(void)
+char *getPreferenceCalibrationServerUploadURL(void *preferences)
 {
     return NULL;
 }
 
-char *getPreferenceCalibrationServerAuthenticationToken(void)
+char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
 {
     return NULL;
 }

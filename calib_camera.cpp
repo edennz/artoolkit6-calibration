@@ -266,11 +266,11 @@ int main(int argc, char *argv[])
 {
     // Preferences.
     gPreferences = initPreferences();
-    gPreferenceCameraOpenToken = getPreferenceCameraOpenToken();
-    gPreferenceCameraResolutionToken = getPreferenceCameraResolutionToken();
-    gCalibrationServerUploadURL = getPreferenceCalibrationServerUploadURL();
+    gPreferenceCameraOpenToken = getPreferenceCameraOpenToken(gPreferences);
+    gPreferenceCameraResolutionToken = getPreferenceCameraResolutionToken(gPreferences);
+    gCalibrationServerUploadURL = getPreferenceCalibrationServerUploadURL(gPreferences);
     if (!gCalibrationServerUploadURL) gCalibrationServerUploadURL = strdup(UPLOAD_POST_URL);
-    gCalibrationServerAuthenticationToken = getPreferenceCalibrationServerAuthenticationToken();
+    gCalibrationServerAuthenticationToken = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
     if (!gCalibrationServerAuthenticationToken) gCalibrationServerAuthenticationToken = strdup(SHARED_SECRET);
     gSDLEventPreferencesChanged = SDL_RegisterEvents(1);
     
@@ -377,7 +377,7 @@ int main(int argc, char *argv[])
             } else if (gSDLEventPreferencesChanged != 0 && ev.type == gSDLEventPreferencesChanged) {
                 
                 // Re-read preferences.
-                char *csuu = getPreferenceCalibrationServerUploadURL();
+                char *csuu = getPreferenceCalibrationServerUploadURL(gPreferences);
                 if (csuu && gCalibrationServerUploadURL && strcmp(gCalibrationServerUploadURL, csuu) == 0) {
                     free(csuu);
                 } else {
@@ -386,7 +386,7 @@ int main(int argc, char *argv[])
                     fileUploaderFinal(&fileUploadHandle);
                     fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
                 }
-                char *csat = getPreferenceCalibrationServerAuthenticationToken();
+                char *csat = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
                 if (csat && gCalibrationServerAuthenticationToken && strcmp(gCalibrationServerAuthenticationToken, csat) == 0) {
                     free(csat);
                 } else {
@@ -394,7 +394,7 @@ int main(int argc, char *argv[])
                     gCalibrationServerAuthenticationToken = csat;
                 }
                 bool changedCameraSettings = false;
-                char *crt = getPreferenceCameraResolutionToken();
+                char *crt = getPreferenceCameraResolutionToken(gPreferences);
                 if (crt && gPreferenceCameraResolutionToken && strcmp(gPreferenceCameraResolutionToken, crt) == 0) {
                     free(crt);
                 } else {
@@ -402,7 +402,7 @@ int main(int argc, char *argv[])
                     gPreferenceCameraResolutionToken = crt;
                     changedCameraSettings = true;
                 }
-                char *cot = getPreferenceCameraOpenToken();
+                char *cot = getPreferenceCameraOpenToken(gPreferences);
                 if (cot && gPreferenceCameraOpenToken && strcmp(gPreferenceCameraOpenToken, cot) == 0) {
                     free(cot);
                 } else {

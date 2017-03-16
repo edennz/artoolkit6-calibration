@@ -19,25 +19,61 @@
 #include <pthread.h>
 #include <AR6/ARVideo/video.h>
 #include "flow.h"
+#include <AR6/ARUtil/file_utils.h>
+#include "calib_camera.h"
 
 #define PREFS_FILENAME "prefs"
+
+typedef struct {
+    char *prefsPath;
+    config_t config;
+    config_setting_t *settingCOT;
+    config_setting_t *settingCSUU;
+    config_setting_t *settingCSAT;
+} prefsLibConfig_t;
 
 void *showPreferencesThread(void *);
 
 void *initPreferences(void)
 {
-    config_t *config_p;
-    arMalloc(config_p, config_t, 1);
-    config_init(config_p);
+    prefsLibConfig_t *prefs;
     
-    char *prefsPath;
-    if (asprintf(&prefsPath, "%s/%s", arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_APP_DATA_DIR), PREFS_FILENAME) < 0) {
+    arMallocClear(prefs, prefsLibConfig_t, 1);
+    config_init(&prefs->config);
+    config_setting_t *root = config_root_setting(&prefs->config);
+    
+    if (asprintf(&prefs->prefsPath, "%s/%s", arUtilGetAndCreateResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_APP_DATA_DIR), PREFS_FILENAME) < 0) {
         ARLOGperror(NULL);
-        return NULL;
+        goto bail;
     }
+    ARLOGd("Preferences config path is '%s'.\n", prefs->prefsPath);
     
+    // Attempt to read config, initialising any unconfigured values to defaults.
+    int err = test_f(prefs->prefsPath, NULL);
+    if (err < 0) {
+        ARLOGperror(NULL);
+        goto bail;
+    } else if (err == 0) {
+        // Ensure that the directory is available.
+        
+    } else if (err == 1) {
+        if (config_read_file(&prefs->config, prefs->prefsPath) == CONFIG_FALSE) {
+            ARLOGe("Error reading configuration file '%s': %s.\n", prefs->prefsPath, config_error_text(&prefs->config));
+            goto bail;
+        }
+        prefs->settingCOT = config_setting_get_member(root, "cameraOpenToken");
+        prefs->settingCSUU = config_setting_get_member(root, "calibrationServerUploadURL");
+        prefs->settingCSAT = config_setting_get_member(root, "calibrationServerAuthenticationToken");
+    }
+    if (!prefs->settingCOT) prefs->settingCOT = config_setting_add(root, "cameraOpenToken", CONFIG_TYPE_STRING);
+    if (!prefs->settingCSUU) prefs->settingCSUU = config_setting_add(root, "calibrationServerUploadURL", CONFIG_TYPE_STRING);
+    if (!prefs->settingCSAT) prefs->settingCSAT = config_setting_add(root, "calibrationServerAuthenticationToken", CONFIG_TYPE_STRING);
     
-    return (config_p);
+    return ((void *)prefs);
+    
+bail:
+    free(prefs);
+    return (NULL);
 }
 
 void showPreferences(void *preferences)
@@ -64,16 +100,20 @@ void *showPreferencesThread(void *arg)
         PREFS_END
     };
     enum state state = PREFS_BEGIN;
-    char defaultCalibrationServerURL[] = "https://omega.artoolworks.com/app/calib_camera/upload.php";
-    char defaultCalibrationServerAuthenticationToken[] = "com.artoolworks.utils.calib_camera.116D5A95-E17B-266E-39E4-E5DED6C07C53";
     int inputi;
     unsigned char *inputa;
+    prefsLibConfig_t *prefs = (prefsLibConfig_t *)arg;
+    
+    if (!prefs) {
+        ARLOGe("NULL preferences.\n");
+        return (NULL);
+    }
     
     flowHandleEvent(EVENT_MODAL);
     
     while (state != PREFS_END) {
         if (state == PREFS_BEGIN) {
-            const char prompt[] = "Preferences\n\n1. Camera.\n2. Calibration server URL.\n3. Calibration server authentication token.\n\nType number and press [return] ";
+            const char prompt[] = "Preferences\n\n1. Camera.\n2. Calibration server URL.\n3. Calibration server authentication token.\n\nPress [esc] to finish or type number and press [return] ";
             EdenMessageInput((const unsigned char *)prompt, 1, 1, 1, 0, 0);
             inputa = EdenMessageInputGetInput();
             if (!inputa) state = PREFS_END;
@@ -97,19 +137,25 @@ void *showPreferencesThread(void *arg)
             } else {
                 char prompt[4096] = "Preferences: Camera.\n\n";
                 size_t len;
+                int selectedItemIndex = -1;
+                const char *cot = config_setting_get_string(prefs->settingCOT);
                 for (int i = 0; i < sil->count; i++) {
                     len = strlen(prompt);
                     snprintf(prompt + len, sizeof(prompt) - len, "%d. %s\n", i + 1, sil->info[i].name);
+                    if (cot && sil->info[i].open_token && strcmp(cot, sil->info[i].open_token) == 0) {
+                        selectedItemIndex = i;
+                    }
                 }
                 len = strlen(prompt);
-                snprintf(prompt + len, sizeof(prompt) - len, "Type number and press [return] ");
+                snprintf(prompt + len, sizeof(prompt) - len, "\nCurrent value is %s.\n\nPress [esc] to leave unchanged, or type a number and press [return] ", (selectedItemIndex >= 0 ? sil->info[selectedItemIndex].name : "a camera not currently connected"));
                 EdenMessageInput((const unsigned char *)prompt, 1, 1, 1, 0, 0);
                 inputa = EdenMessageInputGetInput();
                 if (!inputa) state = PREFS_BEGIN;
                 else if (!inputa[0] || sscanf((const char *)inputa, "%d", &inputi) < 1 || inputi < 1 || inputi > sil->count) {
                     free(inputa);
                 } else {
-                    ARLOGe("User chose camera %d (%s).\n", inputi - 1, sil->info[inputi - 1].open_token);
+                    config_setting_set_string(prefs->settingCOT, sil->info[inputi - 1].open_token);
+                    ARLOGd("User chose camera %d (%s).\n", inputi - 1, sil->info[inputi - 1].open_token);
                 }
                 state = PREFS_BEGIN;
             }
@@ -117,16 +163,15 @@ void *showPreferencesThread(void *arg)
             char prompt[4096] = "Preferences: Calibration server URL.\n\n";
             size_t len;
             len = strlen(prompt);
-            snprintf(prompt + len, sizeof(prompt) - len, "Current value is '%s'.\n\nPress [esc] to leave unchanged, [return] to use default setting '%s', or type new setting and press [return] ", "", defaultCalibrationServerURL);
+            snprintf(prompt + len, sizeof(prompt) - len, "Current value is '%s'.\n\nPress [esc] to leave unchanged, [return] to use default, or type new setting and press [return] ", "");
             EdenMessageInput((const unsigned char *)prompt, 0, 2048, 0, 0, 0);
             inputa = EdenMessageInputGetInput();
             if (!inputa) state = PREFS_BEGIN;
-            else if (!inputa[0]) {
-                ARLOGe("User chose calibration server URL '%s'.\n", defaultCalibrationServerURL);
-                free(inputa);
-                state = PREFS_BEGIN;
-            } else {
-                ARLOGe("User chose calibration server URL '%s'.\n", inputa);
+            else {
+                if (inputa[0]) {
+                    config_setting_set_string(prefs->settingCSUU, (const char *)inputa);
+                    ARLOGd("User chose calibration server upload URL '%s'.\n", (const char *)inputa);
+                }
                 free(inputa);
                 state = PREFS_BEGIN;
             }
@@ -134,53 +179,85 @@ void *showPreferencesThread(void *arg)
             char prompt[4096] = "Preferences: Calibration server authentication token.\n\n";
             size_t len;
             len = strlen(prompt);
-            snprintf(prompt + len, sizeof(prompt) - len, "Current value is '%s'.\n\nPress [esc] to leave unchanged, [return] to use default setting '%s', or type new setting and press [return] ", "", defaultCalibrationServerAuthenticationToken);
+            snprintf(prompt + len, sizeof(prompt) - len, "Current value is '%s'.\n\nPress [esc] to leave unchanged, [return] to use default, or type new setting and press [return] ", "");
             EdenMessageInput((const unsigned char *)prompt, 0, 2048, 0, 0, 0);
             inputa = EdenMessageInputGetInput();
             if (!inputa) state = PREFS_BEGIN;
-            else if (!inputa[0]) {
-                ARLOGe("User chose calibration server authentication token '%s'.\n", defaultCalibrationServerAuthenticationToken);
-                free(inputa);
-                state = PREFS_BEGIN;
-            } else {
-                ARLOGe("User chose calibration server authentication token '%s'.\n", inputa);
+            else {
+                if (inputa[0]) {
+                    config_setting_set_string(prefs->settingCSAT, (const char *)inputa);
+                    ARLOGd("User chose calibration server authentication token '%s'.\n", (const char *)inputa);
+                }
                 free(inputa);
                 state = PREFS_BEGIN;
             }
         }
     }
     
+    if (config_write_file(&prefs->config, prefs->prefsPath) == CONFIG_FALSE) {
+        ARLOGe("Error writing configuration file '%s': %s.\n", prefs->prefsPath, config_error_text(&prefs->config));
+    }
+        
     flowHandleEvent(EVENT_MODAL);
+    
+    SDL_Event event;
+    SDL_zero(event);
+    event.type = gSDLEventPreferencesChanged;
+    event.user.code = (Sint32)0;
+    event.user.data1 = NULL;
+    event.user.data2 = NULL;
+    SDL_PushEvent(&event);
+
+    return NULL;
+}
+
+char *getPreferenceCameraOpenToken(void *preferences)
+{
+    prefsLibConfig_t *prefs = (prefsLibConfig_t *)preferences;
+    if (!prefs) return NULL;
+    
+    const char *s = config_setting_get_string(prefs->settingCOT);
+    if (s && s[0]) return strdup(s);
+    return NULL;
+}
+
+char *getPreferenceCameraResolutionToken(void *preferences)
+{
+    prefsLibConfig_t *prefs = (prefsLibConfig_t *)preferences;
+    if (!prefs) return NULL;
     
     return NULL;
 }
 
-char *getPreferenceCameraOpenToken(void)
+char *getPreferenceCalibrationServerUploadURL(void *preferences)
 {
+    prefsLibConfig_t *prefs = (prefsLibConfig_t *)preferences;
+    if (!prefs) return NULL;
+    
+    const char *s = config_setting_get_string(prefs->settingCSUU);
+    if (s && s[0]) return strdup(s);
     return NULL;
 }
 
-char *getPreferenceCameraResolutionToken(void)
+char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
 {
-    return NULL;
-}
-
-char *getPreferenceCalibrationServerUploadURL(void)
-{
-    return NULL;
-}
-
-char *getPreferenceCalibrationServerAuthenticationToken(void)
-{
+    prefsLibConfig_t *prefs = (prefsLibConfig_t *)preferences;
+    if (!prefs) return NULL;
+    
+    const char *s = config_setting_get_string(prefs->settingCSAT);
+    if (s && s[0]) return strdup(s);
     return NULL;
 }
 
 void preferencesFinal(void **preferences_p)
 {
-    config_t *config_p = (config_t *)(*preferences_p);
+    if (!preferences_p) return;
+    prefsLibConfig_t *prefs = (prefsLibConfig_t *)*preferences_p;
+    if (!prefs) return;
     
-    config_destroy(config_p);
-    
+    config_destroy(&prefs->config);
+    free(prefs->prefsPath);
+
     free(*preferences_p);
     *preferences_p = NULL;
 }
