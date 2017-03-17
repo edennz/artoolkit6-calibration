@@ -269,7 +269,7 @@
 		4A9142DB1DF6466A00DF4FEE /* videoio.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = videoio.hpp; sourceTree = "<group>"; };
 		4A9142DC1DF6466A00DF4FEE /* videoio_c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = videoio_c.h; sourceTree = "<group>"; };
 		4A9142DD1DF6466A00DF4FEE /* videoio.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = videoio.hpp; sourceTree = "<group>"; };
-		4A91434C1DF6477A00DF4FEE /* AR6.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AR6.framework; path = ../../../../artoolkit6/SDK/Frameworks/AR6.framework; sourceTree = "<group>"; };
+		4A91434C1DF6477A00DF4FEE /* AR6.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AR6.framework; sourceTree = "<group>"; };
 		4A9143511DF6660700DF4FEE /* flow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = flow.h; path = ../flow.h; sourceTree = "<group>"; };
 		4A9143521DF6660700DF4FEE /* flow.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = flow.c; path = ../flow.c; sourceTree = "<group>"; };
 		4A9143551DF666E200DF4FEE /* Eden.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Eden.h; sourceTree = "<group>"; };
