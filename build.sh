@@ -109,7 +109,7 @@ if [ $BUILD_MACOS ] ; then
     SDK_FILENAME="ARToolKit for macOS v${SDK_VERSION}.dmg"
     curl -f -o "${SDK_FILENAME}" "${SDK_URL_DIR}$(rawurlencode "${SDK_FILENAME}")"
     hdiutil attach "${SDK_FILENAME}" -noautoopen -quiet -mountpoint "SDK"
-    cp -prf SDK/artoolkit6/SDK/Frameworks/AR6.framework depends/macOS/Frameworks
+    cp -af SDK/artoolkit6/SDK/Frameworks/AR6.framework depends/macOS/Frameworks
     hdiutil detach "SDK" -quiet -force
     
     (cd macOS
