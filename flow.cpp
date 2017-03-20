@@ -68,7 +68,7 @@ static bool gStop;
 unsigned char statusBarMessage[STATUS_BAR_MESSAGE_BUFFER_LEN] = "";
 
 // Calibration inputs.
-static int gFlowCalibImageNum = 0;
+static Calibration *gFlowCalib = nullptr;
 
 
 //
@@ -76,19 +76,20 @@ static int gFlowCalibImageNum = 0;
 //
 
 static void *flowThread(void *arg);
+static void flowSetEventMask(const EVENT_t eventMask);
 
 //
 // Functions.
 //
 
-bool flowInitAndStart(const int calibImageNum)
+bool flowInitAndStart(Calibration *calib)
 {
 	 pthread_mutex_init(&gStateLock, NULL);
 	 pthread_mutex_init(&gEventLock, NULL);
 	 pthread_cond_init(&gEventCond, NULL);
 
      // Calibration inputs.
-     gFlowCalibImageNum = calibImageNum;
+     gFlowCalib = calib;
 
 	 gStop = false;
 	 pthread_create(&gThread, NULL, flowThread, NULL);
@@ -120,6 +121,8 @@ bool flowStopAndFinal()
 	ARLOGi("  done. Exit status was %d.\n", *(int *)(exit_status_p)); // Contents of gThreadExitStatus.
 #  endif
 #endif
+    
+    gFlowCalib = nullptr;
 
 	// Clean up.
 	pthread_mutex_destroy(&gStateLock);
@@ -208,7 +211,6 @@ static void flowThreadCleanup(void *arg)
 
 static void *flowThread(void *arg)
 {
-	int  capturedImageNum;
 	bool captureDoneSinceBackButtonLastPressed;
 	EVENT_t event;
 	// TYPE* TYPE_INSTANCE = (TYPE *)arg; // Cast the thread start arg to the correct type.
@@ -224,11 +226,11 @@ static void *flowThread(void *arg)
 	while (!gStop) {
 
 		if (flowStateGet() == FLOW_STATE_WELCOME) {
-			EdenMessageShow((const unsigned char *)"Welcome to ARToolKit Camera Calibrator\n(c)2015 DAQRI LLC.\n\nPress 'space' to begin a calibration run.\n\nPress 'p' for settings and help.");
+			EdenMessageShow((const unsigned char *)"Welcome to ARToolKit Camera Calibrator\n(c)2017 DAQRI LLC.\n\nPress 'space' to begin a calibration run.\n\nPress 'p' for settings and help.");
 		} else {
 			EdenMessageShow((const unsigned char *)"Press 'space' to begin a calibration run.\n\nPress 'p' for settings and help.");
 		}
-		flowSetEventMask(EVENT_TOUCH | EVENT_MODAL);
+		flowSetEventMask((EVENT_t)(EVENT_TOUCH | EVENT_MODAL));
 		event = flowWaitForEvent();
 		if (gStop) break;
         
@@ -241,38 +243,37 @@ static void *flowThread(void *arg)
         }
 
 		// Start capturing.
-		capturedImageNum = 0;
 		captureDoneSinceBackButtonLastPressed = false;
 		flowStateSet(FLOW_STATE_CAPTURING);
-		flowSetEventMask(EVENT_TOUCH|EVENT_BACK_BUTTON);
+		flowSetEventMask((EVENT_t)(EVENT_TOUCH|EVENT_BACK_BUTTON));
 
 		do {
-			snprintf((char *)statusBarMessage, STATUS_BAR_MESSAGE_BUFFER_LEN, "Capturing image %d/%d", capturedImageNum + 1, gFlowCalibImageNum);
+			snprintf((char *)statusBarMessage, STATUS_BAR_MESSAGE_BUFFER_LEN, "Capturing image %d/%d", gFlowCalib->calibImageCount(), gFlowCalib->calibImageCountMax());
 			event = flowWaitForEvent();
 			if (gStop) break;
 			if (event == EVENT_TOUCH) {
 
-				if (capture(capturedImageNum)) {
-			    	capturedImageNum++;
+				if (gFlowCalib->capture()) {
 			    	captureDoneSinceBackButtonLastPressed = true;
 				}
 
 			} else if (event == EVENT_BACK_BUTTON) {
 
 				if (!captureDoneSinceBackButtonLastPressed) {
-					capturedImageNum = -1;
+                    while (gFlowCalib->calibImageCount() > 0) gFlowCalib->uncapture();
+                    break;
 				} else {
-					capturedImageNum--;
+					gFlowCalib->uncapture();
 				}
 				captureDoneSinceBackButtonLastPressed = false;
 			}
 
-		} while (capturedImageNum >= 0 && capturedImageNum < gFlowCalibImageNum);
+		} while (gFlowCalib->calibImageCount() < gFlowCalib->calibImageCountMax());
 
 		// Clear status bar.
 		statusBarMessage[0] = '\0';
 
-		if (capturedImageNum < gFlowCalibImageNum) {
+		if (gFlowCalib->calibImageCount() < gFlowCalib->calibImageCountMax()) {
 
 			flowSetEventMask(EVENT_TOUCH);
             flowStateSet(FLOW_STATE_DONE);
@@ -288,7 +289,7 @@ static void *flowThread(void *arg)
 			flowSetEventMask(EVENT_NONE);
 			flowStateSet(FLOW_STATE_CALIBRATING);
 			EdenMessageShow((const unsigned char *)"Calculating camera parameters...");
-			calib(&param, &err_min, &err_avg, &err_max);
+			gFlowCalib->calib(&param, &err_min, &err_avg, &err_max);
     		EdenMessageHide();
 
             saveParam(&param, err_min, err_avg, err_max);

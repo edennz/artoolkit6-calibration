@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4A0720F91E6637FE00084FB6 /* PrefsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4A0720F81E6637FE00084FB6 /* PrefsWindow.xib */; };
+		4A47933D1E7F676E002C3631 /* Calibration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A47933B1E7F676E002C3631 /* Calibration.cpp */; };
 		4A5FA0B41DFE138D00795630 /* readtex.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0B31DFE138D00795630 /* readtex.c */; };
 		4A5FA0B71DFE13B300795630 /* EdenMessage.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0B61DFE13B300795630 /* EdenMessage.c */; };
 		4A5FA0BB1DFE140000795630 /* EdenTime.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0BA1DFE140000795630 /* EdenTime.c */; };
@@ -21,7 +22,7 @@
 		4A91421B1DF645A900DF4FEE /* calc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A9142161DF645A900DF4FEE /* calc.cpp */; };
 		4A91421C1DF645A900DF4FEE /* calib_camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A9142181DF645A900DF4FEE /* calib_camera.cpp */; };
 		4A91421D1DF645A900DF4FEE /* fileUploader.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9142191DF645A900DF4FEE /* fileUploader.c */; };
-		4A9143531DF6660700DF4FEE /* flow.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143521DF6660700DF4FEE /* flow.c */; };
+		4A9143531DF6660700DF4FEE /* flow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143521DF6660700DF4FEE /* flow.cpp */; };
 		4A91436B1DF666E200DF4FEE /* EdenGLFont.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143561DF666E200DF4FEE /* EdenGLFont.c */; };
 		4A91436C1DF666E200DF4FEE /* EdenSurfaces.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143581DF666E200DF4FEE /* EdenSurfaces.c */; };
 		4A91436D1DF666E200DF4FEE /* glut_8x13.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A91435B1DF666E200DF4FEE /* glut_8x13.c */; };
@@ -77,6 +78,8 @@
 		4A0720F81E6637FE00084FB6 /* PrefsWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PrefsWindow.xib; sourceTree = "<group>"; };
 		4A0720FA1E663EBA00084FB6 /* PrefsWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrefsWindowController.h; sourceTree = "<group>"; };
 		4A0720FB1E663EBA00084FB6 /* PrefsWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrefsWindowController.m; sourceTree = "<group>"; };
+		4A47933B1E7F676E002C3631 /* Calibration.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Calibration.cpp; path = ../Calibration.cpp; sourceTree = "<group>"; };
+		4A47933C1E7F676E002C3631 /* Calibration.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Calibration.hpp; path = ../Calibration.hpp; sourceTree = "<group>"; };
 		4A5FA0B31DFE138D00795630 /* readtex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = readtex.c; sourceTree = "<group>"; };
 		4A5FA0B51DFE139F00795630 /* readtex.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = readtex.h; sourceTree = "<group>"; };
 		4A5FA0B61DFE13B300795630 /* EdenMessage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EdenMessage.c; sourceTree = "<group>"; };
@@ -271,7 +274,7 @@
 		4A9142DD1DF6466A00DF4FEE /* videoio.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = videoio.hpp; sourceTree = "<group>"; };
 		4A91434C1DF6477A00DF4FEE /* AR6.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AR6.framework; sourceTree = "<group>"; };
 		4A9143511DF6660700DF4FEE /* flow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = flow.h; path = ../flow.h; sourceTree = "<group>"; };
-		4A9143521DF6660700DF4FEE /* flow.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = flow.c; path = ../flow.c; sourceTree = "<group>"; };
+		4A9143521DF6660700DF4FEE /* flow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = flow.cpp; path = ../flow.cpp; sourceTree = "<group>"; };
 		4A9143551DF666E200DF4FEE /* Eden.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Eden.h; sourceTree = "<group>"; };
 		4A9143561DF666E200DF4FEE /* EdenGLFont.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EdenGLFont.c; sourceTree = "<group>"; };
 		4A9143571DF666E200DF4FEE /* EdenMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EdenMessage.h; sourceTree = "<group>"; };
@@ -358,12 +361,14 @@
 			children = (
 				4A5FA0BF1DFE160500795630 /* calib_camera.h */,
 				4A9142181DF645A900DF4FEE /* calib_camera.cpp */,
+				4A47933C1E7F676E002C3631 /* Calibration.hpp */,
+				4A47933B1E7F676E002C3631 /* Calibration.cpp */,
 				4A9142171DF645A900DF4FEE /* calc.h */,
 				4A9142161DF645A900DF4FEE /* calc.cpp */,
 				4A91421A1DF645A900DF4FEE /* fileUploader.h */,
 				4A9142191DF645A900DF4FEE /* fileUploader.c */,
 				4A9143511DF6660700DF4FEE /* flow.h */,
-				4A9143521DF6660700DF4FEE /* flow.c */,
+				4A9143521DF6660700DF4FEE /* flow.cpp */,
 				4AB6B1861E68B7C60034F03C /* prefs.h */,
 				4AB6B1871E68B89C0034F03C /* prefsNull.c */,
 				4A6223CF1E6CFBA8002F0096 /* prefsLibConfig.c */,
@@ -885,7 +890,7 @@
 				4A9143731DF666E200DF4FEE /* glut_hel18.c in Sources */,
 				4A91436F1DF666E200DF4FEE /* glut_bitmap.c in Sources */,
 				4AEC04B21DFF6FB8008678C3 /* glStateCache.c in Sources */,
-				4A9143531DF6660700DF4FEE /* flow.c in Sources */,
+				4A9143531DF6660700DF4FEE /* flow.cpp in Sources */,
 				4A5FA0B71DFE13B300795630 /* EdenMessage.c in Sources */,
 				4A9143791DF666E200DF4FEE /* glut_tr24.c in Sources */,
 				4A5FA0BD1DFE155D00795630 /* EdenUtil.c in Sources */,
@@ -900,6 +905,7 @@
 				4A9143771DF666E200DF4FEE /* glut_swidth.c in Sources */,
 				4A9143761DF666E200DF4FEE /* glut_stroke.c in Sources */,
 				4A91421D1DF645A900DF4FEE /* fileUploader.c in Sources */,
+				4A47933D1E7F676E002C3631 /* Calibration.cpp in Sources */,
 				4A5FA0B41DFE138D00795630 /* readtex.c in Sources */,
 				4A91436E1DF666E200DF4FEE /* glut_9x15.c in Sources */,
 				4A91436D1DF666E200DF4FEE /* glut_8x13.c in Sources */,

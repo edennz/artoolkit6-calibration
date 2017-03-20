@@ -1,6 +1,6 @@
 /*
  *  flow.h
- *  ARToolKit5
+ *  ARToolKit6
  *
  *  This file is part of ARToolKit.
  *
@@ -28,21 +28,16 @@
  *  are not obligated to do so. If you do not wish to do so, delete this exception
  *  statement from your version.
  *
- *  Copyright 2015 Daqri LLC. All Rights Reserved.
+ *  Copyright 2015-2017 Daqri LLC. All Rights Reserved.
  *  Copyright 2013-2015 ARToolworks, Inc. All Rights Reserved.
  *
  *  Author(s): Philip Lamb
  *
  */
 
-#ifndef FLOW_H
-#define FLOW_H
+#pragma once
 
-#include <stdbool.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "Calibration.hpp"
 
 extern unsigned char statusBarMessage[];
 
@@ -61,16 +56,10 @@ typedef enum {
     EVENT_MODAL = 4
 } EVENT_t;
 
-bool flowInitAndStart(const int calibImageNum);
+bool flowInitAndStart(Calibration *calib);
 
 FLOW_STATE flowStateGet();
 
 bool flowHandleEvent(const EVENT_t event);
 
 bool flowStopAndFinal();
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // FLOW_H

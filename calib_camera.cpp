@@ -57,7 +57,6 @@
 #  include <GL/gl.h>
 #endif
 #include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/imgproc/imgproc_c.h>
 #include <AR6/AR/ar.h>
 //#include <AR6/ARVideo/video.h>
 #include <AR6/ARVideoSource.h>
@@ -68,6 +67,7 @@
 #include <AR6/ARG/arg.h>
 
 #include "fileUploader.h"
+#include "Calibration.hpp"
 #include "calc.h"
 #include "flow.h"
 #include "Eden/EdenMessage.h"
@@ -82,16 +82,6 @@
 //	Types
 // ============================================================================
 
-typedef struct {
-    ARUint8*             videoFrame;
-    IplImage            *calibImage;
-    int                  chessboardCornerNumX;
-    int                  chessboardCornerNumY;
-    int                  cornerFlag ;
-    int                  cornerCount;
-    CvPoint2D32f        *corners;
-} CORNER_FINDER_DATA_T;
-
 // ============================================================================
 //	Constants
 // ============================================================================
@@ -102,11 +92,6 @@ typedef struct {
 #define      CALIB_IMAGE_NUM               10
 #define      SAVE_FILENAME                 "camera_para.dat"
 
-// Data upload.
-#define QUEUE_DIR "queue"
-#define QUEUE_INDEX_FILE_EXTENSION "upload"
-#define UPLOAD_POST_URL "https://omega.artoolworks.com/app/calib_camera/upload.php"
-#define UPLOAD_STATUS_HIDE_AFTER_SECONDS 9.0f
 
 #ifdef __APPLE__
 #  include <CommonCrypto/CommonDigest.h>
@@ -128,25 +113,24 @@ unsigned char *MD5(const unsigned char *d, size_t n, unsigned char *md);
 #  endif
 #endif
 
-// Until we implement nonce-based hashing, use of the plain md5 of the shared secret is vulnerable to replay attack.
-// The shared secret itself needs to be hidden in the binary.
-#define SHARED_SECRET "com.artoolworks.utils.calib_camera.116D5A95-E17B-266E-39E4-E5DED6C07C53" // SHARED_SECRET_MD5 = {0x32, 0x57, 0x5a, 0x6f, 0x69, 0xa4, 0x11, 0x5a, 0x25, 0x49, 0xae, 0x55, 0x6b, 0xd2, 0x2a, 0xda}
+// Data upload.
+#define CALIBRATION_SERVER_UPLOAD_URL_DEFAULT "https://omega.artoolworks.com/app/calib_camera/upload.php"
+// Until we implement nonce-based hashing, use of the plain md5 of the calibration server authentication token is vulnerable to replay attack.
+// The calibration server authentication token itself needs to be hidden in the binary.
+#define CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT "com.artoolworks.utils.calib_camera.116D5A95-E17B-266E-39E4-E5DED6C07C53" // MD5 = {0x32, 0x57, 0x5a, 0x6f, 0x69, 0xa4, 0x11, 0x5a, 0x25, 0x49, 0xae, 0x55, 0x6b, 0xd2, 0x2a, 0xda}
 
 #define FONT_SIZE 18.0f
+#define UPLOAD_STATUS_HIDE_AFTER_SECONDS 9.0f
 
 // ============================================================================
 //	Global variables.
 // ============================================================================
 
-//
-// Calibration.
-//
-
 // Prefs.
-static int                  gChessboardCornerNumX = 0;
-static int                  gChessboardCornerNumY = 0;
-static int                  gCalibImageNum = 0;
-static float                gChessboardSquareWidth = 0.0f;
+static int gPreferencesCalibImageCountMax = 0;
+static int gPreferencesChessboardCornerNumX = 0;
+static int gPreferencesChessboardCornerNumY = 0;
+static float gPreferencesChessboardSquareWidth = 0.0f;
 
 static void *gPreferences = NULL;
 Uint32 gSDLEventPreferencesChanged = 0;
@@ -155,15 +139,11 @@ static char *gPreferenceCameraResolutionToken = NULL;
 static char *gCalibrationServerUploadURL = NULL;
 static char *gCalibrationServerAuthenticationToken = NULL;
 
-static bool                 gCameraIsFrontFacing = false;
+//
+// Calibration.
+//
 
-static THREAD_HANDLE_T     *cornerFinderThread = NULL;
-
-// Calibration inputs.
-static CvPoint2D32f        *gCornerSet = NULL;
-//static int                  gVideoWidth = 0;
-//static int                  gVideoHeight = 0;
-
+static Calibration *gCalibration = nullptr;
 
 //
 // Data upload.
@@ -176,6 +156,7 @@ FILE_UPLOAD_HANDLE_t *fileUploadHandle = NULL;
 static ARVideoSource *vs = nullptr;
 static ARView *vv = nullptr;
 static bool gPostVideoSetupDone = false;
+static bool gCameraIsFrontFacing = false;
 
 // Marker detection.
 static long            gCallCountMarkerDetect = 0;
@@ -199,39 +180,16 @@ static struct timeval gStartTime;
 //
 
 // Corner finder results copy, for display to user.
-static ARGL_CONTEXT_SETTINGS_REF gArglSettingsCornerFinderImage = NULL;;
-static ARUint8*             gCornerFinderImage = NULL;; // The image to which gCorners apply.
-static pthread_mutex_t      gCornerFinderResultLock;
-static int                  gCornerFlag = 0;
-static int                  gCornerCount = 0;
-static CvPoint2D32f        *gCorners = NULL;
+static ARGL_CONTEXT_SETTINGS_REF gArglSettingsCornerFinderImage = NULL;
 
 // ============================================================================
 //	Function prototypes
 // ============================================================================
 
 static void stop(void);
-static void *cornerFinder(THREAD_HANDLE_T *threadHandle);
 static void quit(int rc);
 static void reshape(int w, int h);
 static void drawView(void);
-
-
-
-
-
-
-//AR_PIXEL_FORMAT      pixFormat;
-//int                  xsize;
-//int                  ysize;
-//ARUint8             *imageLumaCopy        = NULL;
-//IplImage            *calibImage           = NULL;
-//int                  chessboardCornerNumX = 0;
-//int                  chessboardCornerNumY = 0;
-//int                  calibImageNum        = 0;
-//int                  capturedImageNum     = 0;
-//float                patternWidth         = 0.0f;
-//int                  cornerFlag           = 0;
 
 static void          init(int argc, char *argv[]);
 static void          usage(char *com);
@@ -269,9 +227,9 @@ int main(int argc, char *argv[])
     gPreferenceCameraOpenToken = getPreferenceCameraOpenToken(gPreferences);
     gPreferenceCameraResolutionToken = getPreferenceCameraResolutionToken(gPreferences);
     gCalibrationServerUploadURL = getPreferenceCalibrationServerUploadURL(gPreferences);
-    if (!gCalibrationServerUploadURL) gCalibrationServerUploadURL = strdup(UPLOAD_POST_URL);
+    if (!gCalibrationServerUploadURL) gCalibrationServerUploadURL = strdup(CALIBRATION_SERVER_UPLOAD_URL_DEFAULT);
     gCalibrationServerAuthenticationToken = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
-    if (!gCalibrationServerAuthenticationToken) gCalibrationServerAuthenticationToken = strdup(SHARED_SECRET);
+    if (!gCalibrationServerAuthenticationToken) gCalibrationServerAuthenticationToken = strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT);
     gSDLEventPreferencesChanged = SDL_RegisterEvents(1);
     
     // Initialize SDL.
@@ -322,17 +280,14 @@ int main(int argc, char *argv[])
     fileUploaderTickle(fileUploadHandle);
     
     // Calibration prefs.
-    if( gChessboardCornerNumX == 0 ) gChessboardCornerNumX = CHESSBOARD_CORNER_NUM_X;
-    if( gChessboardCornerNumY == 0 ) gChessboardCornerNumY = CHESSBOARD_CORNER_NUM_Y;
-    if( gCalibImageNum == 0 )        gCalibImageNum = CALIB_IMAGE_NUM;
-    if( gChessboardSquareWidth == 0.0f )       gChessboardSquareWidth = (float)CHESSBOARD_PATTERN_WIDTH;
-    ARLOGi("CHESSBOARD_CORNER_NUM_X = %d\n", gChessboardCornerNumX);
-    ARLOGi("CHESSBOARD_CORNER_NUM_Y = %d\n", gChessboardCornerNumY);
-    ARLOGi("CHESSBOARD_PATTERN_WIDTH = %f\n", gChessboardSquareWidth);
-    ARLOGi("CALIB_IMAGE_NUM = %d\n", gCalibImageNum);
-    
-    // Calibration inputs.
-    arMalloc(gCornerSet, CvPoint2D32f, gChessboardCornerNumX*gChessboardCornerNumY*gCalibImageNum);
+    if( gPreferencesChessboardCornerNumX == 0 ) gPreferencesChessboardCornerNumX = CHESSBOARD_CORNER_NUM_X;
+    if( gPreferencesChessboardCornerNumY == 0 ) gPreferencesChessboardCornerNumY = CHESSBOARD_CORNER_NUM_Y;
+    if( gPreferencesCalibImageCountMax == 0 )        gPreferencesCalibImageCountMax = CALIB_IMAGE_NUM;
+    if( gPreferencesChessboardSquareWidth == 0.0f )       gPreferencesChessboardSquareWidth = (float)CHESSBOARD_PATTERN_WIDTH;
+    ARLOGi("CHESSBOARD_CORNER_NUM_X = %d\n", gPreferencesChessboardCornerNumX);
+    ARLOGi("CHESSBOARD_CORNER_NUM_Y = %d\n", gPreferencesChessboardCornerNumY);
+    ARLOGi("CHESSBOARD_PATTERN_WIDTH = %f\n", gPreferencesChessboardSquareWidth);
+    ARLOGi("CALIB_IMAGE_NUM = %d\n", gPreferencesCalibImageCountMax);
     
     // Library setup.
     int contextsActiveCount = 1;
@@ -493,27 +448,13 @@ int main(int argc, char *argv[])
                     // Calibration init.
                     //
                     
-                    //
-                    // Corner finder inputs and outputs.
-                    //
-                    CORNER_FINDER_DATA_T* cornerFinderDataPtr;
-                    arMallocClear(cornerFinderDataPtr, CORNER_FINDER_DATA_T, 1);
-                    cornerFinderDataPtr->chessboardCornerNumX = gChessboardCornerNumX;
-                    cornerFinderDataPtr->chessboardCornerNumY = gChessboardCornerNumY;
-                    arMalloc(cornerFinderDataPtr->corners, CvPoint2D32f, cornerFinderDataPtr->chessboardCornerNumX * cornerFinderDataPtr->chessboardCornerNumY);
-                    arMalloc(cornerFinderDataPtr->videoFrame, ARUint8, vs->getVideoWidth()*vs->getVideoHeight());
-                    cornerFinderDataPtr->calibImage = cvCreateImageHeader(cvSize(vs->getVideoWidth(), vs->getVideoHeight()), IPL_DEPTH_8U, 1);
-                    cvSetData(cornerFinderDataPtr->calibImage, cornerFinderDataPtr->videoFrame, vs->getVideoWidth()); // Last parameter is rowBytes.
+                    gCalibration = new Calibration;
+                    if (!gCalibration->init(gPreferencesCalibImageCountMax, gPreferencesChessboardCornerNumX, gPreferencesChessboardCornerNumY, gPreferencesChessboardSquareWidth, vs->getVideoWidth(), vs->getVideoHeight())) {
+                        ARLOGe("Error initialising calibration.\n");
+                        exit (-1);
+                    }
                     
-                    // Spawn the corner finder worker thread.
-                    cornerFinderThread = threadInit(0, (void*)(cornerFinderDataPtr), cornerFinder);
-                    
-                    // Corner finder results copy, for display to user.
-                    arMalloc(gCorners, CvPoint2D32f, gChessboardCornerNumX*gChessboardCornerNumY);
-                    arMalloc(gCornerFinderImage, ARUint8, vs->getVideoWidth()*vs->getVideoHeight());
-                    pthread_mutex_init(&gCornerFinderResultLock, NULL);
-                    
-                    if (!flowInitAndStart(gCalibImageNum)) {
+                    if (!flowInitAndStart(gCalibration)) {
                         ARLOGe("Error: Could not initialise and start flow.\n");
                         quit(-1);
                     }
@@ -537,46 +478,9 @@ int main(int argc, char *argv[])
                     // Now done as part of the draw call.
                     
                 } else if (state == FLOW_STATE_CAPTURING) {
-                    //
-                    // Start of main calibration-related cycle.
-                    //
                     
-                    // First, see if an image has been completely processed.
-                    if (threadGetStatus(cornerFinderThread)) {
-                        threadEndWait(cornerFinderThread); // We know from status above that worker has already finished, so this just resets it.
-                        ARLOGd("processFrame: corner find DONE.\n");
-                        
-                        // Copy the results.
-                        pthread_mutex_lock(&gCornerFinderResultLock); // Results are also read by GL thread, so need to lock before modifying.
-                        CORNER_FINDER_DATA_T *cornerFinderData = (CORNER_FINDER_DATA_T *)threadGetArg(cornerFinderThread);
-                        gCornerFlag = cornerFinderData->cornerFlag;
-                        gCornerCount = cornerFinderData->cornerCount;
-                        for (int i = 0; i < cornerFinderData->chessboardCornerNumX*cornerFinderData->chessboardCornerNumY; i++) gCorners[i] = cornerFinderData->corners[i];
-                        memcpy(gCornerFinderImage, cornerFinderData->videoFrame, vs->getVideoWidth()*vs->getVideoHeight()); // For the visual overlay of corner locations to be accurate, we need a copy of the image in which they were found.
-                        arglPixelBufferDataUpload(gArglSettingsCornerFinderImage, gCornerFinderImage);
-                        pthread_mutex_unlock(&gCornerFinderResultLock);
-                    }
-                    
-                    // If corner finder worker thread is ready and waiting, submit the new image.
-                    if (!threadGetBusyStatus(cornerFinderThread)) {
-                        // As corner finding takes longer than a single frame capture, we need to copy the incoming image
-                        // so that OpenCV has exclusive use of it. We copy into cornerFinderData->videoFrame which provides
-                        // the backing for calibImage.
-                        AR2VideoBufferT *buff = vs->checkoutFrameIfNewerThan({0,0});
-                        if (buff) {
-                            CORNER_FINDER_DATA_T *cornerFinderData = (CORNER_FINDER_DATA_T *)threadGetArg(cornerFinderThread);
-                            memcpy(cornerFinderData->videoFrame, buff->buffLuma, vs->getVideoWidth()*vs->getVideoHeight());
-                            vs->checkinFrame();
-                            
-                            // Kick off a new cycle of the cornerFinder. The results will be collected on a subsequent cycle.
-                            ARLOGd("processFrame: corner find GO\n");
-                            threadStartSignal(cornerFinderThread);
-                        }
-                    }
-                    
-                    //
-                    // End of main calibration-related cycle.
-                    //
+                    gCalibration->frame(vs);
+
                 }
                 
                 // The display has changed.
@@ -603,83 +507,12 @@ void reshape(int w, int h)
     contextWasUpdated = true;
 }
 
-bool cornerFinderResultsLockAndFetchCornerFlag(int *cornerFlag, int *cornerCount, CvPoint2D32f **corners)
-{
-    pthread_mutex_lock(&gCornerFinderResultLock);
-    *cornerFlag = gCornerFlag;
-    *cornerCount = gCornerCount;
-    *corners = gCorners;
-    return true;
-}
-
-bool cornerFinderResultsUnlock(void)
-{
-    pthread_mutex_unlock(&gCornerFinderResultLock);
-    return true;
-}
-
-// Worker thread.
-static void *cornerFinder(THREAD_HANDLE_T *threadHandle)
-{
-#ifdef DEBUG
-    ARLOGi("Start cornerFinder thread.\n");
-#endif
-    
-    CORNER_FINDER_DATA_T  *cornerFinderDataPtr = (CORNER_FINDER_DATA_T *)threadGetArg(threadHandle);
-    
-    while (threadStartWait(threadHandle) == 0) {
-        
-        cornerFinderDataPtr->cornerFlag = cvFindChessboardCorners(cornerFinderDataPtr->calibImage,
-                                                                  cvSize(cornerFinderDataPtr->chessboardCornerNumY, cornerFinderDataPtr->chessboardCornerNumX),
-                                                                  cornerFinderDataPtr->corners,
-                                                                  &(cornerFinderDataPtr->cornerCount),
-                                                                  CV_CALIB_CB_FAST_CHECK|CV_CALIB_CB_ADAPTIVE_THRESH|CV_CALIB_CB_FILTER_QUADS);
-        threadEndSignal(threadHandle);
-    }
-    
-#ifdef DEBUG
-    ARLOGi("End cornerFinder thread.\n");
-#endif
-    return (NULL);
-}
-
 static void stop(void)
 {
     // Stop calibration flow.
     flowStopAndFinal();
     
-    // Clean up results copy.
-    // Free space for results.
-    if (gCorners) {
-        free(gCorners);
-        gCorners = NULL;
-    }
-    gCornerCount = 0;
-    gCornerFlag = 0;
-    if (gCornerFinderImage) {
-        free(gCornerFinderImage);
-        gCornerFinderImage = NULL;
-    }
-    pthread_mutex_destroy(&gCornerFinderResultLock);
-    
-    // Clean up the corner finder.
-    if (cornerFinderThread) {
-        
-        threadWaitQuit(cornerFinderThread);
-        CORNER_FINDER_DATA_T *cornerFinderData = (CORNER_FINDER_DATA_T *)threadGetArg(cornerFinderThread);
-        
-        if (cornerFinderData->calibImage) cvReleaseImageHeader(&(cornerFinderData->calibImage));
-        free(cornerFinderData->videoFrame);
-        
-        // Free space for results.
-        if (cornerFinderData->corners) {
-            free(cornerFinderData->corners);
-            cornerFinderData->corners = NULL;
-        }
-        cornerFinderData->cornerCount = 0;
-        cornerFinderData->cornerFlag = 0;
-        threadFree(&cornerFinderThread);
-    }
+    delete gCalibration;
     
     if (gArglSettingsCornerFinderImage) {
         arglCleanup(gArglSettingsCornerFinderImage); // Clean up any left-over ARGL data.
@@ -691,11 +524,6 @@ static void stop(void)
 
 static void quit(int rc)
 {
-    
-    // Calibration input cleanup.
-    free(gCornerSet);
-    gCornerSet = NULL;
-    
     fileUploaderFinal(&fileUploadHandle);
     
     SDL_Quit();
@@ -787,45 +615,6 @@ static void init(int argc, char *argv[])
     ARLOG("CALIB_IMAGE_NUM = %d\n", calibImageNum);
     ARLOG("Video parameter: %s\n", vconf);
     
-    if (!(gVid = ar2VideoOpen(vconf))) exit(0);
-    if (ar2VideoGetSize(gVid, &xsize, &ysize) < 0) exit(0);
-    ARLOG("Image size (x,y) = (%d,%d)\n", xsize, ysize);
-    if ((pixFormat = ar2VideoGetPixelFormat(gVid)) == AR_PIXEL_FORMAT_INVALID) exit(0);
-    
-    screenWidth = glutGet(GLUT_SCREEN_WIDTH);
-    screenHeight = glutGet(GLUT_SCREEN_HEIGHT);
-    if (screenWidth > 0 && screenHeight > 0) {
-        screenMargin = (int)(MAX(screenWidth, screenHeight) * SCREEN_SIZE_MARGIN);
-        if ((screenWidth - screenMargin) < xsize || (screenHeight - screenMargin) < ysize) {
-            viewport.xsize = screenWidth - screenMargin;
-            viewport.ysize = screenHeight - screenMargin;
-            ARLOG("Scaling window to fit onto %dx%d screen (with %2.0f%% margin).\n", screenWidth, screenHeight, SCREEN_SIZE_MARGIN*100.0);
-        } else {
-            viewport.xsize = xsize;
-            viewport.ysize = ysize;
-        }
-    } else {
-        viewport.xsize = xsize;
-        viewport.ysize = ysize;
-    }
-    viewport.sx = 0;
-    viewport.sy = 0;
-    if( (vp=argCreateViewport(&viewport)) == NULL ) exit(0);
-    argViewportSetImageSize( vp, xsize, ysize );
-    argViewportSetPixFormat( vp, pixFormat );
-    argViewportSetDispMethod( vp, AR_GL_DISP_METHOD_TEXTURE_MAPPING_FRAME );
-    argViewportSetDistortionMode( vp, AR_GL_DISTORTION_COMPENSATE_DISABLE );
-    argViewportSetDispMode(vp, AR_GL_DISP_MODE_FIT_TO_VIEWPORT_KEEP_ASPECT_RATIO);
-    
-    // Set up the grayscale image. We must always copy, since we need OpenCV to be able to wrap the memory.
-    arMalloc(imageLumaCopy, ARUint8, xsize*ysize);
-    calibImage = cvCreateImageHeader( cvSize(xsize, ysize), IPL_DEPTH_8U, 1);
-    cvSetData(calibImage, imageLumaCopy, xsize); // Last parameter is rowBytes.
-    
-    // Allocate space for results.
-    arMalloc(corners, CvPoint2D32f, chessboardCornerNumX*chessboardCornerNumY);
-    arMalloc(cornerSet, CvPoint2D32f, chessboardCornerNumX*chessboardCornerNumY*calibImageNum);
-}
 */
 
 static void drawBackground(const float width, const float height, const float x, const float y, const bool drawBorder)
@@ -940,12 +729,14 @@ void drawView(void)
     } else if (state == FLOW_STATE_CAPTURING) {
         
         // Grab a lock while we're using the data to prevent it being changed underneath us.
-        int cornerFlag;
+        int cornerFoundAllFlag;
         int cornerCount;
         CvPoint2D32f *corners;
-        cornerFinderResultsLockAndFetchCornerFlag(&cornerFlag, &cornerCount, &corners);
+        ARUint8 *videoFrame;
+        gCalibration->cornerFinderResultsLockAndFetch(&cornerFoundAllFlag, &cornerCount, &corners, &videoFrame);
         
-        // Display the current frame
+        // Display the current frame.
+        arglPixelBufferDataUpload(gArglSettingsCornerFinderImage, videoFrame);
         arglDispImage(gArglSettingsCornerFinderImage, NULL);
         
         //
@@ -977,7 +768,7 @@ void drawView(void)
         glActiveTexture(GL_TEXTURE0);
         glDisable(GL_TEXTURE_2D);
         
-        if (cornerFlag) glColor4ub(255, 0, 0, 255);
+        if (cornerFoundAllFlag) glColor4ub(255, 0, 0, 255);
         else glColor4ub(0, 255, 0, 255);
         
         
@@ -1010,7 +801,7 @@ void drawView(void)
         }
         EdenGLFontSetSize(FONT_SIZE);
         
-        cornerFinderResultsUnlock();
+        gCalibration->cornerFinderResultsUnlock();
         
         if (vertexCount > 0) {
             glVertexPointer(2, GL_FLOAT, 0, vertices);
@@ -1091,47 +882,9 @@ void drawView(void)
     SDL_GL_SwapWindow(gSDLWindow);
 }
 
-extern "C" bool capture(const int capturedImageNum)
-{
-    CORNER_FINDER_DATA_T *cornerFinderDataPtr;
-    CvPoint2D32f   *p1, *p2;
-    int             i;
-    
-    cornerFinderDataPtr = (CORNER_FINDER_DATA_T *)threadGetArg(cornerFinderThread);
-    if( cornerFinderDataPtr->cornerFlag ) {
-        cvFindCornerSubPix( cornerFinderDataPtr->calibImage,
-                           cornerFinderDataPtr->corners,
-                           cornerFinderDataPtr->chessboardCornerNumX*cornerFinderDataPtr->chessboardCornerNumY,
-                           cvSize(5,5),
-                           cvSize(-1,-1),
-                           cvTermCriteria(CV_TERMCRIT_ITER, 100, 0.1)  );
-        
-        // Copy the corners.
-        p1 = cornerFinderDataPtr->corners;
-        p2 = &gCornerSet[capturedImageNum*gChessboardCornerNumX*gChessboardCornerNumY];
-        for( i = 0; i < gChessboardCornerNumX*gChessboardCornerNumY; i++ ) {
-            *(p2++) = *(p1++);
-        }
-        
-        ARLOG("---------- %2d/%2d -----------\n", capturedImageNum + 1, gCalibImageNum);
-        for (i = 0; i < gChessboardCornerNumX*gChessboardCornerNumY; i++) {
-            ARLOG("  %f, %f\n", gCornerSet[capturedImageNum*gChessboardCornerNumX*gChessboardCornerNumY + i].x, gCornerSet[capturedImageNum*gChessboardCornerNumX*gChessboardCornerNumY + i].y);
-        }
-        ARLOG("---------- %2d/%2d -----------\n", capturedImageNum + 1, gCalibImageNum);
-        
-        return (true);
-    } else {
-        return (false);
-    }
-}
-
-extern "C" void calib(ARParam *param_out, ARdouble *err_min_out, ARdouble *err_avg_out, ARdouble *err_max_out)
-{
-    calc(gCalibImageNum, gChessboardCornerNumX, gChessboardCornerNumY, gChessboardSquareWidth, gCornerSet, vs->getVideoWidth(), vs->getVideoHeight(), param_out, err_min_out, err_avg_out, err_max_out);
-}
 
 // Save parameters file and index file with info about it, then signal thread that it's ready for upload.
-extern "C" void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max)
+void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max)
 {
     int i;
 #define SAVEPARAM_PATHNAME_LEN 80
@@ -1288,7 +1041,7 @@ extern "C" void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_a
         
         // Hash the shared secret.
         if (goodWrite) {
-            char ss[] = SHARED_SECRET;
+            char ss[] = CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT;
             unsigned char ss_md5[MD5_DIGEST_LENGTH];
             char ss_ascii[MD5_DIGEST_LENGTH*2 + 1]; // space for null terminator.
             if (!MD5((unsigned char *)ss, (MD5_COUNT_t)strlen(ss), ss_md5)) {
@@ -1305,7 +1058,7 @@ extern "C" void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_a
         
         if (goodWrite) {
             // Rename the file with QUEUE_INDEX_FILE_EXTENSION file extension so it's picked up in uploader.
-            snprintf(indexUploadPathname, SAVEPARAM_PATHNAME_LEN, "%s.upload", indexPathname);
+            snprintf(indexUploadPathname, SAVEPARAM_PATHNAME_LEN, "%s." QUEUE_INDEX_FILE_EXTENSION, indexPathname);
             if (rename(indexPathname, indexUploadPathname) < 0) {
                 ARLOGe("Error renaming temporary file '%s'.\n", indexPathname);
                 goodWrite = false;
@@ -1328,6 +1081,5 @@ extern "C" void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_a
         }
     }
 }
-
 
 

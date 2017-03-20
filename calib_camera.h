@@ -42,17 +42,20 @@
 #include "fileUploader.h"
 #include <SDL2/SDL.h>
 
+// Data upload.
+#define QUEUE_DIR "queue"
+#define QUEUE_INDEX_FILE_EXTENSION "upload"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 extern FILE_UPLOAD_HANDLE_t *fileUploadHandle;
-extern bool capture(const int capturedImageNum);
-extern void calib(ARParam *param_out, ARdouble *err_min_out, ARdouble *err_avg_out, ARdouble *err_max_out);
-extern void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max);
+
+void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max);
 
 extern Uint32 gSDLEventPreferencesChanged;
+
 #ifdef __cplusplus
 }
 #endif
