@@ -50,8 +50,7 @@
 class Calibration
 {
 public:
-    //Calibration();
-    bool init(const int calibImageCountMax, const int chessboardCornerNumX, const int chessboardCornerNumY, const int chessboardSquareWidth, const int videoWidth, const int videoHeight);
+    Calibration(const int calibImageCountMax, const int chessboardCornerNumX, const int chessboardCornerNumY, const int chessboardSquareWidth, const int videoWidth, const int videoHeight);
     int calibImageCount() const {return m_calibImageCount; }
     int calibImageCountMax() const {return m_calibImageCountMax; }
     bool frame(ARVideoSource *vs);
@@ -64,29 +63,42 @@ public:
     
 private:
     
+    Calibration(const Calibration&) = delete;
+    Calibration& operator=(const Calibration&) = delete;
+    
+    // This function runs the heavy-duty corner finding process on a secondary thread. Must be static so it can be
+    // passed to threadInit().
     static void *cornerFinder(THREAD_HANDLE_T *threadHandle);
     
-    typedef struct {
-        ARUint8*             videoFrame;
-        IplImage            *calibImage;
+    // A class to encapsulate the inputs and outputs of a corner-finding run, and to allow for copying of the results
+    // of a completed run.
+    class CalibrationCornerFinderData {
+    public:
+        CalibrationCornerFinderData(const int chessboardCornerNumX_in, const int chessboardCornerNumY_in, const int videoWidth_in, const int videoHeight_in);
+        CalibrationCornerFinderData(const CalibrationCornerFinderData& orig);
+        const CalibrationCornerFinderData& operator=(const CalibrationCornerFinderData& orig);
+        ~CalibrationCornerFinderData();
         int                  chessboardCornerNumX;
         int                  chessboardCornerNumY;
+        int                  videoWidth;
+        int                  videoHeight;
+        uint8_t             *videoFrame;
+        IplImage            *calibImage;
         int                  cornerFoundAllFlag;
         int                  cornerCount;
         CvPoint2D32f        *corners;
-    } CORNER_FINDER_DATA_T;
+    private:
+        void init();
+        void copy(const CalibrationCornerFinderData& orig);
+        void dealloc();
+    };
     
-    // Corner finder.
-    THREAD_HANDLE_T     *gCornerFinderThread = NULL;
-    pthread_mutex_t      gCornerFinderResultLock;
-    int                  gCornerFinderOutputFoundAllFlag = 0;
-    int                  gCornerFinderOutputFoundCount = 0;
-    CvPoint2D32f        *gCornerFinderOutputCorners = NULL;
-    ARUint8*             gCornerFinderOutputImage = NULL; // The image to which gCornerFinderOutputCorners apply.
-    IplImage            *gCornerFinderOutputCVImage;
+    CalibrationCornerFinderData m_cornerFinderData; // Corner finder input and output.
+    THREAD_HANDLE_T     *m_cornerFinderThread = NULL;
+    pthread_mutex_t      m_cornerFinderResultLock;
+    CalibrationCornerFinderData m_cornerFinderResultData; // Corner finder results copy, for display to user.
     
-    // Calibration inputs.
-    CvPoint2D32f        *gCorners = NULL;
+    CvPoint2D32f        *m_corners = NULL; // Collected corner information which gets passed to the OpenCV calibration function.
     int                  m_calibImageCount;
     int                  m_calibImageCountMax;
     int                  m_chessboardCornerNumX;

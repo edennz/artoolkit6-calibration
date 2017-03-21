@@ -448,8 +448,8 @@ int main(int argc, char *argv[])
                     // Calibration init.
                     //
                     
-                    gCalibration = new Calibration;
-                    if (!gCalibration->init(gPreferencesCalibImageCountMax, gPreferencesChessboardCornerNumX, gPreferencesChessboardCornerNumY, gPreferencesChessboardSquareWidth, vs->getVideoWidth(), vs->getVideoHeight())) {
+                    gCalibration = new Calibration(gPreferencesCalibImageCountMax, gPreferencesChessboardCornerNumX, gPreferencesChessboardCornerNumY, gPreferencesChessboardSquareWidth, vs->getVideoWidth(), vs->getVideoHeight());
+                    if (!gCalibration) {
                         ARLOGe("Error initialising calibration.\n");
                         exit (-1);
                     }
@@ -736,7 +736,7 @@ void drawView(void)
         gCalibration->cornerFinderResultsLockAndFetch(&cornerFoundAllFlag, &cornerCount, &corners, &videoFrame);
         
         // Display the current frame.
-        arglPixelBufferDataUpload(gArglSettingsCornerFinderImage, videoFrame);
+        if (videoFrame) arglPixelBufferDataUpload(gArglSettingsCornerFinderImage, videoFrame);
         arglDispImage(gArglSettingsCornerFinderImage, NULL);
         
         //
