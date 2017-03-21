@@ -42,6 +42,8 @@ bool Calibration::init(const int calibImageCountMax, const int chessboardCornerN
     // Corner finder results copy, for display to user.
     arMalloc(gCornerFinderOutputCorners, CvPoint2D32f, chessboardCornerNumX*chessboardCornerNumY);
     arMalloc(gCornerFinderOutputImage, ARUint8, videoWidth*videoHeight);
+    gCornerFinderOutputCVImage = cvCreateImageHeader(cvSize(videoWidth, videoHeight), IPL_DEPTH_8U, 1);
+    cvSetData(gCornerFinderOutputCVImage, gCornerFinderOutputImage, videoWidth); // Last parameter is rowBytes.
     pthread_mutex_init(&gCornerFinderResultLock, NULL);
     
     return true;
@@ -134,7 +136,6 @@ void *Calibration::cornerFinder(THREAD_HANDLE_T *threadHandle)
 
 bool Calibration::capture()
 {
-    CORNER_FINDER_DATA_T *cornerFinderDataPtr;
     CvPoint2D32f   *p1, *p2;
     int             i;
     
@@ -145,7 +146,7 @@ bool Calibration::capture()
     pthread_mutex_lock(&gCornerFinderResultLock);
     if (gCornerFinderOutputFoundAllFlag) {
         // Refine the corner positions.
-        cvFindCornerSubPix(gCornerFinderOutputImage,
+        cvFindCornerSubPix(gCornerFinderOutputCVImage,
                            gCornerFinderOutputCorners,
                            m_chessboardCornerNumX*m_chessboardCornerNumY,
                            cvSize(5,5),
@@ -164,8 +165,8 @@ bool Calibration::capture()
 
     if (saved) {
         ARLOG("---------- %2d/%2d -----------\n", m_calibImageCount + 1, m_calibImageCountMax);
-        for (i = 0; i < cornerFinderDataPtr->chessboardCornerNumX*cornerFinderDataPtr->chessboardCornerNumY; i++) {
-            ARLOG("  %f, %f\n", gCorners[m_calibImageCount*cornerFinderDataPtr->chessboardCornerNumX*cornerFinderDataPtr->chessboardCornerNumY + i].x, gCorners[m_calibImageCount*cornerFinderDataPtr->chessboardCornerNumX*cornerFinderDataPtr->chessboardCornerNumY + i].y);
+        for (i = 0; i < m_chessboardCornerNumX*m_chessboardCornerNumY; i++) {
+            ARLOG("  %f, %f\n", gCorners[m_calibImageCount*m_chessboardCornerNumX*m_chessboardCornerNumY + i].x, gCorners[m_calibImageCount*m_chessboardCornerNumX*m_chessboardCornerNumY + i].y);
         }
         ARLOG("---------- %2d/%2d -----------\n", m_calibImageCount + 1, m_calibImageCountMax);
         
@@ -197,6 +198,7 @@ Calibration::~Calibration()
     }
     gCornerFinderOutputFoundCount = 0;
     gCornerFinderOutputFoundAllFlag = 0;
+    if (gCornerFinderOutputCVImage) cvReleaseImageHeader(&gCornerFinderOutputCVImage);
     if (gCornerFinderOutputImage) {
         free(gCornerFinderOutputImage);
         gCornerFinderOutputImage = NULL;

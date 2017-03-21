@@ -887,7 +887,7 @@ void drawView(void)
 void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max)
 {
     int i;
-#define SAVEPARAM_PATHNAME_LEN 80
+#define SAVEPARAM_PATHNAME_LEN MAXPATHLEN
     char indexPathname[SAVEPARAM_PATHNAME_LEN];
     char paramPathname[SAVEPARAM_PATHNAME_LEN];
     char indexUploadPathname[SAVEPARAM_PATHNAME_LEN];

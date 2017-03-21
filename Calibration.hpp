@@ -83,6 +83,7 @@ private:
     int                  gCornerFinderOutputFoundCount = 0;
     CvPoint2D32f        *gCornerFinderOutputCorners = NULL;
     ARUint8*             gCornerFinderOutputImage = NULL; // The image to which gCornerFinderOutputCorners apply.
+    IplImage            *gCornerFinderOutputCVImage;
     
     // Calibration inputs.
     CvPoint2D32f        *gCorners = NULL;
