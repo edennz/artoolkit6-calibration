@@ -1,10 +1,6 @@
 /*
  *  Calibration.hpp
- *  ARToolKit6
- *
- *  Camera calibration utility.
- *
- *  Run with "--help" parameter to see usage.
+ *  ARToolKit6 Camera Calibration Utility
  *
  *  This file is part of ARToolKit.
  *
@@ -32,7 +28,7 @@
  *  are not obligated to do so. If you do not wish to do so, delete this exception
  *  statement from your version.
  *
- *  Copyright 2015-2016 Daqri, LLC.
+ *  Copyright 2015-2017 Daqri, LLC.
  *  Copyright 2002-2015 ARToolworks, Inc.
  *
  *  Author(s): Hirokazu Kato, Philip Lamb

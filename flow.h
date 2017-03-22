@@ -41,6 +41,9 @@
 
 extern unsigned char statusBarMessage[];
 
+// Called when the flow has completed and generated a calibration.
+typedef void (*FLOW_CALLBACK_t)(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max, void *userdata);
+
 typedef enum {
 	FLOW_STATE_NOT_INITED = 0,
 	FLOW_STATE_WELCOME,
@@ -56,7 +59,7 @@ typedef enum {
     EVENT_MODAL = 4
 } EVENT_t;
 
-bool flowInitAndStart(Calibration *calib);
+bool flowInitAndStart(Calibration *calib, FLOW_CALLBACK_t callback, void *callback_userdata);
 
 FLOW_STATE flowStateGet();
 

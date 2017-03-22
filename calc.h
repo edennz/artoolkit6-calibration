@@ -28,7 +28,7 @@
  *  are not obligated to do so. If you do not wish to do so, delete this exception
  *  statement from your version.
  *
- *  Copyright 2015-2016 Daqri LLC. All Rights Reserved.
+ *  Copyright 2015-2017 Daqri LLC. All Rights Reserved.
  *  Copyright 2012-2015 ARToolworks, Inc. All Rights Reserved.
  *
  *  Author(s): Philip Lamb, Hirokazu Kato

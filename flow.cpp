@@ -1,6 +1,6 @@
 /*
- *  flow.c
- *  ARToolKit5
+ *  flow.cpp
+ *  ARToolKit6
  *
  *  This file is part of ARToolKit.
  *
@@ -28,7 +28,7 @@
  *  are not obligated to do so. If you do not wish to do so, delete this exception
  *  statement from your version.
  *
- *  Copyright 2015 Daqri LLC. All Rights Reserved.
+ *  Copyright 2015-2017 Daqri LLC. All Rights Reserved.
  *  Copyright 2013-2015 ARToolworks, Inc. All Rights Reserved.
  *
  *  Author(s): Philip Lamb
@@ -43,7 +43,6 @@
 #include <pthread.h>
 #include <Eden/EdenMessage.h>
 #include <AR6/AR/ar.h>
-#include "calib_camera.h"
 
 //
 // Globals.
@@ -59,6 +58,10 @@ static EVENT_t gEventMask = EVENT_NONE;
 static pthread_t gThread;
 static int gThreadExitStatus;
 static bool gStop;
+
+// Completion callback.
+static FLOW_CALLBACK_t gCallback = NULL;
+static void *gCallbackUserdata = NULL;
 
 // Logging macros
 #define  LOG_TAG    "flow"
@@ -82,21 +85,25 @@ static void flowSetEventMask(const EVENT_t eventMask);
 // Functions.
 //
 
-bool flowInitAndStart(Calibration *calib)
+bool flowInitAndStart(Calibration *calib, FLOW_CALLBACK_t callback, void *callback_userdata)
 {
-	 pthread_mutex_init(&gStateLock, NULL);
-	 pthread_mutex_init(&gEventLock, NULL);
-	 pthread_cond_init(&gEventCond, NULL);
+    pthread_mutex_init(&gStateLock, NULL);
+    pthread_mutex_init(&gEventLock, NULL);
+    pthread_cond_init(&gEventCond, NULL);
 
-     // Calibration inputs.
-     gFlowCalib = calib;
+    // Calibration inputs.
+    gFlowCalib = calib;
 
-	 gStop = false;
-	 pthread_create(&gThread, NULL, flowThread, NULL);
+    // Completion callback.
+    gCallback = callback;
+    gCallbackUserdata = callback_userdata;
 
-	 gInited = true;
+    gStop = false;
+    pthread_create(&gThread, NULL, flowThread, NULL);
 
-	 return (true);
+    gInited = true;
+
+    return (true);
 }
 
 bool flowStopAndFinal()
@@ -292,7 +299,7 @@ static void *flowThread(void *arg)
 			gFlowCalib->calib(&param, &err_min, &err_avg, &err_max);
     		EdenMessageHide();
 
-            saveParam(&param, err_min, err_avg, err_max);
+            if (gCallback) (*gCallback)(&param, err_min, err_avg, err_max, gCallbackUserdata);
 
 			// Calibration complete. Post results as status.
 			flowSetEventMask(EVENT_TOUCH);

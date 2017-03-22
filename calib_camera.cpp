@@ -56,7 +56,6 @@
 #elif defined(__linux) || defined(_WIN32)
 #  include <GL/gl.h>
 #endif
-#include <opencv2/calib3d/calib3d.hpp>
 #include <AR6/AR/ar.h>
 //#include <AR6/ARVideo/video.h>
 #include <AR6/ARVideoSource.h>
@@ -91,6 +90,11 @@
 #define      CHESSBOARD_PATTERN_WIDTH      30.0
 #define      CALIB_IMAGE_NUM               10
 #define      SAVE_FILENAME                 "camera_para.dat"
+
+// Data upload.
+#define QUEUE_DIR "queue"
+#define QUEUE_INDEX_FILE_EXTENSION "upload"
+
 
 
 #ifdef __APPLE__
@@ -168,16 +172,11 @@ static int contextHeight = 0;
 static bool contextWasUpdated = false;
 static SDL_Window* gSDLWindow = NULL;
 static int32_t gViewport[4] = {0, 0, 0, 0}; // {x, y, width, height}
-//static ARGL_CONTEXT_SETTINGS_REF gArglSettings = NULL;
 static int gDisplayOrientation = 1; // range [0-3]. 1=landscape.
 static float gDisplayDPI = 72.0f;
 
 // Main state.
 static struct timeval gStartTime;
-
-//
-// Calibration.
-//
 
 // Corner finder results copy, for display to user.
 static ARGL_CONTEXT_SETTINGS_REF gArglSettingsCornerFinderImage = NULL;
@@ -193,6 +192,7 @@ static void drawView(void);
 
 static void          init(int argc, char *argv[]);
 static void          usage(char *com);
+static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max, void *userdata);
 
 static void startVideo(void)
 {
@@ -454,7 +454,7 @@ int main(int argc, char *argv[])
                         exit (-1);
                     }
                     
-                    if (!flowInitAndStart(gCalibration)) {
+                    if (!flowInitAndStart(gCalibration, saveParam, NULL)) {
                         ARLOGe("Error: Could not initialise and start flow.\n");
                         quit(-1);
                     }
@@ -884,7 +884,7 @@ void drawView(void)
 
 
 // Save parameters file and index file with info about it, then signal thread that it's ready for upload.
-void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max)
+static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max, void *userdata)
 {
     int i;
 #define SAVEPARAM_PATHNAME_LEN MAXPATHLEN
