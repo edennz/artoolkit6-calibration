@@ -63,19 +63,19 @@ extern "C" {
 #endif
 
 
-#if defined(EDEN_OPENGL3)
+#if EDEN_USE_GL3
 #  ifdef EDEN_MACOSX
 #    include <OpenGL/gl3.h>
 #  else
 #    include <GL3/gl3.h>
 #  endif
-#elif defined(EDEN_OPENGLES)
+#elif EDEN_USE_GLES2
 #  if defined ANDROID
-#    include <GLES/gl.h>
-#    include <GLES/glext.h>
+#    include <GLES2/gl2.h>
+#    include <GLES2/gl2ext.h>
 #  else
-#    include <OpenGLES/ES1/gl.h>
-#    include <OpenGLES/ES1/glext.h>
+#    include <OpenGLES/ES2/gl.h>
+#    include <OpenGLES/ES2/glext.h>
 #  endif
 #else
 #  ifdef EDEN_MACOSX

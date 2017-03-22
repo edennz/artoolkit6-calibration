@@ -48,7 +48,7 @@
 #include <string.h>				// strcmp()
 #include <stdlib.h>				// malloc(), calloc(), free()
 #include <Eden/readtex.h>			// ReadTex()
-#ifndef EDEN_USE_GLES
+#ifndef EDEN_USE_GLES2
 #  define USE_GL_STATE_CACHE 0
 #endif
 #include <Eden/glStateCache.h>
@@ -130,8 +130,8 @@ EDEN_BOOL EdenSurfacesTextureLoad2(const int contextIndex, const int numTextures
 
 	glStateCachePixelStoreUnpackAlignment(1);	// ReadTex returns tightly packed texture data.
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &textureSizeMax);
-#ifdef EDEN_OPENGLES
-    haveLimitedNPOT = EdenGLCapabilityCheck(0u, (const unsigned char *)"GL_APPLE_texture_2D_limited_npot");
+#if EDEN_USE_GLES2
+    haveLimitedNPOT = TRUE;
     haveNPOT = EdenGLCapabilityCheck(0u, (const unsigned char *)"GL_OES_texture_npot");
 #else
     haveLimitedNPOT = FALSE;
@@ -158,7 +158,7 @@ EDEN_BOOL EdenSurfacesTextureLoad2(const int contextIndex, const int numTextures
         }
 		gTextureIndexPtr[contextIndex] = ptr; // Speed up next search by saving index.
 
-#ifndef EDEN_OPENGLES
+#if !EDEN_USE_GLES2
         // OpenGL 1.4 is required for automatic mipmap generation.
         if (textureInfo[i].mipmaps) {
             if (!EdenGLCapabilityCheck(0x0140, NULL)) {
@@ -180,7 +180,7 @@ EDEN_BOOL EdenSurfacesTextureLoad2(const int contextIndex, const int numTextures
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, textureInfo[i].mag_filter); 	// Interpolation when magnifying.
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureInfo[i].wrap_s); 		// What to do with pixels outside [0,1].
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureInfo[i].wrap_t); 		// What to do with pixels outside [0,1].
-#ifndef EDEN_OPENGLES
+#if !EDEN_USE_GLES2
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_PRIORITY, textureInfo[i].priority);
 #endif
         
@@ -450,8 +450,9 @@ int EdenGLCapabilityCheck(const unsigned short minVersion, const unsigned char *
     
     if (minVersion > 0) {
         strVersion = glGetString(GL_VERSION);
-#ifdef EDEN_OPENGLES
-        j = 13; // Of the form "OpenGL ES-XX 1.1", where XX=CM for common, CL for common lite.
+        if (!strVersion) return (FALSE);
+#if EDEN_USE_GLES2
+        j = 10; // Of the form "OpenGL ES 2.0" etc.
 #else
         j = 0;
 #endif

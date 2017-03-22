@@ -50,7 +50,7 @@
 
 #ifdef EDEN_MACOSX
 #  include <OpenGL/glu.h>
-#elif defined(EDEN_OPENGLES)
+#elif EDEN_USE_GLES2
 #else
 #  ifdef _WIN32
 #    include <windows.h>

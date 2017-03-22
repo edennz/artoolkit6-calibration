@@ -50,7 +50,7 @@
 // EdenSurfaces also does OpenGL header inclusion.
 #include <Eden/EdenSurfaces.h>	// TEXTURE_INFO_t, TEXTURE_INDEX_t, SurfacesTextureLoad(), SurfacesTextureSet(), SurfacesTextureUnload()
 #include <Eden/gluttext.h>
-#ifndef EDEN_USE_GLES
+#ifndef EDEN_USE_GLES2
 #  define USE_GL_STATE_CACHE 0
 #endif
 #include <Eden/glStateCache.h>

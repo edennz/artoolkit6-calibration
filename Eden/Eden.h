@@ -100,7 +100,7 @@ extern "C" {
     
 #  if TARGET_OS_IPHONE
 #    define EDEN_IPHONEOS
-#    define EDEN_USE_GLES 1
+#    define EDEN_USE_GLES2 1
 #  else
 #    define EDEN_USE_GL 1
 #  endif
@@ -125,7 +125,7 @@ extern "C" {
 #  ifndef ANDROID
 #    define ANDROID
 #  endif
-#  define EDEN_USE_GLES 1
+#  define EDEN_USE_GLES2 1
 
 // GCC on Cygnus GNU for Windows.
 #elif defined(__CYGWIN__)

@@ -63,7 +63,7 @@ typedef unsigned char bool;
 #include <Eden/EdenTime.h>	// EdenTimeAbsolutePlusOffset(), struct timespec, EdenTime_sleep()
 #include <Eden/EdenSurfaces.h>	// TEXTURE_INFO_t, TEXTURE_INDEX_t, SurfacesTextureLoad(), SurfacesTextureSet(), SurfacesTextureUnload()
 #include <Eden/EdenGLFont.h>
-#ifndef EDEN_USE_GLES
+#ifndef EDEN_USE_GLES2
 #  define USE_GL_STATE_CACHE 0
 #endif
 #include <Eden/glStateCache.h>

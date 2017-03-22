@@ -1,6 +1,6 @@
 #include <Eden/gluttext.h>
 #if GLUTTEXT_STROKE_ENABLE
-#ifndef EDEN_USE_GLES
+#ifndef EDEN_USE_GLES2
 #  define USE_GL_STATE_CACHE 0
 #endif
 #include <Eden/glStateCache.h>

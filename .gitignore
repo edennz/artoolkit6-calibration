@@ -1,0 +1,7 @@
+depends/ios/include/AR6/
+depends/ios/lib/libAR6.a
+depends/macos/Frameworks/AR6.framework/
+Linux/build/
+macOS/build/
+xcuserdata/
+*.xcscmblueprint
