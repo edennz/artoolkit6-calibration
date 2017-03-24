@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 47;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -25,7 +25,6 @@
 		4A47936C1E80CF96002C3631 /* ARViewOverlay.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793661E80CF96002C3631 /* ARViewOverlay.m */; };
 		4A47936D1E80CF96002C3631 /* CameraFocusView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793681E80CF96002C3631 /* CameraFocusView.m */; };
 		4A47936E1E80CF96002C3631 /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A47936A1E80CF96002C3631 /* SettingsViewController.m */; };
-		4A4793841E80CFD4002C3631 /* ARViewOverlays-iPad.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4A4793701E80CFD4002C3631 /* ARViewOverlays-iPad.xib */; };
 		4A4793851E80CFD4002C3631 /* ARViewOverlays.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4A4793711E80CFD4002C3631 /* ARViewOverlays.xib */; };
 		4A4793861E80CFD4002C3631 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4A4793731E80CFD4002C3631 /* Localizable.strings */; };
 		4A4793871E80CFD4002C3631 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A4793751E80CFD4002C3631 /* Images.xcassets */; };
@@ -80,7 +79,6 @@
 		4A4793681E80CF96002C3631 /* CameraFocusView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CameraFocusView.m; sourceTree = "<group>"; };
 		4A4793691E80CF96002C3631 /* SettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
 		4A47936A1E80CF96002C3631 /* SettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
-		4A4793701E80CFD4002C3631 /* ARViewOverlays-iPad.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "ARViewOverlays-iPad.xib"; sourceTree = "<group>"; };
 		4A4793711E80CFD4002C3631 /* ARViewOverlays.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ARViewOverlays.xib; sourceTree = "<group>"; };
 		4A4793741E80CFD4002C3631 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Localizable.strings; sourceTree = "<group>"; };
 		4A4793751E80CFD4002C3631 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
@@ -170,8 +168,6 @@
 				4A4793511E80CDBE002C3631 /* ARViewControllerCC.m */,
 				4A4793651E80CF96002C3631 /* ARViewOverlay.h */,
 				4A4793661E80CF96002C3631 /* ARViewOverlay.m */,
-				4A4793671E80CF96002C3631 /* CameraFocusView.h */,
-				4A4793681E80CF96002C3631 /* CameraFocusView.m */,
 				4A4793691E80CF96002C3631 /* SettingsViewController.h */,
 				4A47936A1E80CF96002C3631 /* SettingsViewController.m */,
 			);
@@ -234,6 +230,8 @@
 				4A4793A41E80D85A002C3631 /* flow.mm */,
 				4A0AB6821E81DFCE00F6EBB9 /* prefs.h */,
 				4A0AB6831E81DFCE00F6EBB9 /* prefsNull.c */,
+				4A4793671E80CF96002C3631 /* CameraFocusView.h */,
+				4A4793681E80CF96002C3631 /* CameraFocusView.m */,
 				4A0AB6851E82056200F6EBB9 /* old */,
 				4A4793A81E80D945002C3631 /* Eden */,
 			);
@@ -244,7 +242,6 @@
 			isa = PBXGroup;
 			children = (
 				4A0AB69C1E8224D800F6EBB9 /* Main.storyboard */,
-				4A4793701E80CFD4002C3631 /* ARViewOverlays-iPad.xib */,
 				4A4793711E80CFD4002C3631 /* ARViewOverlays.xib */,
 				4A4793721E80CFD4002C3631 /* en.lproj */,
 				4A4793751E80CFD4002C3631 /* Images.xcassets */,
@@ -384,7 +381,7 @@
 				};
 			};
 			buildConfigurationList = 4A4793421E80CDBE002C3631 /* Build configuration list for PBXProject "ARToolKit6 Camera Calibration Utility" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 6.3";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -421,7 +418,6 @@
 				4A4793881E80CFD4002C3631 /* Iris-568h@2x.png in Resources */,
 				4A4793891E80CFD4002C3631 /* Iris-iPad.png in Resources */,
 				4A4793921E80CFD4002C3631 /* printusletter.pdf in Resources */,
-				4A4793841E80CFD4002C3631 /* ARViewOverlays-iPad.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -188,13 +188,13 @@ static void *cornerFinder(THREAD_HANDLE_T *threadHandle);
 //	Class implementations and functions
 // ============================================================================
 
-@interface ARViewController () {
+@interface ARViewControllerCC () {
 }
 - (IBAction)showMenu:(id)sender;
 //@property (nonatomic) IBOutlet UIView *glViewPlaceHolder;
 @end
 
-@implementation ARViewController {
+@implementation ARViewControllerCC {
     
     BOOL            running;
     NSInteger       runLoopInterval;

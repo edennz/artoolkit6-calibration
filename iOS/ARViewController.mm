@@ -38,6 +38,7 @@
 
 #import "ARViewController.h"
 #import <OpenGLES/ES2/glext.h>
+#import "CameraFocusView.h"
 #ifdef DEBUG
 #  import <unistd.h>
 #  import <sys/param.h>
@@ -59,6 +60,7 @@
 #include "flow.h"
 #include "Eden/EdenMessage.h"
 #include "Eden/EdenGLFont.h"
+
 
 #include "prefs.h"
 
@@ -174,6 +176,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     float gDisplayDPI;
     GLint uniforms[UNIFORM_COUNT];
     GLuint program;
+    CameraFocusView *focusView;
 
     // Main state.
     struct timeval gStartTime;
@@ -245,7 +248,23 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     view.context = self.context;
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
     
+    [[NSBundle mainBundle] loadNibNamed:@"ARViewOverlays" owner:self options:nil]; // Contains connection to the strong property "overlays".
+    self.overlays.frame = self.view.frame;
+    if (!focusView) focusView = [[CameraFocusView alloc] initWithFrame:self.view.frame];
+    
     [self setupGL];
+    
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+
+    // Extra view setup.
+    [self.view addSubview:self.overlays];
+    //self.view.touchDelegate = self;
+    [self.view addSubview:focusView];
+    
 }
 
 - (void)viewDidLayoutSubviews
@@ -256,6 +275,17 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     contextHeight = (int)view.drawableHeight;
     contextWasUpdated = true;
 }
+
+- (void)viewDidDisappear:(BOOL)animated
+{
+    // Extra view cleanup.
+    [self.overlays removeFromSuperview];
+    //self.view.touchDelegate = nil;
+    [focusView removeFromSuperview];
+
+    [super viewDidDisappear:animated];
+}
+
 
 - (void)dealloc
 {    
@@ -399,6 +429,8 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     GLfloat *vertices = NULL;
     GLint vertexCount;
     
+    if (!drawRequired) return;
+    
     // Get frame time.
     gettimeofday(&time, NULL);
     
@@ -516,17 +548,17 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         "varying vec4 colourVarying;\n"
         "void main()\n"
         "{\n"
-        "gl_Position = modelViewProjectionMatrix * position;\n"
-        "colourVarying = colour;\n"
+            "gl_Position = modelViewProjectionMatrix * position;\n"
+            "colourVarying = colour;\n"
         "}\n";
         const char fragShaderString[] =
         "#ifdef GL_ES\n"
-        "precision mediump float;\n"
+            "precision mediump float;\n"
         "#endif\n"
         "varying vec4 colourVarying;\n"
         "void main()\n"
         "{\n"
-        "gl_FragColor = colourVarying;\n"
+            "gl_FragColor = colourVarying;\n"
         "}\n";
         
         if (program) arglGLDestroyShaders(0, 0, program);
@@ -934,6 +966,16 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     }
 }
 
+- (IBAction)handleBackButton:(id)sender {
+    flowHandleEvent(EVENT_BACK_BUTTON);
+}
+
+- (IBAction)handleAddButton:(id)sender {
+    flowHandleEvent(EVENT_TOUCH);
+}
+
+- (IBAction)handleMenuButton:(id)sender {
+}
 @end
 
 // Save parameters file and index file with info about it, then signal thread that it's ready for upload.

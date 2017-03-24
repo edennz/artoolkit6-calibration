@@ -40,4 +40,9 @@
 
 @interface ARViewController : GLKViewController
 
+- (IBAction)handleBackButton:(id)sender;
+- (IBAction)handleAddButton:(id)sender;
+- (IBAction)handleMenuButton:(id)sender;
+@property (nonatomic, retain) IBOutlet UIView *overlays;
+
 @end

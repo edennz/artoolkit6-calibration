@@ -22,7 +22,7 @@
 #define FONT_SIZE 6.8f
 
 @class ARView; @class CalibCameraWrapper;
-@interface ARViewController : UIViewController <CameraVideoTookPictureDelegate, ARViewTouchDelegate, EAGLViewTookSnapshotDelegate, UIDocumentInteractionControllerDelegate>
+@interface ARViewControllerCC : UIViewController <CameraVideoTookPictureDelegate, ARViewTouchDelegate, EAGLViewTookSnapshotDelegate, UIDocumentInteractionControllerDelegate>
 {
      
 }
