@@ -73,12 +73,12 @@
 // Indices of GL ES program uniforms.
 enum {
     UNIFORM_MODELVIEW_PROJECTION_MATRIX,
+    UNIFORM_COLOR,
     UNIFORM_COUNT
 };
 // Indices of of GL ES program attributes.
 enum {
     ATTRIBUTE_VERTEX,
-    ATTRIBUTE_COLOUR,
     ATTRIBUTE_COUNT
 };
 
@@ -222,7 +222,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     contextHeight = 0;
     contextWasUpdated = false;
     gViewport[0] =  gViewport[1] = gViewport[2] = gViewport[3] = 0;
-    gDisplayOrientation = 1; // range [0-3]. 1=landscape.
+    gDisplayOrientation = 0; // range [0-3]. 0=portrait, 1=landscape.
     gDisplayDPI = 72.0f;
     uniforms[0] = 0;
     program = 0;
@@ -464,7 +464,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
             contentFlipH = false;
         }
         
-        // Setup a route for rendering the colour background image.
+        // Setup a route for rendering the color background image.
         vv = new ARView;
         if (!vv) {
             ARLOGe("Error: unable to create video view.\n");
@@ -540,25 +540,26 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     
     if (!program) {
         GLuint vertShader = 0, fragShader = 0;
-        // A simple shader pair which accepts just a vertex position and colour, no lighting.
+        // A simple shader pair which accepts just a vertex position. Fixed color, no lighting.
         const char vertShaderString[] =
         "attribute vec4 position;\n"
-        "attribute vec4 colour;\n"
+        "uniform vec4 color;\n"
         "uniform mat4 modelViewProjectionMatrix;\n"
-        "varying vec4 colourVarying;\n"
+        
+        "varying vec4 colorVarying;\n"
         "void main()\n"
         "{\n"
             "gl_Position = modelViewProjectionMatrix * position;\n"
-            "colourVarying = colour;\n"
+            "colorVarying = color;\n"
         "}\n";
         const char fragShaderString[] =
         "#ifdef GL_ES\n"
             "precision mediump float;\n"
         "#endif\n"
-        "varying vec4 colourVarying;\n"
+        "varying vec4 colorVarying;\n"
         "void main()\n"
         "{\n"
-            "gl_FragColor = colourVarying;\n"
+            "gl_FragColor = colorVarying;\n"
         "}\n";
         
         if (program) arglGLDestroyShaders(0, 0, program);
@@ -584,7 +585,6 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         glAttachShader(program, fragShader);
         
         glBindAttribLocation(program, ATTRIBUTE_VERTEX, "position");
-        glBindAttribLocation(program, ATTRIBUTE_COLOUR, "colour");
         if (!arglGLLinkProgram(program)) {
             ARLOGe("draw: Error linking shader program.\n");
             arglGLDestroyShaders(vertShader, fragShader, program);
@@ -595,8 +595,8 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         
         // Retrieve linked uniform locations.
         uniforms[UNIFORM_MODELVIEW_PROJECTION_MATRIX] = glGetUniformLocation(program, "modelViewProjectionMatrix");
+        uniforms[UNIFORM_COLOR] = glGetUniformLocation(program, "color");
     }
-    glUseProgram(program);
 
     //
     // Setup for drawing video frame.
@@ -625,7 +625,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         // Setup for drawing on top of video frame, in video pixel coordinates.
         //
         mtxLoadIdentityf(p);
-        if (vv->rotate90()) mtxRotatef(m, 90.0f, 0.0f, 0.0f, -1.0f);
+        if (vv->rotate90()) mtxRotatef(p, 90.0f, 0.0f, 0.0f, -1.0f);
         if (vv->flipV()) {
             bottom = (float)vs->getVideoHeight();
             top = 0.0f;
@@ -642,15 +642,8 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         }
         mtxOrthof(p, left, right, bottom, top, -1.0f, 1.0f);
         mtxLoadIdentityf(m);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_BLEND);
-        glActiveTexture(GL_TEXTURE0);
-        glDisable(GL_TEXTURE_2D);
-        
-        GLubyte colorRed[4] = {255, 0, 0, 255};
-        GLubyte colorGreen[4] = {0, 255, 0, 255};
-        glVertexAttribPointer(ATTRIBUTE_COLOUR, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, cornerFoundAllFlag ? colorRed : colorGreen);
-        glEnableVertexAttribArray(ATTRIBUTE_COLOUR);
+        glStateCacheDisableDepthTest();
+        glStateCacheDisableBlend();
         
         // Draw the crosses marking the corner positions.
         float fontSizeScaled = FONT_SIZE * (float)vs->getVideoHeight()/(float)(gViewport[(gDisplayOrientation % 2) == 1 ? 3 : 2]);
@@ -683,10 +676,14 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         gCalibration->cornerFinderResultsUnlock();
         
         if (vertexCount > 0) {
+            glUseProgram(program);
+            GLfloat colorRed[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+            GLfloat colorGreen[4] = {0.0f, 1.0f, 0.0f, 1.0f};
             GLfloat mvp[16];
             mtxLoadMatrixf(mvp, p);
             mtxMultMatrixf(mvp, m);
             glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEW_PROJECTION_MATRIX], 1, GL_FALSE, mvp);
+            glUniform4fv(uniforms[UNIFORM_COLOR], 1, cornerFoundAllFlag ? colorRed : colorGreen);
             
             glVertexAttribPointer(ATTRIBUTE_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, vertices);
             glEnableVertexAttribArray(ATTRIBUTE_VERTEX);
@@ -734,7 +731,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     // Draw status bar with centred status message.
     if (statusBarMessage[0]) {
         drawBackground(right, statusBarHeight, 0.0f, 0.0f, false);
-        glDisable(GL_BLEND);
+        glStateCacheDisableBlend();
         glColor4ub(255, 255, 255, 255);
         EdenGLFontDrawLine(0, statusBarMessage, 0.0f, 2.0f, H_OFFSET_VIEW_CENTER_TO_TEXT_CENTER, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
     }
