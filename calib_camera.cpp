@@ -768,15 +768,16 @@ void drawView(void)
         glActiveTexture(GL_TEXTURE0);
         glDisable(GL_TEXTURE_2D);
         
-        if (cornerFoundAllFlag) glColor4ub(255, 0, 0, 255);
-        else glColor4ub(0, 255, 0, 255);
-        
         
         // Draw the crosses marking the corner positions.
-        float fontSizeScaled = FONT_SIZE * (float)vs->getVideoHeight()/(float)(gViewport[(gDisplayOrientation % 2) == 1 ? 3 : 2]);
-        EdenGLFontSetSize(fontSizeScaled);
         vertexCount = cornerCount*4;
         if (vertexCount > 0) {
+            float fontSizeScaled = FONT_SIZE * (float)vs->getVideoHeight()/(float)(gViewport[(gDisplayOrientation % 2) == 1 ? 3 : 2]);
+            float colorRed[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+            float colorGreen[4] = {0.0f, 1.0f, 0.0f, 1.0f};
+            glColor4fv(cornerFoundAllFlag ? colorRed : colorGreen);
+            EdenGLFontSetSize(fontSizeScaled);
+            EdenGLFontSetColor(cornerFoundAllFlag ? colorRed : colorGreen);
             arMalloc(vertices, GLfloat, vertexCount*2); // 2 coords per vertex.
             for (i = 0; i < cornerCount; i++) {
                 vertices[i*8    ] = corners[i].x - 5.0f;
@@ -795,11 +796,13 @@ void drawView(void)
                 glLoadIdentity();
                 glTranslatef(corners[i].x, vs->getVideoHeight() - corners[i].y, 0.0f);
                 glRotatef((float)(gDisplayOrientation - 1) * -90.0f, 0.0f, 0.0f, 1.0f); // Orient the text to the user.
-                EdenGLFontDrawLine(0, buf, 0.0f, 0.0f, H_OFFSET_VIEW_LEFT_EDGE_TO_TEXT_LEFT_EDGE, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE); // These alignment modes don't require setting of EdenGLFontSetViewSize().
+                EdenGLFontDrawLine(0, NULL, buf, 0.0f, 0.0f, H_OFFSET_VIEW_LEFT_EDGE_TO_TEXT_LEFT_EDGE, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE); // These alignment modes don't require setting of EdenGLFontSetViewSize().
                 glPopMatrix();
             }
+            EdenGLFontSetSize(FONT_SIZE);
+            float colorWhite[4] = {1.0f, 1.0f, 1.0f, 1.0f};;
+            EdenGLFontSetColor(colorWhite);
         }
-        EdenGLFontSetSize(FONT_SIZE);
         
         gCalibration->cornerFinderResultsUnlock();
         
@@ -856,8 +859,7 @@ void drawView(void)
     if (statusBarMessage[0]) {
         drawBackground(right, statusBarHeight, 0.0f, 0.0f, false);
         glDisable(GL_BLEND);
-        glColor4ub(255, 255, 255, 255);
-        EdenGLFontDrawLine(0, statusBarMessage, 0.0f, 2.0f, H_OFFSET_VIEW_CENTER_TO_TEXT_CENTER, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
+        EdenGLFontDrawLine(0, NULL, statusBarMessage, 0.0f, 2.0f, H_OFFSET_VIEW_CENTER_TO_TEXT_CENTER, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
     }
     
     // If background tasks are proceeding, draw a status box.
@@ -873,11 +875,11 @@ void drawView(void)
         y = statusBarHeight + 2.0f;
         drawBackground(w, h, x, y, true);
         if (status == 1) drawBusyIndicator((int)(x + 4.0f + 1.5f*squareSize), (int)(y + 4.0f + 1.5f*squareSize), squareSize, &time);
-        EdenGLFontDrawLine(0, (unsigned char *)uploadStatus, x + 4.0f + 3*squareSize, y + (h - FONT_SIZE)/2.0f, H_OFFSET_VIEW_LEFT_EDGE_TO_TEXT_LEFT_EDGE, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
+        EdenGLFontDrawLine(0, NULL, (unsigned char *)uploadStatus, x + 4.0f + 3*squareSize, y + (h - FONT_SIZE)/2.0f, H_OFFSET_VIEW_LEFT_EDGE_TO_TEXT_LEFT_EDGE, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
     }
     
     // If a message should be onscreen, draw it.
-    if (gEdenMessageDrawRequired) EdenMessageDraw(0);
+    if (gEdenMessageDrawRequired) EdenMessageDraw(0, NULL);
     
     SDL_GL_SwapWindow(gSDLWindow);
 }

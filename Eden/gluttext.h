@@ -50,7 +50,11 @@ extern const struct _StrokeFontRec glutStrokeMonoRoman;
  */
 #define GLUT_STROKE_MONO_ROMAN		((void *)&glutStrokeMonoRoman)
 
+#ifdef EDEN_USE_GL
 extern void glutStrokeCharacter(void *font, int character);
+#elif defined(EDEN_USE_GLES2)
+extern void glutStrokeCharacter(void *font, int character, uint32_t vertexAttribIndex, float *translateX);
+#endif
 extern int glutStrokeWidth(void *font, int character);
 extern int glutStrokeLength(void *font, const unsigned char *string);
 #endif // GLUTTEXT_STROKE_ENABLE

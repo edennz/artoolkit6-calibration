@@ -38,11 +38,12 @@
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
 
-@interface ARViewController : GLKViewController
+@interface ARViewController : UIViewController <GLKViewDelegate>
 
 - (IBAction)handleBackButton:(id)sender;
 - (IBAction)handleAddButton:(id)sender;
 - (IBAction)handleMenuButton:(id)sender;
-@property (nonatomic, retain) IBOutlet UIView *overlays;
+//@property (nonatomic, retain) IBOutlet UIView *overlays;
+@property (nonatomic, retain) IBOutlet GLKView *glkView;
 
 @end

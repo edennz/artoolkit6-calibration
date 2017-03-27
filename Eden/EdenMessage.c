@@ -63,11 +63,14 @@ typedef unsigned char bool;
 #include <Eden/EdenTime.h>	// EdenTimeAbsolutePlusOffset(), struct timespec, EdenTime_sleep()
 #include <Eden/EdenSurfaces.h>	// TEXTURE_INFO_t, TEXTURE_INDEX_t, SurfacesTextureLoad(), SurfacesTextureSet(), SurfacesTextureUnload()
 #include <Eden/EdenGLFont.h>
-#ifndef EDEN_USE_GLES2
+#ifdef EDEN_USE_GL
 #  define USE_GL_STATE_CACHE 0
+#  include <Eden/glStateCache.h>
+#elif defined(EDEN_USE_GLES2)
+#  include <AR6/ARG/glStateCache2.h>
+#  include <AR6/ARG/arg_shader_gl.h>
+#  include <AR6/ARG/arg_mtx.h>
 #endif
-#include <Eden/glStateCache.h>
-
 
 // ============================================================================
 //  Types and constants
@@ -108,6 +111,22 @@ static boxSettings_t *gBoxSettings = NULL;
 static float gScreenWidth = 640.0f;
 static float gScreenHeight = 480.0f;
 static float gScreenScale = 1.0f;
+
+#ifdef EDEN_USE_GLES2
+// Indices of GL ES program uniforms.
+enum {
+    UNIFORM_MODELVIEW_PROJECTION_MATRIX,
+    UNIFORM_COLOR,
+    UNIFORM_COUNT
+};
+// Indices of of GL ES program attributes.
+enum {
+    ATTRIBUTE_VERTEX,
+    ATTRIBUTE_COUNT
+};
+static GLint uniforms[UNIFORM_COUNT] = {0};
+static GLuint program = 0;
+#endif
 
 // Use of gDrawLock allows EdenMessageDraw() to be called in a separate thread
 // by protecting the global static data (below) that it uses.
@@ -286,6 +305,69 @@ EDEN_BOOL EdenMessageInit(const int contextsActiveCount)
 {
 	if (gMessageInited) return (FALSE);
 
+    // OpenGL setup.
+#ifdef EDEN_USE_GLES2
+    if (!program) {
+        GLuint vertShader = 0, fragShader = 0;
+        // A simple shader pair which accepts just a vertex position. Fixed color, no lighting.
+        const char vertShaderString[] =
+        "attribute vec4 position;\n"
+        "uniform vec4 color;\n"
+        "uniform mat4 modelViewProjectionMatrix;\n"
+        
+        "varying vec4 colorVarying;\n"
+        "void main()\n"
+        "{\n"
+        "gl_Position = modelViewProjectionMatrix * position;\n"
+        "colorVarying = color;\n"
+        "}\n";
+        const char fragShaderString[] =
+        "#ifdef GL_ES\n"
+        "precision mediump float;\n"
+        "#endif\n"
+        "varying vec4 colorVarying;\n"
+        "void main()\n"
+        "{\n"
+        "gl_FragColor = colorVarying;\n"
+        "}\n";
+        
+        if (program) arglGLDestroyShaders(0, 0, program);
+        program = glCreateProgram();
+        if (!program) {
+            EDEN_LOGe("draw: Error creating shader program.\n");
+            return (FALSE);
+        }
+        
+        if (!arglGLCompileShaderFromString(&vertShader, GL_VERTEX_SHADER, vertShaderString)) {
+            EDEN_LOGe("draw: Error compiling vertex shader.\n");
+            arglGLDestroyShaders(vertShader, fragShader, program);
+            program = 0;
+            return (FALSE);
+        }
+        if (!arglGLCompileShaderFromString(&fragShader, GL_FRAGMENT_SHADER, fragShaderString)) {
+            EDEN_LOGe("draw: Error compiling fragment shader.\n");
+            arglGLDestroyShaders(vertShader, fragShader, program);
+            program = 0;
+            return (FALSE);
+        }
+        glAttachShader(program, vertShader);
+        glAttachShader(program, fragShader);
+        
+        glBindAttribLocation(program, ATTRIBUTE_VERTEX, "position");
+        if (!arglGLLinkProgram(program)) {
+            EDEN_LOGe("draw: Error linking shader program.\n");
+            arglGLDestroyShaders(vertShader, fragShader, program);
+            program = 0;
+            return (FALSE);
+        }
+        arglGLDestroyShaders(vertShader, fragShader, 0); // After linking, shader objects can be deleted.
+        
+        // Retrieve linked uniform locations.
+        uniforms[UNIFORM_MODELVIEW_PROJECTION_MATRIX] = glGetUniformLocation(program, "modelViewProjectionMatrix");
+        uniforms[UNIFORM_COLOR] = glGetUniformLocation(program, "color");
+    }
+#endif
+    
     gBoxSettings = boxCreate(-1.0f, -1.0f, -1.0f, -1.0f, -1.0f); // Use defaults.
 
     pthread_mutex_init(&gInputLock, NULL);
@@ -294,7 +376,7 @@ EDEN_BOOL EdenMessageInit(const int contextsActiveCount)
     gInputPromptLength = 0;
     pthread_cond_init(&gInputCompleteCond, NULL);
     gInputComplete = FALSE;
- 
+    
 	gMessageInited = TRUE;
 	return (TRUE);
 }
@@ -315,6 +397,10 @@ EDEN_BOOL EdenMessageFinal(void)
 
     boxDestroy(&gBoxSettings);
     
+#ifdef EDEN_USE_GLES2
+    arglGLDestroyShaders(0, 0, program);
+#endif
+
 	gMessageInited = FALSE;
 	return (ok);
 }
@@ -510,11 +596,10 @@ void EdenMessageSetBoxParams(const float width, const float padding)
     if (changed) boxSetText(gBoxSettings, NULL);
 }
 
-void EdenMessageDraw(const int contextIndex)
+void EdenMessageDraw(const int contextIndex, const float viewProjection[16])
 {
     GLfloat boxcentrex, boxcentrey, boxwd2, boxhd2;
     GLfloat boxVertices[4][2];
-    const GLubyte quadIndices[4] = {0, 1, 2, 3};
 #ifdef _WIN32
     struct _timeb sys_time;
 #else
@@ -567,6 +652,7 @@ void EdenMessageDraw(const int contextIndex)
     pthread_mutex_lock(&gBoxSettings->lock);
 	if (gBoxSettings->lineCount) {
         // Draw the semi-transparent black shaded box and white outline.
+#ifdef EDEN_USE_GL
         glStateCacheBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glStateCacheEnableBlend();
         glVertexPointer(2, GL_FLOAT, 0, boxVertices);
@@ -575,12 +661,28 @@ void EdenMessageDraw(const int contextIndex)
         glStateCacheClientActiveTexture(GL_TEXTURE0);
         glStateCacheDisableClientStateTexCoordArray();
         glColor4f(0.0f, 0.0f, 0.0f, 0.5f);	// 50% transparent black.
-        glDrawElements(GL_TRIANGLE_FAN, 4, GL_UNSIGNED_BYTE, quadIndices);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         glStateCacheDisableBlend();
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f); // Opaque white.
-        glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, quadIndices);
+        glDrawArrays(GL_LINE_LOOP, 0, 4);
         
-        EdenGLFontDrawBlock(contextIndex, (const unsigned char **)gBoxSettings->lines, gBoxSettings->lineCount, 0.0f, 0.0f, H_OFFSET_VIEW_CENTER_TO_TEXT_CENTER, V_OFFSET_VIEW_CENTER_TO_TEXT_CENTER);
+        EdenGLFontDrawBlock(contextIndex, NULL, (const unsigned char **)gBoxSettings->lines, gBoxSettings->lineCount, 0.0f, 0.0f, H_OFFSET_VIEW_CENTER_TO_TEXT_CENTER, V_OFFSET_VIEW_CENTER_TO_TEXT_CENTER);
+#elif defined(EDEN_USE_GLES2)
+        glUseProgram(program);
+        glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEW_PROJECTION_MATRIX], 1, GL_FALSE, viewProjection);
+        glStateCacheBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glStateCacheEnableBlend();
+        glStateCacheDisableDepthTest();
+        glVertexAttribPointer(ATTRIBUTE_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, boxVertices);
+        glEnableVertexAttribArray(ATTRIBUTE_VERTEX);
+        glUniform4f(uniforms[UNIFORM_COLOR], 0.0f, 0.0f, 0.0f, 0.5f);	// 50% transparent black.
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glStateCacheDisableBlend();
+        glUniform4f(uniforms[UNIFORM_COLOR], 1.0f, 1.0f, 1.0f, 1.0f); // Opaque white.
+        glDrawArrays(GL_LINE_LOOP, 0, 4);
+
+        EdenGLFontDrawBlock(contextIndex, viewProjection, (const unsigned char **)gBoxSettings->lines, gBoxSettings->lineCount, 0.0f, 0.0f, H_OFFSET_VIEW_CENTER_TO_TEXT_CENTER, V_OFFSET_VIEW_CENTER_TO_TEXT_CENTER);
+#endif
     }
 	pthread_mutex_unlock(&gBoxSettings->lock);
 

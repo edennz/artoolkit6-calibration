@@ -50,14 +50,32 @@
 // EdenSurfaces also does OpenGL header inclusion.
 #include <Eden/EdenSurfaces.h>	// TEXTURE_INFO_t, TEXTURE_INDEX_t, SurfacesTextureLoad(), SurfacesTextureSet(), SurfacesTextureUnload()
 #include <Eden/gluttext.h>
-#ifndef EDEN_USE_GLES2
+#ifdef EDEN_USE_GL
 #  define USE_GL_STATE_CACHE 0
+#  include <Eden/glStateCache.h>
+#elif defined(EDEN_USE_GLES2)
+#  include <AR6/ARG/glStateCache2.h>
+#  include <AR6/ARG/arg_shader_gl.h>
+#  include <AR6/ARG/arg_mtx.h>
 #endif
-#include <Eden/glStateCache.h>
 
 // ============================================================================
 //  Private types and definitions.
 // ============================================================================
+
+#ifdef EDEN_USE_GLES2
+// Indices of GL ES program uniforms.
+enum {
+    UNIFORM_MODELVIEW_PROJECTION_MATRIX,
+    UNIFORM_COLOR,
+    UNIFORM_COUNT
+};
+// Indices of of GL ES program attributes.
+enum {
+    ATTRIBUTE_VERTEX,
+    ATTRIBUTE_COUNT
+};
+#endif
 
 typedef enum {
     EDEN_GL_FONT_TYPE_TEXTURE,
@@ -67,11 +85,11 @@ typedef enum {
 struct _EDEN_GL_FONT_INFO_t {
     EDEN_GL_FONT_TYPE type;
     char *fontName;
-    char *fontDataPathname; // Pointer to font resources. For texture fonts, pathname to a texure. For GLUT fonts, NULL.
+    char *fontDataPathname; // Pointer to font resources. For texture fonts, pathname to a texure. For GLUT fonts, the GLUT font name (a void *).
     float naturalHeight;
     EDEN_BOOL monospaced;
     float naturalWidthIfMonospaced;
-    void *tsi; // Type-specific info. For texture fonts, pointer to TEXTURE_INFO_t. For GLUT fonts, the GLUT font name.
+    void *tsi; // Type-specific info. For texture fonts, pointer to EDEN_GL_FONT_TEXTURE_INFO. For GLUT fonts, pointer to EDEN_GL_FONT_GLUT_STROKE_INFO.
 };
 
 // When EDEN_GL_FONT_INFO_t.type==EDEN_GL_FONT_TYPE_TEXTURE, tsi will be a pointer to this structure.
@@ -80,6 +98,15 @@ typedef struct _EDEN_GL_FONT_TEXTURE_INFO {
     TEXTURE_INDEX_t *textureIndexPerContext; // Dynamically allocated to size gContextsActiveCount.
     int refCount; // Incremented each time loadTexture() is called, decremented each time unloadTexture() is called. When decremented to zero, this whole structure will be deallocated and parent ref set to NULL.
 } EDEN_GL_FONT_TEXTURE_INFO;
+
+// When EDEN_GL_FONT_INFO_t.type==EDEN_GL_FONT_TYPE_GLUT_STROKE, tsi will be a pointer to this structure.
+typedef struct _EDEN_GL_FONT_GLUT_STROKE_INFO {
+#ifdef EDEN_USE_GLES2
+    GLuint *programs; // Dynamically allocated to size gContextsActiveCount.
+    GLint *uniforms; // Dynamically allocated to size gContextsActiveCount*UNIFORM_COUNT.
+#endif
+    int refCount; // Incremented each time loadTexture() is called, decremented each time unloadTexture() is called. When decremented to zero, this whole structure will be deallocated and parent ref set to NULL.
+} EDEN_GL_FONT_GLUT_STROKE_INFO;
 
 typedef struct _EDEN_GL_FONT_VIEW_SETTINGS {
     float width;
@@ -96,6 +123,7 @@ typedef struct _EDEN_GL_FONT_FORMATTING_SETTINGS {
 typedef struct _EDEN_GL_FONT_FONT_SETTINGS {
     EDEN_GL_FONT_INFO_t *font;
     float size;
+    float colorRGBA[4];
 } EDEN_GL_FONT_FONT_SETTINGS;
 
 // ============================================================================
@@ -126,21 +154,21 @@ EDEN_GL_FONT_INFO_t *const EDEN_GL_FONT_ID_Bitmap16_OCR_B_10 = &ocrb10;
 static EDEN_GL_FONT_INFO_t roman = {
     EDEN_GL_FONT_TYPE_GLUT_STROKE,
     "Roman",
-    NULL,
+    GLUT_STROKE_ROMAN,
     119.05f,
     FALSE,
     0.0f,
-    GLUT_STROKE_ROMAN
+    NULL
 };
 EDEN_GL_FONT_INFO_t *const EDEN_GL_FONT_ID_Stroke_Roman = &roman;
 static EDEN_GL_FONT_INFO_t monoroman = {
     EDEN_GL_FONT_TYPE_GLUT_STROKE,
     "Mono Roman",
-    NULL,
+    GLUT_STROKE_MONO_ROMAN,
     119.05f,
     TRUE,
     104.76f,
-    GLUT_STROKE_MONO_ROMAN
+    NULL
 };
 EDEN_GL_FONT_INFO_t *const EDEN_GL_FONT_ID_Stroke_MonoRoman = &monoroman;
 
@@ -159,7 +187,8 @@ static EDEN_GL_FONT_FORMATTING_SETTINGS gFormattingSettings = {
 };
 static EDEN_GL_FONT_FONT_SETTINGS gFontSettings = {
     &monoroman,
-    16.0f
+    16.0f,
+    {1.0f, 1.0f, 1.0f, 1.0f}
 };
 
 // ============================================================================
@@ -174,8 +203,10 @@ EDEN_BOOL EdenGLFontInit(const int contextsActiveCount)
 {
 	// Sanity check
 	if (gInited) return (FALSE);
+    if (contextsActiveCount < 1) return (FALSE);
 
 	gContextsActiveCount = contextsActiveCount;
+    
 	gInited = TRUE;
     
 	return (TRUE);
@@ -251,6 +282,25 @@ float EdenGLFontGetSize(void)
     return (gFontSettings.size);
 }
 
+void EdenGLFontSetColor(const float rgba[4])
+{
+    if (!rgba) return;
+    gFontSettings.colorRGBA[0] = rgba[0];
+    gFontSettings.colorRGBA[1] = rgba[1];
+    gFontSettings.colorRGBA[2] = rgba[2];
+    gFontSettings.colorRGBA[3] = rgba[3];
+}
+
+void EdenGLFontGetColor(float rgba[4])
+{
+    if (!rgba) return;
+    rgba[0] = gFontSettings.colorRGBA[0];
+    rgba[1] = gFontSettings.colorRGBA[1];
+    rgba[2] = gFontSettings.colorRGBA[2];
+    rgba[3] = gFontSettings.colorRGBA[3];
+}
+
+
 void EdenGLFontSetCharacterSpacing(const float spacing)
 {
     gFormattingSettings.characterSpacing = spacing;
@@ -313,7 +363,7 @@ float EdenGLFontGetCharacterWidth(const unsigned char c)
             if (gFontSettings.font->monospaced) {
                 widthAtSizeOfOnePoint = gFontSettings.font->naturalWidthIfMonospaced / gFontSettings.font->naturalHeight;
             } else {
-                widthAtSizeOfOnePoint = glutStrokeWidth(gFontSettings.font->tsi, c);
+                widthAtSizeOfOnePoint = glutStrokeWidth(gFontSettings.font->fontDataPathname, c);
                 if (c == ' ' && gFormattingSettings.wordExtraSpacing) widthAtSizeOfOnePoint *= (gFormattingSettings.wordExtraSpacing + 1.0f);
                 widthAtSizeOfOnePoint /= gFontSettings.font->naturalHeight;
             }
@@ -347,7 +397,7 @@ float EdenGLFontGetLineWidth(const unsigned char *line)
             if (gFontSettings.font->monospaced) {
                 widthAtSizeOfOnePoint = gFontSettings.font->naturalWidthIfMonospaced * charCount / gFontSettings.font->naturalHeight;
             } else {
-                widthAtSizeOfOnePoint = (glutStrokeLength(gFontSettings.font->tsi, line) + glutStrokeWidth(gFontSettings.font->tsi, ' ')*gFormattingSettings.wordExtraSpacing*spaceCount) / gFontSettings.font->naturalHeight;
+                widthAtSizeOfOnePoint = (glutStrokeLength(gFontSettings.font->fontDataPathname, line) + glutStrokeWidth(gFontSettings.font->fontDataPathname, ' ')*gFormattingSettings.wordExtraSpacing*spaceCount) / gFontSettings.font->naturalHeight;
             }
             break;
         case EDEN_GL_FONT_TYPE_TEXTURE:
@@ -380,87 +430,191 @@ float EdenGLFontGetBlockHeight(const unsigned char **lines, const unsigned int l
     return ((lineCount + (lineCount - 1)*(gFormattingSettings.lineSpacing - 1.0f)) * gFontSettings.size/72.0f * gViewSettings.pixelsPerInch);
 }
 
-EDEN_BOOL EdenGLFontLoadTextureFontForContext(const int contextIndex, EDEN_GL_FONT_INFO_t *fontInfo)
+EDEN_BOOL EdenGLFontSetupFontForContext(const int contextIndex, EDEN_GL_FONT_INFO_t *fontInfo)
 {
-    EDEN_GL_FONT_TEXTURE_INFO *fontTextureInfo;
     char hasAlpha;
 	
     // Sanity checks.
 	if (contextIndex < 0 || contextIndex >= gContextsActiveCount) return (FALSE);
 	if (!fontInfo) return (FALSE);
-    if (fontInfo->type != EDEN_GL_FONT_TYPE_TEXTURE) return (FALSE);
+    
+    if (fontInfo->type == EDEN_GL_FONT_TYPE_TEXTURE) {
 	
-	// If first time called, set up the texture info.
-    if (!fontInfo->tsi) {
+        EDEN_GL_FONT_TEXTURE_INFO *fontTextureInfo;
+        // If first time called, set up the texture info.
+        if (!fontInfo->tsi) {
+            
+            fontInfo->tsi = calloc(1, sizeof(struct _EDEN_GL_FONT_TEXTURE_INFO));
+            if (!fontInfo->tsi) return (FALSE);
+            fontTextureInfo = (EDEN_GL_FONT_TEXTURE_INFO *)fontInfo->tsi; // Type convenience.
+            
+            fontTextureInfo->textureInfo.pathname = fontInfo->fontDataPathname;
+            fontTextureInfo->textureInfo.mipmaps = GL_FALSE;
+            fontTextureInfo->textureInfo.internalformat = GL_LUMINANCE;
+            fontTextureInfo->textureInfo.min_filter = GL_LINEAR;
+            fontTextureInfo->textureInfo.mag_filter = GL_LINEAR;
+            fontTextureInfo->textureInfo.wrap_s = GL_REPEAT;
+            fontTextureInfo->textureInfo.wrap_t = GL_REPEAT;
+            fontTextureInfo->textureInfo.priority = 0.9;
+            fontTextureInfo->textureInfo.env_mode = GL_REPLACE;
+            
+            fontTextureInfo->textureIndexPerContext = calloc(gContextsActiveCount, sizeof(TEXTURE_INDEX_t));
+            if (!fontTextureInfo->textureIndexPerContext) {
+                free(fontTextureInfo);
+                fontTextureInfo = NULL;
+                return (FALSE);
+            }
+        }
         
-        fontInfo->tsi = calloc(1, sizeof(struct _EDEN_GL_FONT_TEXTURE_INFO));
-        if (!fontInfo->tsi) return (FALSE);
         fontTextureInfo = (EDEN_GL_FONT_TEXTURE_INFO *)fontInfo->tsi; // Type convenience.
         
-        fontTextureInfo->textureInfo.pathname = fontInfo->fontDataPathname;
-        fontTextureInfo->textureInfo.mipmaps = GL_FALSE;
-        fontTextureInfo->textureInfo.internalformat = GL_LUMINANCE;
-        fontTextureInfo->textureInfo.min_filter = GL_LINEAR;
-        fontTextureInfo->textureInfo.mag_filter = GL_LINEAR;
-        fontTextureInfo->textureInfo.wrap_s = GL_REPEAT;
-        fontTextureInfo->textureInfo.wrap_t = GL_REPEAT;
-        fontTextureInfo->textureInfo.priority = 0.9;
-        fontTextureInfo->textureInfo.env_mode = GL_REPLACE;
+        // Unload texture if previously loaded.
+        if (fontTextureInfo->textureIndexPerContext[contextIndex]) {
+            EdenSurfacesTextureUnload(contextIndex, 1, &(fontTextureInfo->textureIndexPerContext[contextIndex]));
+        }
         
-        fontTextureInfo->textureIndexPerContext = calloc(gContextsActiveCount, sizeof(TEXTURE_INDEX_t));
-        if (!fontTextureInfo->textureIndexPerContext) {
-            free(fontTextureInfo);
-            fontTextureInfo = NULL;
+        // Load texture.
+        if (!EdenSurfacesTextureLoad(contextIndex, 1, &(fontTextureInfo->textureInfo), &(fontTextureInfo->textureIndexPerContext[contextIndex]), &hasAlpha)) {
+            fprintf(stderr,"EdenGLFontLoad(): Unable to load font texture.\n");
+            
+            // If this was first texture load and it didn't work out, don't keep the fontTextureInfo around.
+            if (fontTextureInfo->refCount == 0) {
+                free(fontTextureInfo->textureIndexPerContext);
+                free(fontTextureInfo);
+                fontTextureInfo = NULL;
+            }
             return (FALSE);
         }
-    }
-    
-    fontTextureInfo = (EDEN_GL_FONT_TEXTURE_INFO *)fontInfo->tsi; // Type convenience.
-    
-    // Unload texture if previously loaded.
-    if (fontTextureInfo->textureIndexPerContext[contextIndex]) {
-        EdenSurfacesTextureUnload(contextIndex, 1, &(fontTextureInfo->textureIndexPerContext[contextIndex]));
-    }
-    
-    // Load texture.
-	if (!EdenSurfacesTextureLoad(contextIndex, 1, &(fontTextureInfo->textureInfo), &(fontTextureInfo->textureIndexPerContext[contextIndex]), &hasAlpha)) {
-		fprintf(stderr,"EdenGLFontLoad(): Unable to load font texture.\n");
+        fontTextureInfo->refCount++;
         
-        // If this was first texture load and it didn't work out, don't keep the fontTextureInfo around.
+    } else if (fontInfo->type == EDEN_GL_FONT_TYPE_GLUT_STROKE) {
+
+        EDEN_GL_FONT_GLUT_STROKE_INFO *fontGlutStrokeInfo;
+        if (!fontInfo->tsi) {
+            fontInfo->tsi = calloc(1, sizeof(struct _EDEN_GL_FONT_GLUT_STROKE_INFO));
+            if (!fontInfo->tsi) return (FALSE);
+            fontGlutStrokeInfo = (EDEN_GL_FONT_GLUT_STROKE_INFO *)fontInfo->tsi; // Type convenience.
+
+            // If first time called, reserve space for the uniforms and programs.
+#ifdef EDEN_USE_GLES2
+            fontGlutStrokeInfo->uniforms = (GLint *)calloc(gContextsActiveCount * UNIFORM_COUNT, sizeof(GLint));
+            fontGlutStrokeInfo->programs = (GLuint *)calloc(gContextsActiveCount, sizeof(GLuint));
+            if (!fontGlutStrokeInfo->uniforms || !fontGlutStrokeInfo->programs) {
+                free(fontGlutStrokeInfo);
+                fontGlutStrokeInfo = NULL;
+                return (FALSE);
+            }
+#endif
+        }
+
+        fontGlutStrokeInfo = (EDEN_GL_FONT_GLUT_STROKE_INFO *)fontInfo->tsi; // Type convenience.
+        
+#ifdef EDEN_USE_GLES2
+        GLuint vertShader = 0, fragShader = 0;
+        // A simple shader pair which accepts just a vertex position. Fixed color, no lighting.
+        const char vertShaderString[] =
+        "attribute vec4 position;\n"
+        "uniform vec4 color;\n"
+        "uniform mat4 modelViewProjectionMatrix;\n"
+        
+        "varying vec4 colorVarying;\n"
+        "void main()\n"
+        "{\n"
+        "gl_Position = modelViewProjectionMatrix * position;\n"
+        "colorVarying = color;\n"
+        "}\n";
+        const char fragShaderString[] =
+        "#ifdef GL_ES\n"
+        "precision mediump float;\n"
+        "#endif\n"
+        "varying vec4 colorVarying;\n"
+        "void main()\n"
+        "{\n"
+        "gl_FragColor = colorVarying;\n"
+        "}\n";
+        
+        if (fontGlutStrokeInfo->programs[contextIndex]) arglGLDestroyShaders(0, 0, fontGlutStrokeInfo->programs[contextIndex]);
+        fontGlutStrokeInfo->programs[contextIndex] = glCreateProgram();
+        if (!fontGlutStrokeInfo->programs[contextIndex]) {
+            EDEN_LOGe("draw: Error creating shader program.\n");
+            return (FALSE);
+        }
+        
+        if (!arglGLCompileShaderFromString(&vertShader, GL_VERTEX_SHADER, vertShaderString)) {
+            EDEN_LOGe("draw: Error compiling vertex shader.\n");
+            arglGLDestroyShaders(vertShader, fragShader, fontGlutStrokeInfo->programs[contextIndex]);
+            fontGlutStrokeInfo->programs[contextIndex] = 0;
+            return (FALSE);
+        }
+        if (!arglGLCompileShaderFromString(&fragShader, GL_FRAGMENT_SHADER, fragShaderString)) {
+            EDEN_LOGe("draw: Error compiling fragment shader.\n");
+            arglGLDestroyShaders(vertShader, fragShader, fontGlutStrokeInfo->programs[contextIndex]);
+            fontGlutStrokeInfo->programs[contextIndex] = 0;
+            return (FALSE);
+        }
+        glAttachShader(fontGlutStrokeInfo->programs[contextIndex], vertShader);
+        glAttachShader(fontGlutStrokeInfo->programs[contextIndex], fragShader);
+        
+        glBindAttribLocation(fontGlutStrokeInfo->programs[contextIndex], ATTRIBUTE_VERTEX, "position");
+        if (!arglGLLinkProgram(fontGlutStrokeInfo->programs[contextIndex])) {
+            EDEN_LOGe("draw: Error linking shader program.\n");
+            arglGLDestroyShaders(vertShader, fragShader, fontGlutStrokeInfo->programs[contextIndex]);
+            fontGlutStrokeInfo->programs[contextIndex] = 0;
+            return (FALSE);
+        }
+        arglGLDestroyShaders(vertShader, fragShader, 0); // After linking, shader objects can be deleted.
+        
+        // Retrieve linked uniform locations.
+        fontGlutStrokeInfo->uniforms[contextIndex*UNIFORM_COUNT + UNIFORM_MODELVIEW_PROJECTION_MATRIX] = glGetUniformLocation(fontGlutStrokeInfo->programs[contextIndex], "modelViewProjectionMatrix");
+        fontGlutStrokeInfo->uniforms[contextIndex*UNIFORM_COUNT + UNIFORM_COLOR] = glGetUniformLocation(fontGlutStrokeInfo->programs[contextIndex], "color");
+#endif
+       
+        fontGlutStrokeInfo->refCount++;
+    }
+    
+    return (TRUE);
+}
+
+EDEN_BOOL EdenGLFontCleanupFontForContext(const int contextIndex, EDEN_GL_FONT_INFO_t *fontInfo)
+{
+	if (contextIndex < 0 || contextIndex >= gContextsActiveCount) return (FALSE); // Sanity check.
+	if (!fontInfo) return (FALSE);
+    
+    if (fontInfo->type == EDEN_GL_FONT_TYPE_TEXTURE)  {
+    
+        if (!fontInfo->tsi) return (FALSE);
+        
+        // Just for convenience of type.
+        EDEN_GL_FONT_TEXTURE_INFO *fontTextureInfo = (EDEN_GL_FONT_TEXTURE_INFO *)fontInfo->tsi;
+        
+        EdenSurfacesTextureUnload(contextIndex, 1, &(fontTextureInfo->textureIndexPerContext[contextIndex]));
+        
+        fontTextureInfo->refCount--;
         if (fontTextureInfo->refCount == 0) {
             free(fontTextureInfo->textureIndexPerContext);
             free(fontTextureInfo);
             fontTextureInfo = NULL;
         }
-		return (FALSE);
-    }
-    fontTextureInfo->refCount++;
     
-    return (TRUE);
-}
+    } else if (fontInfo->type == EDEN_GL_FONT_TYPE_GLUT_STROKE) {
 
-EDEN_BOOL EdenGLFontUnloadTextureFontForContext(const int contextIndex, EDEN_GL_FONT_INFO_t *fontInfo)
-{
-    EDEN_GL_FONT_TEXTURE_INFO *fontTextureInfo;
-    
-	if (contextIndex < 0 || contextIndex >= gContextsActiveCount) return (FALSE); // Sanity check.
-	if (!fontInfo) return (FALSE);
-    if (!(fontInfo->type == EDEN_GL_FONT_TYPE_TEXTURE)) return (FALSE);
-    
-    if (!fontInfo->tsi) return (FALSE);
-    
-    // Just for convenience of type.
-    fontTextureInfo = (EDEN_GL_FONT_TEXTURE_INFO *)fontInfo->tsi;
-    
-    EdenSurfacesTextureUnload(contextIndex, 1, &(fontTextureInfo->textureIndexPerContext[contextIndex]));
-    
-    fontTextureInfo->refCount--;
-    if (fontTextureInfo->refCount == 0) {
-        free(fontTextureInfo->textureIndexPerContext);
-        free(fontTextureInfo);
-        fontTextureInfo = NULL;
+        if (!fontInfo->tsi) return (FALSE);
+        
+        // Just for convenience of type.
+        EDEN_GL_FONT_GLUT_STROKE_INFO *fontGlutStrokeInfo = (EDEN_GL_FONT_GLUT_STROKE_INFO *)fontInfo->tsi;
+        
+#ifdef EDEN_USE_GLES2
+        arglGLDestroyShaders(0, 0, fontGlutStrokeInfo->programs[contextIndex]);
+#endif
+        fontGlutStrokeInfo->refCount--;
+        if (fontGlutStrokeInfo->refCount == 0) {
+#ifdef EDEN_USE_GLES2
+            free(fontGlutStrokeInfo->programs);
+            free(fontGlutStrokeInfo->uniforms);
+#endif
+            fontGlutStrokeInfo = NULL;
+        }
     }
-    
     return (TRUE);
 }
 
@@ -485,6 +639,7 @@ static void drawSetup(const int contextIndex, struct _VTs *VTs)
     fontTextureInfo = (EDEN_GL_FONT_TEXTURE_INFO *)gFontSettings.font->tsi;
     
     // Set up for texture drawing.
+#ifdef EDEN_USE_GL
     EdenSurfacesTextureSet(contextIndex, fontTextureInfo->textureIndexPerContext[contextIndex]); // Select font texture.
     glStateCacheBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR); // Blend by luminance.
     glStateCacheEnableBlend();
@@ -495,34 +650,54 @@ static void drawSetup(const int contextIndex, struct _VTs *VTs)
     glTexCoordPointer(2, GL_FLOAT, 0, VTs->texcoords);
     glStateCacheEnableClientStateTexCoordArray();
     glStateCacheEnableTex2D();
+#endif
 }
 
-static void drawOneLine(const unsigned char *line)
+static void drawOneLine(const unsigned char *line, int contextIndex, const float viewProjection[16])
 {
     int i = 0;
     unsigned char c;
 
     if (gFontSettings.font->type == EDEN_GL_FONT_TYPE_GLUT_STROKE) {
+#ifdef EDEN_USE_GL
+        glColor4f(gFontSettings.colorRGBA[0], gFontSettings.colorRGBA[1], gFontSettings.colorRGBA[2], gFontSettings.colorRGBA[3]);
         while ((c = line[i++])) {
             if (c < ' ') continue;
-            glutStrokeCharacter(gFontSettings.font->tsi, c);
-            if (!gFontSettings.font->monospaced && c == ' ' && gFormattingSettings.wordExtraSpacing) glTranslatef(glutStrokeWidth(gFontSettings.font->tsi, ' ') * gFormattingSettings.wordExtraSpacing, 0.0f, 0.0f);
+            glutStrokeCharacter(gFontSettings.font->fontDataPathname, c);
+            if (!gFontSettings.font->monospaced && c == ' ' && gFormattingSettings.wordExtraSpacing) glTranslatef(glutStrokeWidth(gFontSettings.font->fontDataPathname, ' ') * gFormattingSettings.wordExtraSpacing, 0.0f, 0.0f);
             glTranslatef(gFontSettings.font->naturalHeight * gFormattingSettings.characterSpacing, 0.0f, 0.0f);
         }
+#elif defined(EDEN_USE_GLES2)
+        EDEN_GL_FONT_GLUT_STROKE_INFO *gsi = (EDEN_GL_FONT_GLUT_STROKE_INFO *)gFontSettings.font->tsi;
+        glUseProgram(gsi->programs[contextIndex]);
+        glUniform4fv(gsi->uniforms[contextIndex*UNIFORM_COUNT + UNIFORM_COLOR], 1, gFontSettings.colorRGBA);
+        float mvp[16];
+        mtxLoadMatrixf(mvp, viewProjection);
+        while ((c = line[i++])) {
+            if (c < ' ') continue;
+            glUniformMatrix4fv(gsi->uniforms[contextIndex*UNIFORM_COUNT + UNIFORM_MODELVIEW_PROJECTION_MATRIX], 1, GL_FALSE, mvp);
+            float translateX;
+            glutStrokeCharacter(gFontSettings.font->fontDataPathname, c, ATTRIBUTE_VERTEX, &translateX);
+            if (!gFontSettings.font->monospaced && c == ' ' && gFormattingSettings.wordExtraSpacing) mtxTranslatef(mvp, glutStrokeWidth(gFontSettings.font->fontDataPathname, ' ') * gFormattingSettings.wordExtraSpacing, 0.0f, 0.0f);
+            mtxTranslatef(mvp, translateX + gFontSettings.font->naturalHeight * gFormattingSettings.characterSpacing, 0.0f, 0.0f);
+        }
+#endif
     } else if (gFontSettings.font->type == EDEN_GL_FONT_TYPE_TEXTURE) {
         while ((c = line[i++])) {
             if (c < ' ') continue;
+#ifdef EDEN_USE_GL
             glMatrixMode(GL_TEXTURE);
             glLoadIdentity();
             glTranslatef((float)(c%16)*0.0625f, 1.0f - (float)(c/16 + 1)*0.0625f, 0.0f); // Select the appropriate bit of font texture.
             glMatrixMode(GL_MODELVIEW);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             glTranslatef(gFontSettings.font->naturalWidthIfMonospaced + (gFontSettings.font->naturalHeight * gFormattingSettings.characterSpacing), 0.0f, 0.0f); // Move to the right.
+#endif
         }
     }
 }
 
-void EdenGLFontDrawLine(const int contextIndex, const unsigned char *line, const float hOffset, const float vOffset, H_OFFSET_TYPE hOffsetType, V_OFFSET_TYPE vOffsetType)
+void EdenGLFontDrawLine(const int contextIndex, const float viewProjection[16], const unsigned char *line, const float hOffset, const float vOffset, H_OFFSET_TYPE hOffsetType, V_OFFSET_TYPE vOffsetType)
 {
     GLfloat x, y;
     GLfloat fontScalef;
@@ -545,14 +720,22 @@ void EdenGLFontDrawLine(const int contextIndex, const unsigned char *line, const
     
     if (gFontSettings.font->type == EDEN_GL_FONT_TYPE_TEXTURE) drawSetup(contextIndex, &VTs);
     fontScalef = gFontSettings.size/72.0f * gViewSettings.pixelsPerInch / gFontSettings.font->naturalHeight;
+#ifdef EDEN_USE_GL
     glPushMatrix();
     glTranslatef(x, y, 0.0f);
     glScalef(fontScalef, fontScalef, fontScalef);
-    drawOneLine(line);
+    drawOneLine(line, 0 , NULL);
     glPopMatrix();
+#elif defined(EDEN_USE_GLES2)
+    float mvp[16];
+    mtxLoadMatrixf(mvp, viewProjection);
+    mtxTranslatef(mvp, x, y, 0.0f);
+    mtxScalef(mvp, fontScalef, fontScalef, fontScalef);
+    drawOneLine(line, contextIndex, mvp);
+#endif
 }
 
-void EdenGLFontDrawBlock(const int contextIndex, const unsigned char **lines, const unsigned int lineCount, const float hOffset, const float vOffset, H_OFFSET_TYPE hOffsetType, V_OFFSET_TYPE vOffsetType)
+void EdenGLFontDrawBlock(const int contextIndex, const float viewProjection[16], const unsigned char **lines, const unsigned int lineCount, const float hOffset, const float vOffset, H_OFFSET_TYPE hOffsetType, V_OFFSET_TYPE vOffsetType)
 {
     int i;
     GLfloat x, y;
@@ -577,6 +760,7 @@ void EdenGLFontDrawBlock(const int contextIndex, const unsigned char **lines, co
     
     if (gFontSettings.font->type == EDEN_GL_FONT_TYPE_TEXTURE) drawSetup(contextIndex, &VTs);
     fontScalef = gFontSettings.size/72.0f * gViewSettings.pixelsPerInch / gFontSettings.font->naturalHeight;
+#ifdef EDEN_USE_GL
     glPushMatrix();
     for (i = 0; i < lineCount; i++) {
         if (lines[i]) {
@@ -585,9 +769,20 @@ void EdenGLFontDrawBlock(const int contextIndex, const unsigned char **lines, co
             glTranslatef(x, y, 0.0f);
             glScalef(fontScalef, fontScalef, fontScalef);
             glTranslatef(0.0f, ((lineCount - 1) - i)*gFontSettings.font->naturalHeight*gFormattingSettings.lineSpacing, 0.0f); // Translate to baseline for this line.
-            drawOneLine(lines[i]);
+            drawOneLine(lines[i], 0, NULL);
         }
     }
     glPopMatrix();
+#elif defined(EDEN_USE_GLES2)
+    for (i = 0; i < lineCount; i++) {
+        if (lines[i]) {
+            float mvp[16];
+            mtxLoadMatrixf(mvp, viewProjection);
+            mtxTranslatef(mvp, x, y, 0.0f);
+            mtxScalef(mvp, fontScalef, fontScalef, fontScalef);
+            mtxTranslatef(mvp, 0.0f, ((lineCount - 1) - i)*gFontSettings.font->naturalHeight*gFormattingSettings.lineSpacing, 0.0f); // Translate to baseline for this line.
+            drawOneLine(lines[i], contextIndex, mvp);
+        }
+    }
+#endif
 }
-

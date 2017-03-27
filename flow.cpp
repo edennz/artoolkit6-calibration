@@ -255,7 +255,7 @@ static void *flowThread(void *arg)
 		flowSetEventMask((EVENT_t)(EVENT_TOUCH|EVENT_BACK_BUTTON));
 
 		do {
-			snprintf((char *)statusBarMessage, STATUS_BAR_MESSAGE_BUFFER_LEN, "Capturing image %d/%d", gFlowCalib->calibImageCount(), gFlowCalib->calibImageCountMax());
+			snprintf((char *)statusBarMessage, STATUS_BAR_MESSAGE_BUFFER_LEN, "Capturing image %d/%d", gFlowCalib->calibImageCount() + 1, gFlowCalib->calibImageCountMax());
 			event = flowWaitForEvent();
 			if (gStop) break;
 			if (event == EVENT_TOUCH) {

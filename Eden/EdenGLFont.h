@@ -193,7 +193,11 @@ void EdenGLFontSetSize(const float points);
     @result Font size in points. Default is 16 point.
  */
 float EdenGLFontGetSize(void);
-    
+
+void EdenGLFontSetColor(const float rgba[4]);
+
+void EdenGLFontGetColor(float rgba[4]);
+
 /*!
     @function
     @abstract Set character spacing (i.e. "kerning").
@@ -345,7 +349,7 @@ float EdenGLFontGetBlockHeight(const unsigned char **lines, const unsigned int l
     @param fontInfo
     @result 
  */
-EDEN_BOOL EdenGLFontLoadTextureFontForContext(const int contextIndex, EDEN_GL_FONT_INFO_t *fontInfo);
+EDEN_BOOL EdenGLFontSetupFontForContext(const int contextIndex, EDEN_GL_FONT_INFO_t *fontInfo);
 
 /*!
     @function
@@ -356,7 +360,7 @@ EDEN_BOOL EdenGLFontLoadTextureFontForContext(const int contextIndex, EDEN_GL_FO
     @param fontInfo
     @result
  */
-EDEN_BOOL EdenGLFontUnloadTextureFontForContext(const int contextIndex, EDEN_GL_FONT_INFO_t *fontInfo);
+EDEN_BOOL EdenGLFontCleanupFontForContext(const int contextIndex, EDEN_GL_FONT_INFO_t *fontInfo);
 
 /*!
     @function 
@@ -395,7 +399,7 @@ EDEN_BOOL EdenGLFontUnloadTextureFontForContext(const int contextIndex, EDEN_GL_
     @param hOffsetType Specifies left, centered, or right alignment horizontal alignment.
     @param vOffsetType Specifies top, centered, or bottom alignment vertical alignment.
 */
-void EdenGLFontDrawLine(const int contextIndex, const unsigned char *line, const float hOffset, const float vOffset, H_OFFSET_TYPE hOffsetType, V_OFFSET_TYPE vOffsetType);
+void EdenGLFontDrawLine(const int contextIndex, const float viewProjection[16], const unsigned char *line, const float hOffset, const float vOffset, H_OFFSET_TYPE hOffsetType, V_OFFSET_TYPE vOffsetType);
 
 /*!
     @function 
@@ -435,7 +439,7 @@ void EdenGLFontDrawLine(const int contextIndex, const unsigned char *line, const
     @param hOffsetType Specifies left, centered, or right alignment horizontal alignment.
     @param vOffsetType Specifies top, centered, or bottom alignment vertical alignment.
 */
-void EdenGLFontDrawBlock(const int contextIndex, const unsigned char **lines, const unsigned int lineCount, const float hOffset, const float vOffset, H_OFFSET_TYPE hOffsetType, V_OFFSET_TYPE vOffsetType);
+void EdenGLFontDrawBlock(const int contextIndex, const float viewProjection[16], const unsigned char **lines, const unsigned int lineCount, const float hOffset, const float vOffset, H_OFFSET_TYPE hOffsetType, V_OFFSET_TYPE vOffsetType);
     
 #ifdef __cplusplus
 }

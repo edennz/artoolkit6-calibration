@@ -25,7 +25,6 @@
 		4A47936C1E80CF96002C3631 /* ARViewOverlay.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793661E80CF96002C3631 /* ARViewOverlay.m */; };
 		4A47936D1E80CF96002C3631 /* CameraFocusView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793681E80CF96002C3631 /* CameraFocusView.m */; };
 		4A47936E1E80CF96002C3631 /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A47936A1E80CF96002C3631 /* SettingsViewController.m */; };
-		4A4793851E80CFD4002C3631 /* ARViewOverlays.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4A4793711E80CFD4002C3631 /* ARViewOverlays.xib */; };
 		4A4793861E80CFD4002C3631 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4A4793731E80CFD4002C3631 /* Localizable.strings */; };
 		4A4793871E80CFD4002C3631 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A4793751E80CFD4002C3631 /* Images.xcassets */; };
 		4A4793881E80CFD4002C3631 /* Iris-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A4793761E80CFD4002C3631 /* Iris-568h@2x.png */; };
@@ -45,7 +44,23 @@
 		4A4793A51E80D85A002C3631 /* flow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793A41E80D85A002C3631 /* flow.mm */; };
 		4A4793CE1E80D945002C3631 /* EdenTime.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793B21E80D945002C3631 /* EdenTime.c */; };
 		4A4793CF1E80D945002C3631 /* EdenUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793B41E80D945002C3631 /* EdenUtil.c */; };
-		4A4793D01E80D945002C3631 /* glStateCache.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793B61E80D945002C3631 /* glStateCache.c */; };
+		4ADE9C161E887B8500F04AC0 /* EdenMessage.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793AE1E80D945002C3631 /* EdenMessage.c */; };
+		4ADE9C171E88863600F04AC0 /* EdenGLFont.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793AB1E80D945002C3631 /* EdenGLFont.c */; };
+		4ADE9C181E8886AB00F04AC0 /* EdenSurfaces.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793B01E80D945002C3631 /* EdenSurfaces.c */; };
+		4ADE9C191E8887B200F04AC0 /* readtex.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793C91E80D945002C3631 /* readtex.c */; };
+		4ADE9C1A1E8887CF00F04AC0 /* glut_8x13.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793B91E80D945002C3631 /* glut_8x13.c */; };
+		4ADE9C1B1E8887CF00F04AC0 /* glut_9x15.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793BA1E80D945002C3631 /* glut_9x15.c */; };
+		4ADE9C1C1E8887CF00F04AC0 /* glut_bitmap.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793BB1E80D945002C3631 /* glut_bitmap.c */; };
+		4ADE9C1D1E8887CF00F04AC0 /* glut_bwidth.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793BC1E80D945002C3631 /* glut_bwidth.c */; };
+		4ADE9C1E1E8887CF00F04AC0 /* glut_hel10.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793BD1E80D945002C3631 /* glut_hel10.c */; };
+		4ADE9C1F1E8887CF00F04AC0 /* glut_hel12.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793BE1E80D945002C3631 /* glut_hel12.c */; };
+		4ADE9C201E8887CF00F04AC0 /* glut_hel18.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793BF1E80D945002C3631 /* glut_hel18.c */; };
+		4ADE9C211E8887CF00F04AC0 /* glut_mroman.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793C01E80D945002C3631 /* glut_mroman.c */; };
+		4ADE9C221E8887CF00F04AC0 /* glut_roman.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793C11E80D945002C3631 /* glut_roman.c */; };
+		4ADE9C231E8887CF00F04AC0 /* glut_stroke.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793C21E80D945002C3631 /* glut_stroke.c */; };
+		4ADE9C241E8887CF00F04AC0 /* glut_swidth.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793C31E80D945002C3631 /* glut_swidth.c */; };
+		4ADE9C251E8887CF00F04AC0 /* glut_tr10.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793C41E80D945002C3631 /* glut_tr10.c */; };
+		4ADE9C261E8887CF00F04AC0 /* glut_tr24.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793C51E80D945002C3631 /* glut_tr24.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,18 +83,13 @@
 		4A47934B1E80CDBE002C3631 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		4A47934D1E80CDBE002C3631 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		4A47934E1E80CDBE002C3631 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		4A4793501E80CDBE002C3631 /* ARViewControllerCC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ARViewControllerCC.h; sourceTree = "<group>"; };
-		4A4793511E80CDBE002C3631 /* ARViewControllerCC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ARViewControllerCC.m; sourceTree = "<group>"; };
 		4A47935B1E80CDBF002C3631 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		4A4793631E80CF96002C3631 /* ARView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARView.h; sourceTree = "<group>"; };
-		4A4793641E80CF96002C3631 /* ARView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ARView.m; sourceTree = "<group>"; };
 		4A4793651E80CF96002C3631 /* ARViewOverlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARViewOverlay.h; sourceTree = "<group>"; };
 		4A4793661E80CF96002C3631 /* ARViewOverlay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ARViewOverlay.m; sourceTree = "<group>"; };
 		4A4793671E80CF96002C3631 /* CameraFocusView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CameraFocusView.h; sourceTree = "<group>"; };
 		4A4793681E80CF96002C3631 /* CameraFocusView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CameraFocusView.m; sourceTree = "<group>"; };
 		4A4793691E80CF96002C3631 /* SettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
 		4A47936A1E80CF96002C3631 /* SettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
-		4A4793711E80CFD4002C3631 /* ARViewOverlays.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ARViewOverlays.xib; sourceTree = "<group>"; };
 		4A4793741E80CFD4002C3631 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Localizable.strings; sourceTree = "<group>"; };
 		4A4793751E80CFD4002C3631 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		4A4793761E80CFD4002C3631 /* Iris-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Iris-568h@2x.png"; sourceTree = "<group>"; };
@@ -116,8 +126,6 @@
 		4A4793B31E80D945002C3631 /* EdenTime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EdenTime.h; sourceTree = "<group>"; };
 		4A4793B41E80D945002C3631 /* EdenUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EdenUtil.c; sourceTree = "<group>"; };
 		4A4793B51E80D945002C3631 /* EdenUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EdenUtil.h; sourceTree = "<group>"; };
-		4A4793B61E80D945002C3631 /* glStateCache.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glStateCache.c; sourceTree = "<group>"; };
-		4A4793B71E80D945002C3631 /* glStateCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glStateCache.h; sourceTree = "<group>"; };
 		4A4793B91E80D945002C3631 /* glut_8x13.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glut_8x13.c; sourceTree = "<group>"; };
 		4A4793BA1E80D945002C3631 /* glut_9x15.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glut_9x15.c; sourceTree = "<group>"; };
 		4A4793BB1E80D945002C3631 /* glut_bitmap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glut_bitmap.c; sourceTree = "<group>"; };
@@ -162,10 +170,6 @@
 		4A0AB6851E82056200F6EBB9 /* old */ = {
 			isa = PBXGroup;
 			children = (
-				4A4793631E80CF96002C3631 /* ARView.h */,
-				4A4793641E80CF96002C3631 /* ARView.m */,
-				4A4793501E80CDBE002C3631 /* ARViewControllerCC.h */,
-				4A4793511E80CDBE002C3631 /* ARViewControllerCC.m */,
 				4A4793651E80CF96002C3631 /* ARViewOverlay.h */,
 				4A4793661E80CF96002C3631 /* ARViewOverlay.m */,
 				4A4793691E80CF96002C3631 /* SettingsViewController.h */,
@@ -242,7 +246,6 @@
 			isa = PBXGroup;
 			children = (
 				4A0AB69C1E8224D800F6EBB9 /* Main.storyboard */,
-				4A4793711E80CFD4002C3631 /* ARViewOverlays.xib */,
 				4A4793721E80CFD4002C3631 /* en.lproj */,
 				4A4793751E80CFD4002C3631 /* Images.xcassets */,
 				4A4793761E80CFD4002C3631 /* Iris-568h@2x.png */,
@@ -308,8 +311,6 @@
 				4A4793B31E80D945002C3631 /* EdenTime.h */,
 				4A4793B41E80D945002C3631 /* EdenUtil.c */,
 				4A4793B51E80D945002C3631 /* EdenUtil.h */,
-				4A4793B61E80D945002C3631 /* glStateCache.c */,
-				4A4793B71E80D945002C3631 /* glStateCache.h */,
 				4A4793B81E80D945002C3631 /* gluttext */,
 				4A4793C81E80D945002C3631 /* gluttext.h */,
 				4A4793C91E80D945002C3631 /* readtex.c */,
@@ -404,7 +405,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4A4793951E80CFD4002C3631 /* SettingsViewController.xib in Resources */,
-				4A4793851E80CFD4002C3631 /* ARViewOverlays.xib in Resources */,
 				4A47938C1E80CFD4002C3631 /* Iris@2x.png in Resources */,
 				4A4793871E80CFD4002C3631 /* Images.xcassets in Resources */,
 				4A4793941E80CFD4002C3631 /* reveal-icon@2x.png in Resources */,
@@ -428,20 +428,36 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4ADE9C1F1E8887CF00F04AC0 /* glut_hel12.c in Sources */,
 				4A4793A51E80D85A002C3631 /* flow.mm in Sources */,
 				4A47934F1E80CDBE002C3631 /* AppDelegate.m in Sources */,
+				4ADE9C261E8887CF00F04AC0 /* glut_tr24.c in Sources */,
 				4A47936C1E80CF96002C3631 /* ARViewOverlay.m in Sources */,
 				4A47939E1E80D195002C3631 /* calc.cpp in Sources */,
 				4A4793CE1E80D945002C3631 /* EdenTime.c in Sources */,
 				4A0AB6811E81DA6900F6EBB9 /* ARViewController.mm in Sources */,
+				4ADE9C251E8887CF00F04AC0 /* glut_tr10.c in Sources */,
 				4A47936D1E80CF96002C3631 /* CameraFocusView.m in Sources */,
+				4ADE9C241E8887CF00F04AC0 /* glut_swidth.c in Sources */,
+				4ADE9C181E8886AB00F04AC0 /* EdenSurfaces.c in Sources */,
+				4ADE9C1D1E8887CF00F04AC0 /* glut_bwidth.c in Sources */,
+				4ADE9C211E8887CF00F04AC0 /* glut_mroman.c in Sources */,
+				4ADE9C191E8887B200F04AC0 /* readtex.c in Sources */,
 				4A0AB6841E81DFCE00F6EBB9 /* prefsNull.c in Sources */,
-				4A4793D01E80D945002C3631 /* glStateCache.c in Sources */,
+				4ADE9C1C1E8887CF00F04AC0 /* glut_bitmap.c in Sources */,
+				4ADE9C231E8887CF00F04AC0 /* glut_stroke.c in Sources */,
 				4A47934C1E80CDBE002C3631 /* main.m in Sources */,
 				4A4793A01E80D195002C3631 /* fileUploader.c in Sources */,
+				4ADE9C1E1E8887CF00F04AC0 /* glut_hel10.c in Sources */,
+				4ADE9C1B1E8887CF00F04AC0 /* glut_9x15.c in Sources */,
 				4A47936E1E80CF96002C3631 /* SettingsViewController.m in Sources */,
+				4ADE9C201E8887CF00F04AC0 /* glut_hel18.c in Sources */,
+				4ADE9C171E88863600F04AC0 /* EdenGLFont.c in Sources */,
+				4ADE9C221E8887CF00F04AC0 /* glut_roman.c in Sources */,
 				4A47939F1E80D195002C3631 /* Calibration.cpp in Sources */,
+				4ADE9C1A1E8887CF00F04AC0 /* glut_8x13.c in Sources */,
 				4A4793CF1E80D945002C3631 /* EdenUtil.c in Sources */,
+				4ADE9C161E887B8500F04AC0 /* EdenMessage.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

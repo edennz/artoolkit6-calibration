@@ -235,9 +235,9 @@ static void *flowThread(void *arg)
 	while (!gStop) {
 
 		if (flowStateGet() == FLOW_STATE_WELCOME) {
-//			EdenMessageShow((const unsigned char *)NSLocalizedString(@"Intro",@"Welcome message for first run").UTF8String);
+			EdenMessageShow((const unsigned char *)NSLocalizedString(@"Intro",@"Welcome message for first run").UTF8String);
 		} else {
-//			EdenMessageShow((const unsigned char *)NSLocalizedString(@"Reintro",@"Welcome message for subsequent runs").UTF8String);
+			EdenMessageShow((const unsigned char *)NSLocalizedString(@"Reintro",@"Welcome message for subsequent runs").UTF8String);
 		}
 		flowSetEventMask((EVENT_t)(EVENT_TOUCH | EVENT_MODAL));
 		event = flowWaitForEvent();
@@ -248,7 +248,7 @@ static void *flowThread(void *arg)
             event = flowWaitForEvent();
             continue;
         } else {
-//            EdenMessageHide();
+            EdenMessageHide();
         }
 
 		// Start capturing.
@@ -257,7 +257,7 @@ static void *flowThread(void *arg)
 		flowSetEventMask((EVENT_t)(EVENT_TOUCH|EVENT_BACK_BUTTON));
 
 		do {
-			snprintf((char *)statusBarMessage, STATUS_BAR_MESSAGE_BUFFER_LEN, NSLocalizedString(@"CalibCapturing",@"Message during image capture").UTF8String, gFlowCalib->calibImageCount(), gFlowCalib->calibImageCountMax());
+			snprintf((char *)statusBarMessage, STATUS_BAR_MESSAGE_BUFFER_LEN, NSLocalizedString(@"CalibCapturing",@"Message during image capture").UTF8String, gFlowCalib->calibImageCount() + 1, gFlowCalib->calibImageCountMax());
 			event = flowWaitForEvent();
 			if (gStop) break;
 			if (event == EVENT_TOUCH) {
@@ -286,10 +286,10 @@ static void *flowThread(void *arg)
 
 			flowSetEventMask(EVENT_TOUCH);
             flowStateSet(FLOW_STATE_DONE);
-//			EdenMessageShow((const unsigned char *)NSLocalizedString(@"CalibCanceled",@"Message when user cancels a calibration run.").UTF8String);
+			EdenMessageShow((const unsigned char *)NSLocalizedString(@"CalibCanceled",@"Message when user cancels a calibration run.").UTF8String);
 			flowWaitForEvent();
 			if (gStop) break;
-//			EdenMessageHide();
+			EdenMessageHide();
 
 		} else {
 			ARParam param;
@@ -297,9 +297,9 @@ static void *flowThread(void *arg)
 
 			flowSetEventMask(EVENT_NONE);
 			flowStateSet(FLOW_STATE_CALIBRATING);
-//			EdenMessageShow((const unsigned char *)NSLocalizedString(@"CalibCalculating",@"Message during calibration calculation.").UTF8String);
+			EdenMessageShow((const unsigned char *)NSLocalizedString(@"CalibCalculating",@"Message during calibration calculation.").UTF8String);
 			gFlowCalib->calib(&param, &err_min, &err_avg, &err_max);
-//    		EdenMessageHide();
+    		EdenMessageHide();
 
             if (gCallback) (*gCallback)(&param, err_min, err_avg, err_max, gCallbackUserdata);
 
@@ -308,11 +308,11 @@ static void *flowThread(void *arg)
 			flowStateSet(FLOW_STATE_DONE);
 			unsigned char *buf;
 			asprintf((char **)&buf, NSLocalizedString(@"CalibResults",@"Message when user completes a calibration run.").UTF8String, err_min, err_avg, err_max);
-//			EdenMessageShow(buf);
+			EdenMessageShow(buf);
 			free(buf);
 			flowWaitForEvent();
 			if (gStop) break;
-//			EdenMessageHide();
+			EdenMessageHide();
 
 		}
 

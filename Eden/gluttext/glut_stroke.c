@@ -1,9 +1,12 @@
 #include <Eden/gluttext.h>
 #if GLUTTEXT_STROKE_ENABLE
-#ifndef EDEN_USE_GLES2
+#ifdef EDEN_USE_GL
 #  define USE_GL_STATE_CACHE 0
+#  include <Eden/glStateCache.h>
+#elif defined(EDEN_USE_GLES2)
+#  include <stdlib.h>
+#  include <AR6/ARG/glStateCache2.h>
 #endif
-#include <Eden/glStateCache.h>
 
 /* Copyright (c) Mark J. Kilgard, 1994. */
 
@@ -14,18 +17,16 @@
 //#include "glutint.h"
 #include "glutstroke.h"
 
-void
-glutStrokeCharacter(GLUTstrokeFont font, int c)
+#ifdef EDEN_USE_GL
+void glutStrokeCharacter(GLUTstrokeFont font, int c)
+#elif defined(EDEN_USE_GLES2)
+void glutStrokeCharacter(GLUTstrokeFont font, int c, uint32_t vertexAttribIndex, float *translateX)
+#endif
 {
     const StrokeCharRec *ch;
     const StrokeRec *stroke;
     StrokeFontPtr fontinfo;
     int i;
-#if 0
-    const CoordRec *coord;
-    int j;
-#endif
-    
     
     fontinfo = (StrokeFontPtr) font;
     
@@ -33,9 +34,9 @@ glutStrokeCharacter(GLUTstrokeFont font, int c)
         return;
     ch = &(fontinfo->ch[c]);
     if (ch) {
+#ifdef EDEN_USE_GL
         for (i = ch->num_strokes, stroke = ch->stroke;
              i > 0; i--, stroke++) {
-#if 1
             // Essential setup for glDrawArrays();
             glVertexPointer(2, GL_FLOAT, 0, stroke->coord);
             glStateCacheEnableClientStateVertexArray();
@@ -44,16 +45,18 @@ glutStrokeCharacter(GLUTstrokeFont font, int c)
             glStateCacheDisableClientStateNormalArray();
             
             glDrawArrays(GL_LINE_STRIP, 0, stroke->num_coords);
-#else
-            glBegin(GL_LINE_STRIP);
-            for (j = stroke->num_coords, coord = stroke->coord;
-                 j > 0; j--, coord++) {
-                glVertex2f(coord->x, coord->y);
-            }
-            glEnd();
-#endif
         }
-        glTranslatef(ch->right, 0.0, 0.0);
+        glTranslatef(ch->right, 0.0f, 0.0f);
+#elif defined(EDEN_USE_GLES2)
+        for (i = ch->num_strokes, stroke = ch->stroke;
+             i > 0; i--, stroke++) {
+            // Essential setup for glDrawArrays();
+            glVertexAttribPointer(vertexAttribIndex, 2, GL_FLOAT, GL_FALSE, 0, stroke->coord);
+            glEnableVertexAttribArray(vertexAttribIndex);
+            glDrawArrays(GL_LINE_STRIP, 0, stroke->num_coords);
+        }
+        if (translateX) *translateX = ch->right;
+#endif
     }
 }
 

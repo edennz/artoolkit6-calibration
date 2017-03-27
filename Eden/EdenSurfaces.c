@@ -48,10 +48,14 @@
 #include <string.h>				// strcmp()
 #include <stdlib.h>				// malloc(), calloc(), free()
 #include <Eden/readtex.h>			// ReadTex()
-#ifndef EDEN_USE_GLES2
+#ifdef EDEN_USE_GL
 #  define USE_GL_STATE_CACHE 0
+#  include <Eden/glStateCache.h>
+#elif defined(EDEN_USE_GLES2)
+#  include <AR6/ARG/glStateCache2.h>
+#  include <AR6/ARG/arg_shader_gl.h>
+#  include <AR6/ARG/arg_mtx.h>
 #endif
-#include <Eden/glStateCache.h>
 #ifndef GL_GENERATE_MIPMAP
 #  define GL_GENERATE_MIPMAP 0x8191
 #endif
@@ -90,7 +94,7 @@ EDEN_BOOL EdenSurfacesInit(const int contextsActiveCount, const int textureIndex
     
 	gTextures = (TEXTURE_t *)calloc(textureIndexMax * contextsActiveCount, sizeof(TEXTURE_t));
 	gTextureIndexPtr = (unsigned int *)calloc(contextsActiveCount, sizeof(unsigned int));
-	gTextureIndexMax = textureIndexMax;	
+	gTextureIndexMax = textureIndexMax;
 
 	gSurfacesContextsActiveCount = contextsActiveCount;
 
@@ -130,7 +134,7 @@ EDEN_BOOL EdenSurfacesTextureLoad2(const int contextIndex, const int numTextures
 
 	glStateCachePixelStoreUnpackAlignment(1);	// ReadTex returns tightly packed texture data.
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &textureSizeMax);
-#if EDEN_USE_GLES2
+#ifdef EDEN_USE_GLES2
     haveLimitedNPOT = TRUE;
     haveNPOT = EdenGLCapabilityCheck(0u, (const unsigned char *)"GL_OES_texture_npot");
 #else
@@ -314,8 +318,10 @@ void EdenSurfacesTextureSet(const int contextIndex, TEXTURE_INDEX_t textureIndex
 		offset = contextIndex * gTextureIndexMax + textureIndex - 1;
         glStateCacheActiveTexture(GL_TEXTURE0);
 		glStateCacheBindTexture2D(gTextures[offset].name);
+#ifdef EDEN_USE_GL
 		glStateCacheTexEnvMode(gTextures[offset].env_mode);	// Environment mode specific to this texture.
 		//glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, gTextures[offset].env_color);	// Environment colour specific to this texture.
+#endif
 	}
 }
 
@@ -336,6 +342,7 @@ EDEN_BOOL EdenSurfacesTextureUnload(const int contextIndex, const int numTexture
 	return (ok);
 }
 
+#ifdef EDEN_USE_GL
 EDEN_BOOL EdenSurfacesDraw(const int contextIndex, const TEXTURE_INDEX_t textureIndex, const int width, const int height, const EDEN_TEXTURE_SCALING_MODE scaleMode, const EDEN_TEXTURE_ALIGNMENT_MODE alignMode)
 {
 	unsigned int offset;
@@ -416,6 +423,8 @@ EDEN_BOOL EdenSurfacesDraw2(const int contextIndex, const TEXTURE_INDEX_t textur
     return (TRUE);
 }
 
+#endif // EDEN_USE_GL
+
 GLboolean EdenGluCheckExtension(const GLubyte* extName, const GLubyte *extString)
 {
     const GLubyte *start;
@@ -451,7 +460,7 @@ int EdenGLCapabilityCheck(const unsigned short minVersion, const unsigned char *
     if (minVersion > 0) {
         strVersion = glGetString(GL_VERSION);
         if (!strVersion) return (FALSE);
-#if EDEN_USE_GLES2
+#ifdef EDEN_USE_GLES2
         j = 10; // Of the form "OpenGL ES 2.0" etc.
 #else
         j = 0;

@@ -259,7 +259,7 @@ void EdenMessageSetBoxParams(const float width, const float padding);
 		message routines, in both single- and multi-threaded applications.
 	@param      contextIndex (description)
 */
-void EdenMessageDraw(const int contextIndex);
+void EdenMessageDraw(const int contextIndex, const float viewProjection[16]);
 
 /*!
     @function 

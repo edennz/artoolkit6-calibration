@@ -187,9 +187,17 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 
 @property (strong, nonatomic) EAGLContext *context;
 
+// Re-implemented properties from GLKViewController.
+@property (strong, nonatomic) CADisplayLink *displayLink;
+@property (nonatomic) NSInteger animationFrameInterval;
+@property (nonatomic) NSInteger preferredFramesPerSecond;
+@property (nonatomic, getter=isPaused) BOOL paused;
+@property (nonatomic) BOOL pauseOnWillResignActive;
+@property (nonatomic) BOOL resumeOnDidBecomeActive;
+
+
 - (void)setupGL;
 - (void)tearDownGL;
-- (void) drawCleanupGLES2;
 @end
 
 @implementation ARViewController
@@ -228,6 +236,16 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     program = 0;
     gArglSettingsCornerFinderImage = NULL;
     
+    // Init reimplemented GLKViewController properties.
+    _displayLink = nil;
+    _animationFrameInterval = 2;
+    _preferredFramesPerSecond = 30;
+    _paused = YES;
+    _pauseOnWillResignActive = NO;
+    self.pauseOnWillResignActive = YES;
+    _resumeOnDidBecomeActive = NO;
+    self.resumeOnDidBecomeActive = YES;
+    
     // Preferences.
     gPreferences = initPreferences();
     gPreferenceCameraOpenToken = getPreferenceCameraOpenToken(gPreferences);
@@ -239,17 +257,13 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     //gSDLEventPreferencesChanged = SDL_RegisterEvents(1);
     
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-
     if (!self.context) {
         NSLog(@"Failed to create ES context");
     }
+    self.glkView.context = self.context;
     
-    GLKView *view = (GLKView *)self.view;
-    view.context = self.context;
-    view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
-    
-    [[NSBundle mainBundle] loadNibNamed:@"ARViewOverlays" owner:self options:nil]; // Contains connection to the strong property "overlays".
-    self.overlays.frame = self.view.frame;
+    //[[NSBundle mainBundle] loadNibNamed:@"ARViewOverlays" owner:self options:nil]; // Contains connection to the strong property "overlays".
+    //self.overlays.frame = self.view.frame;
     if (!focusView) focusView = [[CameraFocusView alloc] initWithFrame:self.view.frame];
     
     [self setupGL];
@@ -260,8 +274,10 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 {
     [super viewWillAppear:animated];
 
+    [self setPaused:NO];
+    
     // Extra view setup.
-    [self.view addSubview:self.overlays];
+    //[self.view addSubview:self.overlays];
     //self.view.touchDelegate = self;
     [self.view addSubview:focusView];
     
@@ -269,20 +285,21 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 
 - (void)viewDidLayoutSubviews
 {
-    GLKView *view = (GLKView *)self.view;
-    [view bindDrawable];
-    contextWidth = (int)view.drawableWidth;
-    contextHeight = (int)view.drawableHeight;
+    [self.glkView bindDrawable];
+    contextWidth = (int)self.glkView.drawableWidth;
+    contextHeight = (int)self.glkView.drawableHeight;
     contextWasUpdated = true;
 }
 
 - (void)viewDidDisappear:(BOOL)animated
 {
     // Extra view cleanup.
-    [self.overlays removeFromSuperview];
+    //[self.overlays removeFromSuperview];
     //self.view.touchDelegate = nil;
     [focusView removeFromSuperview];
 
+    [self setPaused:YES];
+    
     [super viewDidDisappear:animated];
 }
 
@@ -294,6 +311,10 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     if ([EAGLContext currentContext] == self.context) {
         [EAGLContext setCurrentContext:nil];
     }
+    
+    // Cleanup reimplemented GLKViewController properties.
+    self.pauseOnWillResignActive = NO;
+    self.resumeOnDidBecomeActive = NO;
 }
 
 - (void)didReceiveMemoryWarning
@@ -317,6 +338,93 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 - (BOOL)prefersStatusBarHidden {
     return YES;
 }
+
+#pragma mark - GLKViewController methods
+
+- (void)setAnimationFrameInterval:(NSInteger)animationFrameInterval {
+    if (animationFrameInterval == _animationFrameInterval) {
+        return;
+    }
+    _animationFrameInterval = animationFrameInterval;
+    [self.displayLink invalidate];
+    CADisplayLink *aDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(executeRunLoop)];
+    [aDisplayLink setFrameInterval:_animationFrameInterval];
+    [aDisplayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    self.displayLink = aDisplayLink;
+}
+
+- (void)setPreferredFramesPerSecond:(NSInteger)preferredFramesPerSecond {
+    _preferredFramesPerSecond = preferredFramesPerSecond;
+    if (_preferredFramesPerSecond < 2) {
+        self.animationFrameInterval = 60;
+        return;
+    }
+    if (_preferredFramesPerSecond > 30) {
+        self.animationFrameInterval = 1;
+        return;
+    }
+    self.animationFrameInterval = 60 / _preferredFramesPerSecond;
+}
+
+- (void)setPaused:(BOOL)paused {
+    if (paused) {
+        if (!_paused) {
+            [self.displayLink invalidate];
+            self.displayLink = nil;
+            _paused = YES;
+        }
+        return;
+    }
+    if (_paused) {
+        CADisplayLink *aDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(executeRunLoop)];
+        [aDisplayLink setFrameInterval:_animationFrameInterval];
+        [aDisplayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        self.displayLink = aDisplayLink;
+        _paused = NO;
+    }
+}
+
+- (void)setPauseOnWillResignActive:(BOOL)pauseOnWillResignActive {
+    if (pauseOnWillResignActive == _pauseOnWillResignActive) {
+        return;
+    }
+    _pauseOnWillResignActive = pauseOnWillResignActive;
+    if (pauseOnWillResignActive) {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stopAnimation) name:UIApplicationWillResignActiveNotification object:nil];
+    } else {
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
+    }
+}
+
+- (void)setResumeOnDidBecomeActive:(BOOL)resumeOnDidBecomeActive {
+    if (resumeOnDidBecomeActive == _resumeOnDidBecomeActive) {
+        return;
+    }
+    _resumeOnDidBecomeActive = resumeOnDidBecomeActive;
+    if (resumeOnDidBecomeActive) {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(startAnimation) name:UIApplicationDidBecomeActiveNotification object:nil];
+    } else {
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
+    }
+}
+
+- (void)startAnimation {
+    [self setPaused:NO];
+}
+
+- (void)stopAnimation {
+    [self setPaused:YES];
+}
+
+- (void)executeRunLoop {
+    [self.glkView bindDrawable];
+    if ([self respondsToSelector:@selector(update)]) {
+        [self performSelector:@selector(update)];
+    }
+    [self.glkView display];
+}
+
+#pragma mark - AR methods
 
 - (void)startVideo
 {
@@ -379,26 +487,168 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     
     // Library setup.
     int contextsActiveCount = 1;
-//    EdenMessageInit(contextsActiveCount);
-//    EdenGLFontInit(contextsActiveCount);
-//    EdenGLFontSetFont(EDEN_GL_FONT_ID_Stroke_Roman);
-//    EdenGLFontSetSize(FONT_SIZE);
+    EdenMessageInit(contextsActiveCount);
+    EdenGLFontInit(contextsActiveCount);
+    EdenGLFontSetFont(EDEN_GL_FONT_ID_Stroke_Roman);
+    EdenGLFontSetupFontForContext(0, EDEN_GL_FONT_ID_Stroke_Roman);
+    EdenGLFontSetSize(FONT_SIZE);
     
     // Get start time.
     gettimeofday(&gStartTime, NULL);
     
+    if (!program) {
+        GLuint vertShader = 0, fragShader = 0;
+        // A simple shader pair which accepts just a vertex position. Fixed color, no lighting.
+        const char vertShaderString[] =
+        "attribute vec4 position;\n"
+        "uniform vec4 color;\n"
+        "uniform mat4 modelViewProjectionMatrix;\n"
+        
+        "varying vec4 colorVarying;\n"
+        "void main()\n"
+        "{\n"
+        "gl_Position = modelViewProjectionMatrix * position;\n"
+        "colorVarying = color;\n"
+        "}\n";
+        const char fragShaderString[] =
+        "#ifdef GL_ES\n"
+        "precision mediump float;\n"
+        "#endif\n"
+        "varying vec4 colorVarying;\n"
+        "void main()\n"
+        "{\n"
+        "gl_FragColor = colorVarying;\n"
+        "}\n";
+        
+        if (program) arglGLDestroyShaders(0, 0, program);
+        program = glCreateProgram();
+        if (!program) {
+            ARLOGe("draw: Error creating shader program.\n");
+            return;
+        }
+        
+        if (!arglGLCompileShaderFromString(&vertShader, GL_VERTEX_SHADER, vertShaderString)) {
+            ARLOGe("draw: Error compiling vertex shader.\n");
+            arglGLDestroyShaders(vertShader, fragShader, program);
+            program = 0;
+            return;
+        }
+        if (!arglGLCompileShaderFromString(&fragShader, GL_FRAGMENT_SHADER, fragShaderString)) {
+            ARLOGe("draw: Error compiling fragment shader.\n");
+            arglGLDestroyShaders(vertShader, fragShader, program);
+            program = 0;
+            return;
+        }
+        glAttachShader(program, vertShader);
+        glAttachShader(program, fragShader);
+        
+        glBindAttribLocation(program, ATTRIBUTE_VERTEX, "position");
+        if (!arglGLLinkProgram(program)) {
+            ARLOGe("draw: Error linking shader program.\n");
+            arglGLDestroyShaders(vertShader, fragShader, program);
+            program = 0;
+            return;
+        }
+        arglGLDestroyShaders(vertShader, fragShader, 0); // After linking, shader objects can be deleted.
+        
+        // Retrieve linked uniform locations.
+        uniforms[UNIFORM_MODELVIEW_PROJECTION_MATRIX] = glGetUniformLocation(program, "modelViewProjectionMatrix");
+        uniforms[UNIFORM_COLOR] = glGetUniformLocation(program, "color");
+    }
+
     [self startVideo];
 }
+
+- (void) drawBackgroundWidth:(const float)width height:(const float)height x:(const float)x y:(const float)y border:(const bool)drawBorder projection:(GLfloat [16])p
+{
+    GLfloat vertices[4][2];
+    GLfloat colorBlack50[4] = {0.0f, 0.0f, 0.0f, 0.5f}; // 50% transparent black.
+    GLfloat colorWhite[4] = {1.0f, 1.0f, 1.0f, 1.0f}; // Opaque white.
+    
+    vertices[0][0] = x; vertices[0][1] = y;
+    vertices[1][0] = width + x; vertices[1][1] = y;
+    vertices[2][0] = width + x; vertices[2][1] = height + y;
+    vertices[3][0] = x; vertices[3][1] = height + y;
+    
+    glUseProgram(program);
+    glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEW_PROJECTION_MATRIX], 1, GL_FALSE, p);
+    glStateCacheDisableDepthTest();
+    glStateCacheBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glStateCacheEnableBlend();
+    
+    glVertexAttribPointer(ATTRIBUTE_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+    glEnableVertexAttribArray(ATTRIBUTE_VERTEX);
+    glUniform4fv(uniforms[UNIFORM_COLOR], 1, colorBlack50);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    if (drawBorder) {
+        glUniform4fv(uniforms[UNIFORM_COLOR], 1, colorWhite);
+        glLineWidth(1.0f);
+        glDrawArrays(GL_LINE_LOOP, 0, 4);
+    }
+}
+
+#if 0
+// An animation while we're waiting.
+// Designed to be drawn on background of at least 3xsquareSize wide and tall.
+- (void) drawBusyIndicator(int positionX, int positionY, int squareSize, struct timeval *tp)
+{
+    const GLfloat square_vertices [4][2] = { {0.5f, 0.5f}, {squareSize - 0.5f, 0.5f}, {squareSize - 0.5f, squareSize - 0.5f}, {0.5f, squareSize - 0.5f} };
+    int i;
+    
+    int hundredthSeconds = (int)tp->tv_usec / 1E4;
+    
+    // Set up drawing.
+    glPushMatrix();
+    glLoadIdentity();
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_BLEND);
+    glVertexPointer(2, GL_FLOAT, 0, square_vertices);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glClientActiveTexture(GL_TEXTURE0);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    
+    for (i = 0; i < 4; i++) {
+        glLoadIdentity();
+        glTranslatef((float)(positionX + ((i + 1)/2 != 1 ? -squareSize : 0.0f)), (float)(positionY + (i / 2 == 0 ? 0.0f : -squareSize)), 0.0f); // Order: UL, UR, LR, LL.
+        if (i == hundredthSeconds / 25) {
+            char r, g, b;
+            int secDiv255 = (int)tp->tv_usec / 3921;
+            int secMod6 = tp->tv_sec % 6;
+            if (secMod6 == 0) {
+                r = 255; g = secDiv255; b = 0;
+            } else if (secMod6 == 1) {
+                r = secDiv255; g = 255; b = 0;
+            } else if (secMod6 == 2) {
+                r = 0; g = 255; b = secDiv255;
+            } else if (secMod6 == 3) {
+                r = 0; g = secDiv255; b = 255;
+            } else if (secMod6 == 4) {
+                r = secDiv255; g = 0; b = 255;
+            } else {
+                r = 255; g = 0; b = secDiv255;
+            }
+            glColor4ub(r, g, b, 255);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        }
+        glColor4ub(255, 255, 255, 255);
+        glDrawArrays(GL_LINE_LOOP, 0, 4);
+    }
+    
+    glPopMatrix();
+}
+#endif
 
 - (void)tearDownGL
 {
     [EAGLContext setCurrentContext:self.context];
     
-    [self drawCleanupGLES2];
-
+    if (program) {
+        glDeleteProgram(program);
+    }
 }
-
-#pragma mark - GLKView and GLKViewController delegate methods
 
 - (void)update
 {
@@ -420,6 +670,8 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 }
 
 
+
+// GLKViewDelegate
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
 {
     GLfloat p[16], m[16];
@@ -538,66 +790,6 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    if (!program) {
-        GLuint vertShader = 0, fragShader = 0;
-        // A simple shader pair which accepts just a vertex position. Fixed color, no lighting.
-        const char vertShaderString[] =
-        "attribute vec4 position;\n"
-        "uniform vec4 color;\n"
-        "uniform mat4 modelViewProjectionMatrix;\n"
-        
-        "varying vec4 colorVarying;\n"
-        "void main()\n"
-        "{\n"
-            "gl_Position = modelViewProjectionMatrix * position;\n"
-            "colorVarying = color;\n"
-        "}\n";
-        const char fragShaderString[] =
-        "#ifdef GL_ES\n"
-            "precision mediump float;\n"
-        "#endif\n"
-        "varying vec4 colorVarying;\n"
-        "void main()\n"
-        "{\n"
-            "gl_FragColor = colorVarying;\n"
-        "}\n";
-        
-        if (program) arglGLDestroyShaders(0, 0, program);
-        program = glCreateProgram();
-        if (!program) {
-            ARLOGe("draw: Error creating shader program.\n");
-            return;
-        }
-        
-        if (!arglGLCompileShaderFromString(&vertShader, GL_VERTEX_SHADER, vertShaderString)) {
-            ARLOGe("draw: Error compiling vertex shader.\n");
-            arglGLDestroyShaders(vertShader, fragShader, program);
-            program = 0;
-            return;
-        }
-        if (!arglGLCompileShaderFromString(&fragShader, GL_FRAGMENT_SHADER, fragShaderString)) {
-            ARLOGe("draw: Error compiling fragment shader.\n");
-            arglGLDestroyShaders(vertShader, fragShader, program);
-            program = 0;
-            return;
-        }
-        glAttachShader(program, vertShader);
-        glAttachShader(program, fragShader);
-        
-        glBindAttribLocation(program, ATTRIBUTE_VERTEX, "position");
-        if (!arglGLLinkProgram(program)) {
-            ARLOGe("draw: Error linking shader program.\n");
-            arglGLDestroyShaders(vertShader, fragShader, program);
-            program = 0;
-            return;
-        }
-        arglGLDestroyShaders(vertShader, fragShader, 0); // After linking, shader objects can be deleted.
-        
-        // Retrieve linked uniform locations.
-        uniforms[UNIFORM_MODELVIEW_PROJECTION_MATRIX] = glGetUniformLocation(program, "modelViewProjectionMatrix");
-        uniforms[UNIFORM_COLOR] = glGetUniformLocation(program, "color");
-    }
-
     //
     // Setup for drawing video frame.
     //
@@ -646,10 +838,13 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         glStateCacheDisableBlend();
         
         // Draw the crosses marking the corner positions.
-        float fontSizeScaled = FONT_SIZE * (float)vs->getVideoHeight()/(float)(gViewport[(gDisplayOrientation % 2) == 1 ? 3 : 2]);
-//        EdenGLFontSetSize(fontSizeScaled);
+        const float colorRed[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+        const float colorGreen[4] = {0.0f, 1.0f, 0.0f, 1.0f};
         vertexCount = cornerCount*4;
         if (vertexCount > 0) {
+            float fontSizeScaled = FONT_SIZE * (float)vs->getVideoHeight()/(float)(gViewport[(gDisplayOrientation % 2) == 1 ? 3 : 2]);
+            EdenGLFontSetSize(fontSizeScaled);
+            EdenGLFontSetColor(cornerFoundAllFlag ? colorRed : colorGreen);
             arMalloc(vertices, GLfloat, vertexCount*2); // 2 coords per vertex.
             for (i = 0; i < cornerCount; i++) {
                 vertices[i*8    ] = corners[i].x - 5.0f;
@@ -664,21 +859,22 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
                 unsigned char buf[12]; // 10 digits in INT32_MAX, plus sign, plus null.
                 sprintf((char *)buf, "%d\n", i);
                 
-                GLfloat m0[16];
-                mtxLoadMatrixf(m0, m);
-                mtxTranslatef(m0, corners[i].x, vs->getVideoHeight() - corners[i].y, 0.0f);
-                mtxRotatef(m0, (float)(gDisplayOrientation - 1) * -90.0f, 0.0f, 0.0f, 1.0f); // Orient the text to the user.
-//                EdenGLFontDrawLine(0, buf, 0.0f, 0.0f, H_OFFSET_VIEW_LEFT_EDGE_TO_TEXT_LEFT_EDGE, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE); // These alignment modes don't require setting of EdenGLFontSetViewSize().
+                GLfloat mvp[16];
+                mtxLoadMatrixf(mvp, p);
+                mtxMultMatrixf(mvp, m);
+                mtxTranslatef(mvp, corners[i].x, vs->getVideoHeight() - corners[i].y, 0.0f);
+                mtxRotatef(mvp, (float)(gDisplayOrientation - 1) * -90.0f, 0.0f, 0.0f, 1.0f); // Orient the text to the user.
+                EdenGLFontDrawLine(0, mvp, buf, 0.0f, 0.0f, H_OFFSET_VIEW_LEFT_EDGE_TO_TEXT_LEFT_EDGE, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE); // These alignment modes don't require setting of EdenGLFontSetViewSize().
             }
+            EdenGLFontSetSize(FONT_SIZE);
+            const float colorWhite[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+            EdenGLFontSetColor(colorWhite);
         }
-//        EdenGLFontSetSize(FONT_SIZE);
         
         gCalibration->cornerFinderResultsUnlock();
         
         if (vertexCount > 0) {
             glUseProgram(program);
-            GLfloat colorRed[4] = {1.0f, 0.0f, 0.0f, 1.0f};
-            GLfloat colorGreen[4] = {0.0f, 1.0f, 0.0f, 1.0f};
             GLfloat mvp[16];
             mtxLoadMatrixf(mvp, p);
             mtxMultMatrixf(mvp, m);
@@ -722,18 +918,16 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     mtxOrthof(p, left, right, bottom, top, -1.0f, 1.0f);
     mtxLoadIdentityf(m);
     
-//    EdenGLFontSetViewSize(right, top);
-//    EdenMessageSetViewSize(right, top);
-//    EdenMessageSetBoxParams(600.0f, 20.0f);
-//    float statusBarHeight = EdenGLFontGetHeight() + 4.0f; // 2 pixels above, 2 below.
+    EdenGLFontSetViewSize(right, top);
+    EdenMessageSetViewSize(right, top);
+    EdenMessageSetBoxParams(600.0f, 20.0f);
+    float statusBarHeight = EdenGLFontGetHeight() + 4.0f; // 2 pixels above, 2 below.
   
-#if 0
     // Draw status bar with centred status message.
     if (statusBarMessage[0]) {
-        drawBackground(right, statusBarHeight, 0.0f, 0.0f, false);
+        [self drawBackgroundWidth:right height:statusBarHeight x:0.0f y:0.0f border:false projection:p];
         glStateCacheDisableBlend();
-        glColor4ub(255, 255, 255, 255);
-        EdenGLFontDrawLine(0, statusBarMessage, 0.0f, 2.0f, H_OFFSET_VIEW_CENTER_TO_TEXT_CENTER, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
+        EdenGLFontDrawLine(0, p, statusBarMessage, 0.0f, 2.0f, H_OFFSET_VIEW_CENTER_TO_TEXT_CENTER, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
     }
     
     // If background tasks are proceeding, draw a status box.
@@ -747,21 +941,13 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         h = MAX(FONT_SIZE, 3*squareSize) + 2*4.0f /* box margin */;
         x = right - (w + 2.0f);
         y = statusBarHeight + 2.0f;
-        drawBackground(w, h, x, y, true);
-        if (status == 1) drawBusyIndicator((int)(x + 4.0f + 1.5f*squareSize), (int)(y + 4.0f + 1.5f*squareSize), squareSize, &time);
-//        EdenGLFontDrawLine(0, (unsigned char *)uploadStatus, x + 4.0f + 3*squareSize, y + (h - FONT_SIZE)/2.0f, H_OFFSET_VIEW_LEFT_EDGE_TO_TEXT_LEFT_EDGE, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
+        [self drawBackgroundWidth:w height:h x:x y:y border:true projection:p];
+//        if (status == 1) drawBusyIndicator((int)(x + 4.0f + 1.5f*squareSize), (int)(y + 4.0f + 1.5f*squareSize), squareSize, &time);
+        EdenGLFontDrawLine(0, p, (unsigned char *)uploadStatus, x + 4.0f + 3*squareSize, y + (h - FONT_SIZE)/2.0f, H_OFFSET_VIEW_LEFT_EDGE_TO_TEXT_LEFT_EDGE, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
     }
-#endif
     
     // If a message should be onscreen, draw it.
-//    if (gEdenMessageDrawRequired) EdenMessageDraw(0);
-}
-
-- (void) drawCleanupGLES2
-{
-    if (program) {
-        glDeleteProgram(program);
-    }
+    if (gEdenMessageDrawRequired) EdenMessageDraw(0, p);
 }
 
 // Save parameters file and index file with info about it, then signal thread that it's ready for upload.
@@ -962,6 +1148,8 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         }
     }
 }
+
+#pragma mark - User interaction methods.
 
 - (IBAction)handleBackButton:(id)sender {
     flowHandleEvent(EVENT_BACK_BUTTON);
