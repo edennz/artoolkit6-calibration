@@ -220,6 +220,51 @@ static void stopVideo(void)
     vs = nullptr;
 }
 
+static void rereadPreferences(void)
+{
+    // Re-read preferences.
+    char *csuu = getPreferenceCalibrationServerUploadURL(gPreferences);
+    if (csuu && gCalibrationServerUploadURL && strcmp(gCalibrationServerUploadURL, csuu) == 0) {
+        free(csuu);
+    } else {
+        free(gCalibrationServerUploadURL);
+        gCalibrationServerUploadURL = csuu;
+        fileUploaderFinal(&fileUploadHandle);
+        fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
+    }
+    char *csat = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
+    if (csat && gCalibrationServerAuthenticationToken && strcmp(gCalibrationServerAuthenticationToken, csat) == 0) {
+        free(csat);
+    } else {
+        free(gCalibrationServerAuthenticationToken);
+        gCalibrationServerAuthenticationToken = csat;
+    }
+    bool changedCameraSettings = false;
+    char *crt = getPreferenceCameraResolutionToken(gPreferences);
+    if (crt && gPreferenceCameraResolutionToken && strcmp(gPreferenceCameraResolutionToken, crt) == 0) {
+        free(crt);
+    } else {
+        free(gPreferenceCameraResolutionToken);
+        gPreferenceCameraResolutionToken = crt;
+        changedCameraSettings = true;
+    }
+    char *cot = getPreferenceCameraOpenToken(gPreferences);
+    if (cot && gPreferenceCameraOpenToken && strcmp(gPreferenceCameraOpenToken, cot) == 0) {
+        free(cot);
+    } else {
+        free(gPreferenceCameraOpenToken);
+        gPreferenceCameraOpenToken = cot;
+        changedCameraSettings = true;
+    }
+    if (changedCameraSettings) {
+        // Changing camera settings requires complete cancelation of calibration flow,
+        // closing of video source, and re-init.
+        flowStopAndFinal();
+        stopVideo();
+        startVideo();
+    }
+}
+
 int main(int argc, char *argv[])
 {
     // Preferences.
@@ -230,7 +275,6 @@ int main(int argc, char *argv[])
     if (!gCalibrationServerUploadURL) gCalibrationServerUploadURL = strdup(CALIBRATION_SERVER_UPLOAD_URL_DEFAULT);
     gCalibrationServerAuthenticationToken = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
     if (!gCalibrationServerAuthenticationToken) gCalibrationServerAuthenticationToken = strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT);
-    gSDLEventPreferencesChanged = SDL_RegisterEvents(1);
     
     // Initialize SDL.
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -238,6 +282,7 @@ int main(int argc, char *argv[])
         return -1;
     }
     
+    gSDLEventPreferencesChanged = SDL_RegisterEvents(1);
     
     // Create a window.
     gSDLWindow = SDL_CreateWindow("ARToolKit6 Camera Calibration Utility",
@@ -330,48 +375,7 @@ int main(int argc, char *argv[])
                     showPreferences(gPreferences);
                 }
             } else if (gSDLEventPreferencesChanged != 0 && ev.type == gSDLEventPreferencesChanged) {
-                
-                // Re-read preferences.
-                char *csuu = getPreferenceCalibrationServerUploadURL(gPreferences);
-                if (csuu && gCalibrationServerUploadURL && strcmp(gCalibrationServerUploadURL, csuu) == 0) {
-                    free(csuu);
-                } else {
-                    free(gCalibrationServerUploadURL);
-                    gCalibrationServerUploadURL = csuu;
-                    fileUploaderFinal(&fileUploadHandle);
-                    fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
-                }
-                char *csat = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
-                if (csat && gCalibrationServerAuthenticationToken && strcmp(gCalibrationServerAuthenticationToken, csat) == 0) {
-                    free(csat);
-                } else {
-                    free(gCalibrationServerAuthenticationToken);
-                    gCalibrationServerAuthenticationToken = csat;
-                }
-                bool changedCameraSettings = false;
-                char *crt = getPreferenceCameraResolutionToken(gPreferences);
-                if (crt && gPreferenceCameraResolutionToken && strcmp(gPreferenceCameraResolutionToken, crt) == 0) {
-                    free(crt);
-                } else {
-                    free(gPreferenceCameraResolutionToken);
-                    gPreferenceCameraResolutionToken = crt;
-                    changedCameraSettings = true;
-                }
-                char *cot = getPreferenceCameraOpenToken(gPreferences);
-                if (cot && gPreferenceCameraOpenToken && strcmp(gPreferenceCameraOpenToken, cot) == 0) {
-                    free(cot);
-                } else {
-                    free(gPreferenceCameraOpenToken);
-                    gPreferenceCameraOpenToken = cot;
-                    changedCameraSettings = true;
-                }
-                if (changedCameraSettings) {
-                    // Changing camera settings requires complete cancelation of calibration flow,
-                    // closing of video source, and re-init.
-                    flowStopAndFinal();
-                    stopVideo();
-                    startVideo();
-                }
+                rereadPreferences();
             }
         }
         

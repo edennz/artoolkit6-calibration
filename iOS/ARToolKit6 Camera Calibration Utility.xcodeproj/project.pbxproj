@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		4A0AB6811E81DA6900F6EBB9 /* ARViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4A0AB6801E81DA6900F6EBB9 /* ARViewController.mm */; };
-		4A0AB6841E81DFCE00F6EBB9 /* prefsNull.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A0AB6831E81DFCE00F6EBB9 /* prefsNull.c */; };
 		4A0AB6891E82209600F6EBB9 /* libAR6.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0AB6861E82209600F6EBB9 /* libAR6.a */; };
 		4A0AB68A1E82209600F6EBB9 /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0AB6871E82209600F6EBB9 /* libcurl.a */; };
 		4A0AB68B1E82209600F6EBB9 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0AB6881E82209600F6EBB9 /* libjpeg.a */; };
@@ -67,7 +66,6 @@
 		4A0AB67F1E81DA6900F6EBB9 /* ARViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARViewController.h; sourceTree = "<group>"; };
 		4A0AB6801E81DA6900F6EBB9 /* ARViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARViewController.mm; sourceTree = "<group>"; };
 		4A0AB6821E81DFCE00F6EBB9 /* prefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = prefs.h; sourceTree = "<group>"; };
-		4A0AB6831E81DFCE00F6EBB9 /* prefsNull.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = prefsNull.c; sourceTree = "<group>"; };
 		4A0AB6861E82209600F6EBB9 /* libAR6.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libAR6.a; sourceTree = "<group>"; };
 		4A0AB6871E82209600F6EBB9 /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcurl.a; sourceTree = "<group>"; };
 		4A0AB6881E82209600F6EBB9 /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libjpeg.a; sourceTree = "<group>"; };
@@ -231,7 +229,6 @@
 				4A4793A61E80D867002C3631 /* flow.h */,
 				4A4793A41E80D85A002C3631 /* flow.mm */,
 				4A0AB6821E81DFCE00F6EBB9 /* prefs.h */,
-				4A0AB6831E81DFCE00F6EBB9 /* prefsNull.c */,
 				4A4793671E80CF96002C3631 /* CameraFocusView.h */,
 				4A4793681E80CF96002C3631 /* CameraFocusView.m */,
 				4A4793691E80CF96002C3631 /* SettingsViewController.h */,
@@ -443,7 +440,6 @@
 				4ADE9C1D1E8887CF00F04AC0 /* glut_bwidth.c in Sources */,
 				4ADE9C211E8887CF00F04AC0 /* glut_mroman.c in Sources */,
 				4ADE9C191E8887B200F04AC0 /* readtex.c in Sources */,
-				4A0AB6841E81DFCE00F6EBB9 /* prefsNull.c in Sources */,
 				4ADE9C1C1E8887CF00F04AC0 /* glut_bitmap.c in Sources */,
 				4ADE9C231E8887CF00F04AC0 /* glut_stroke.c in Sources */,
 				4A47934C1E80CDBE002C3631 /* main.m in Sources */,

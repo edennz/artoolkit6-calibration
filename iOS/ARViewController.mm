@@ -125,6 +125,7 @@ extern "C" {
 #define FONT_SIZE 18.0f
 #define UPLOAD_STATUS_HIDE_AFTER_SECONDS 9.0f
 
+NSString *const PreferencesChangedNotification = @"PreferencesChangedNotification";
 
 static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max, void *userdata);
 
@@ -256,7 +257,8 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     if (!gCalibrationServerUploadURL) gCalibrationServerUploadURL = strdup(CALIBRATION_SERVER_UPLOAD_URL_DEFAULT);
     gCalibrationServerAuthenticationToken = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
     if (!gCalibrationServerAuthenticationToken) gCalibrationServerAuthenticationToken = strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT);
-    //gSDLEventPreferencesChanged = SDL_RegisterEvents(1);
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rereadPreferences) name:PreferencesChangedNotification object:nil];
     
     self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
     if (!self.context) {
@@ -311,6 +313,8 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     // Cleanup reimplemented GLKViewController properties.
     self.pauseOnWillResignActive = NO;
     self.resumeOnDidBecomeActive = NO;
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:PreferencesChangedNotification object:nil];
 }
 
 - (void)didReceiveMemoryWarning
@@ -447,6 +451,52 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     delete vs;
     vs = nullptr;
 }
+
+- (void) rereadPreferences
+{
+    // Re-read preferences.
+    char *csuu = getPreferenceCalibrationServerUploadURL(gPreferences);
+    if (csuu && gCalibrationServerUploadURL && strcmp(gCalibrationServerUploadURL, csuu) == 0) {
+        free(csuu);
+    } else {
+        free(gCalibrationServerUploadURL);
+        gCalibrationServerUploadURL = csuu;
+        fileUploaderFinal(&fileUploadHandle);
+        fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
+    }
+    char *csat = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
+    if (csat && gCalibrationServerAuthenticationToken && strcmp(gCalibrationServerAuthenticationToken, csat) == 0) {
+        free(csat);
+    } else {
+        free(gCalibrationServerAuthenticationToken);
+        gCalibrationServerAuthenticationToken = csat;
+    }
+    bool changedCameraSettings = false;
+    char *crt = getPreferenceCameraResolutionToken(gPreferences);
+    if (crt && gPreferenceCameraResolutionToken && strcmp(gPreferenceCameraResolutionToken, crt) == 0) {
+        free(crt);
+    } else {
+        free(gPreferenceCameraResolutionToken);
+        gPreferenceCameraResolutionToken = crt;
+        changedCameraSettings = true;
+    }
+    char *cot = getPreferenceCameraOpenToken(gPreferences);
+    if (cot && gPreferenceCameraOpenToken && strcmp(gPreferenceCameraOpenToken, cot) == 0) {
+        free(cot);
+    } else {
+        free(gPreferenceCameraOpenToken);
+        gPreferenceCameraOpenToken = cot;
+        changedCameraSettings = true;
+    }
+    if (changedCameraSettings) {
+        // Changing camera settings requires complete cancelation of calibration flow,
+        // closing of video source, and re-init.
+        flowStopAndFinal();
+        [self stopVideo];
+        [self startVideo];
+    }
+}
+
 
 - (void)setupGL
 {
@@ -683,6 +733,8 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     gettimeofday(&time, NULL);
     
     if (!gPostVideoSetupDone) {
+        
+        [ARViewController displayToastWithMessage:[NSString stringWithFormat:@"Camera: %dx%d", vs->getVideoWidth(), vs->getVideoHeight()]];
         
         gCameraIsFrontFacing = false;
         AR2VideoParamT *vid = vs->getAR2VideoParam();
@@ -1228,6 +1280,36 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 - (void)documentInteractionControllerDidEndPreview:(UIDocumentInteractionController *)controller
 {
     
+}
+
++ (void)displayToastWithMessage:(NSString *)toastMessage
+{
+    [[NSOperationQueue mainQueue] addOperationWithBlock:^ {
+        UIWindow * keyWindow = [[UIApplication sharedApplication] keyWindow];
+        UILabel *toastView = [[UILabel alloc] init];
+        toastView.text = toastMessage;
+        toastView.font = [UIFont fontWithName:@"Helvetica" size:14.0f];
+        toastView.textColor = [UIColor whiteColor];
+        toastView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.9];
+        toastView.textAlignment = NSTextAlignmentCenter;
+        toastView.frame = CGRectMake(0.0f, 0.0f, keyWindow.frame.size.width/2.0f, 28.0f);
+        toastView.layer.cornerRadius = 7.0f;
+        toastView.layer.masksToBounds = YES;
+        toastView.center = keyWindow.center;
+        
+        [keyWindow addSubview:toastView];
+        
+        [UIView animateWithDuration: 3.0f
+                              delay: 0.0
+                            options: UIViewAnimationOptionCurveEaseOut
+                         animations: ^{
+                             toastView.alpha = 0.0;
+                         }
+                         completion: ^(BOOL finished) {
+                             [toastView removeFromSuperview];
+                         }
+         ];
+    }];
 }
 
 @end

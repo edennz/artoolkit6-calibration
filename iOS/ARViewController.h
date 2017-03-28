@@ -38,6 +38,8 @@
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
 
+extern NSString *const PreferencesChangedNotification;
+
 @interface ARViewController : UIViewController <GLKViewDelegate, UIDocumentInteractionControllerDelegate>
 
 - (IBAction)handleBackButton:(id)sender;

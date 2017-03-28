@@ -6,6 +6,7 @@
 //  Copyright (c) 2015 DAQRI. All rights reserved.
 //
 
+#import "ARViewController.h"
 #import "SettingsViewController.h"
 #import <AVFoundation/AVFoundation.h>
 
@@ -29,7 +30,7 @@
 @implementation SettingsViewController
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.cameraResPresets = [NSArray arrayWithObjects:@"cif", @"480p", @"vga", @"720p", @"1080p", @"low", @"medium", @"high", nil];
+    self.cameraResPresets = [NSArray arrayWithObjects:@"cif", @"480p" /*@"vga"*/, @"720p", @"1080p", @"low", @"medium", @"high", nil];
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [self.forceLandscapeSwitch setOn:[defaults boolForKey:kSettingForceLandscapeStr]];
     if ([defaults objectForKey:kSettingCameraResolutionStr] != nil) [self.cameraResolutionSubLabel setText:[defaults objectForKey:kSettingCameraResolutionStr]];
@@ -39,6 +40,7 @@
 
 - (IBAction)goBack:(id)sender {
     [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+    [[NSNotificationCenter defaultCenter] postNotificationName:PreferencesChangedNotification object:self];
 }
 
 - (void)toggleForceLandscape {
@@ -172,3 +174,46 @@
     else return UIInterfaceOrientationMaskAll;
 }
 @end
+
+void *initPreferences(void)
+{
+    return (NULL);
+}
+
+void showPreferences(void *preferences)
+{
+}
+
+char *getPreferenceCameraOpenToken(void *preferences)
+{
+    NSString *cameraSource = [[NSUserDefaults standardUserDefaults] objectForKey:kSettingCameraSourceStr];
+    if (cameraSource) {
+        if      ([cameraSource isEqualToString:kCameraSourceFront]) return strdup("-position=front");
+        else if ([cameraSource isEqualToString:kCameraSourceRear]) return strdup("-position=rear");
+    }
+    return NULL;
+}
+
+char *getPreferenceCameraResolutionToken(void *preferences)
+{
+    NSString *cameraResolution = [[NSUserDefaults standardUserDefaults] objectForKey:kSettingCameraResolutionStr];
+    if (cameraResolution) {
+        return (strdup([NSString stringWithFormat:@"-preset=%@", cameraResolution].UTF8String));
+    }
+    return NULL;
+}
+
+char *getPreferenceCalibrationServerUploadURL(void *preferences)
+{
+    return NULL;
+}
+
+char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
+{
+    return NULL;
+}
+
+void preferencesFinal(void **preferences_p)
+{
+}
+
