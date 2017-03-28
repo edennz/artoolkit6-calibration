@@ -39,6 +39,7 @@
 #import "ARViewController.h"
 #import <OpenGLES/ES2/glext.h>
 #import "CameraFocusView.h"
+#import "SettingsViewController.h"
 #ifdef DEBUG
 #  import <unistd.h>
 #  import <sys/param.h>
@@ -186,6 +187,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 }
 
 @property (strong, nonatomic) EAGLContext *context;
+@property (strong, nonatomic) UIDocumentInteractionController *docInteractionController;
 
 // Re-implemented properties from GLKViewController.
 @property (strong, nonatomic) CADisplayLink *displayLink;
@@ -262,8 +264,6 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     }
     self.glkView.context = self.context;
     
-    //[[NSBundle mainBundle] loadNibNamed:@"ARViewOverlays" owner:self options:nil]; // Contains connection to the strong property "overlays".
-    //self.overlays.frame = self.view.frame;
     if (!focusView) focusView = [[CameraFocusView alloc] initWithFrame:self.view.frame];
     
     [self setupGL];
@@ -277,8 +277,6 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     [self setPaused:NO];
     
     // Extra view setup.
-    //[self.view addSubview:self.overlays];
-    //self.view.touchDelegate = self;
     [self.view addSubview:focusView];
     
 }
@@ -294,8 +292,6 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 - (void)viewDidDisappear:(BOOL)animated
 {
     // Extra view cleanup.
-    //[self.overlays removeFromSuperview];
-    //self.view.touchDelegate = nil;
     [focusView removeFromSuperview];
 
     [self setPaused:YES];
@@ -1160,7 +1156,80 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 }
 
 - (IBAction)handleMenuButton:(id)sender {
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Settings" style:UIAlertActionStyleDefault handler:
+                                ^(UIAlertAction *action) {
+                                    [self presentViewController:[[SettingsViewController alloc] init] animated:YES completion:nil];
+                                }
+                                ]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:
+                                ^(UIAlertAction *action) {
+                                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/artoolkit/artoolkit6/wiki/Camera-calibration-iOS"]];
+                                }
+                                ]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Print" style:UIAlertActionStyleDefault handler:
+                                ^(UIAlertAction *action) {
+                                    [self showPrintDialog];
+                                }
+                                ]];
+    alertController.modalPresentationStyle = UIModalPresentationPopover;
+    [alertController.popoverPresentationController setBarButtonItem:self.menuButton];
+    [self presentViewController:alertController animated:YES completion:nil];
 }
+
+- (void)showPrintDialog
+{
+    NSString *pdfFileName = @"printa4";
+    NSString *paperSizeStr;
+    if ([[NSUserDefaults standardUserDefaults] objectForKey:kSettingPaperSizeStr]) {
+        paperSizeStr = [[NSUserDefaults standardUserDefaults] objectForKey:kSettingPaperSizeStr];
+        if ([paperSizeStr isEqualToString:kPaperSizeUSLetterStr]) pdfFileName = @"printusletter";
+    }
+    
+    NSURL *pagesURL = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:pdfFileName ofType:@"pdf"]];
+    
+    if (!self.docInteractionController) {
+        self.docInteractionController = [UIDocumentInteractionController interactionControllerWithURL:pagesURL];
+        self.docInteractionController.delegate = self;
+    } else {
+        self.docInteractionController.URL = pagesURL;
+    }
+    [self.docInteractionController presentOptionsMenuFromBarButtonItem:self.menuButton animated:YES];
+}
+
+// Called when action has been taken, including when QuickLook has been selected.
+- (void)documentInteractionControllerDidDismissOptionsMenu:(UIDocumentInteractionController *)controller
+{
+     self.docInteractionController = nil;
+}
+
+- (void)documentInteractionController:(UIDocumentInteractionController *)controller willBeginSendingToApplication:(NSString *)application
+{
+    
+}
+
+- (void)documentInteractionController:(UIDocumentInteractionController *)controller didEndSendingToApplication:(NSString *)application
+{
+    
+}
+
+- (UIViewController *)documentInteractionControllerViewControllerForPreview:(UIDocumentInteractionController *)controller
+{
+    return (self);
+}
+
+- (UIView *)documentInteractionControllerViewForPreview:(UIDocumentInteractionController *)controller
+{
+    return (self.view);
+}
+
+// Called when user chooses "Done" from QuickLook.
+- (void)documentInteractionControllerDidEndPreview:(UIDocumentInteractionController *)controller
+{
+    
+}
+
 @end
 
 // Save parameters file and index file with info about it, then signal thread that it's ready for upload.

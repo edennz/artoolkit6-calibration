@@ -172,8 +172,6 @@
 			children = (
 				4A4793651E80CF96002C3631 /* ARViewOverlay.h */,
 				4A4793661E80CF96002C3631 /* ARViewOverlay.m */,
-				4A4793691E80CF96002C3631 /* SettingsViewController.h */,
-				4A47936A1E80CF96002C3631 /* SettingsViewController.m */,
 			);
 			name = old;
 			sourceTree = "<group>";
@@ -236,6 +234,8 @@
 				4A0AB6831E81DFCE00F6EBB9 /* prefsNull.c */,
 				4A4793671E80CF96002C3631 /* CameraFocusView.h */,
 				4A4793681E80CF96002C3631 /* CameraFocusView.m */,
+				4A4793691E80CF96002C3631 /* SettingsViewController.h */,
+				4A47936A1E80CF96002C3631 /* SettingsViewController.m */,
 				4A0AB6851E82056200F6EBB9 /* old */,
 				4A4793A81E80D945002C3631 /* Eden */,
 			);
@@ -521,7 +521,7 @@
 					..,
 					../depends/ios/include,
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LIBRARY_SEARCH_PATHS = ../depends/ios/lib;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -573,7 +573,7 @@
 					..,
 					../depends/ios/include,
 				);
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LIBRARY_SEARCH_PATHS = ../depends/ios/lib;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
