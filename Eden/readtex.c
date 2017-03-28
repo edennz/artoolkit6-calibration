@@ -48,14 +48,15 @@
 
 #include <Eden/readtex.h>
 
-#ifdef EDEN_MACOSX
-#  include <OpenGL/glu.h>
-#elif EDEN_USE_GLES2
-#else
-#  ifdef _WIN32
-#    include <windows.h>
+#if EDEN_USE_GL
+#  ifdef EDEN_MACOSX
+#    include <OpenGL/glu.h>
+#  else
+#    ifdef _WIN32
+#      include <windows.h>
+#    endif
+#    include <GL/glu.h>
 #  endif
-#  include <GL/glu.h>
 #endif
 
 #include <stdio.h>
@@ -125,18 +126,18 @@ static void ConvertInt(uint32_t *array, size_t length)
 static unsigned char *RawImageRead(const char *imageFile, int *w, int *h, int *nc)
 {
     int i, j, k, count;
-    FILE *fp;
+    FILE *fp = NULL;
     long fileLen;
-    unsigned char *fileContents;
-    rawImageHeader *header;
+    unsigned char *fileContents = NULL;
+    rawImageHeader *header = NULL;
     uint32_t tableLength;
-    uint32_t *rowOffsetsTable;
-    uint32_t *rowLengthsTable;
-    unsigned char **rows;
-    unsigned char *data;
-    unsigned char *dataPtr;
-    unsigned char *oPtr;
-    unsigned char *iPtr;
+    uint32_t *rowOffsetsTable = NULL;
+    uint32_t *rowLengthsTable = NULL;
+    unsigned char **rows = NULL;
+    unsigned char *data = NULL;
+    unsigned char *dataPtr = NULL;
+    unsigned char *oPtr = NULL;
+    unsigned char *iPtr = NULL;
     unsigned char pixel;
     int outCount;
     

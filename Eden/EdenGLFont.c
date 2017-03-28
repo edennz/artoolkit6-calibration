@@ -50,10 +50,10 @@
 // EdenSurfaces also does OpenGL header inclusion.
 #include <Eden/EdenSurfaces.h>	// TEXTURE_INFO_t, TEXTURE_INDEX_t, SurfacesTextureLoad(), SurfacesTextureSet(), SurfacesTextureUnload()
 #include <Eden/gluttext.h>
-#ifdef EDEN_USE_GL
+#if EDEN_USE_GL
 #  define USE_GL_STATE_CACHE 0
 #  include <Eden/glStateCache.h>
-#elif defined(EDEN_USE_GLES2)
+#elif EDEN_USE_GLES2
 #  include <AR6/ARG/glStateCache2.h>
 #  include <AR6/ARG/arg_shader_gl.h>
 #  include <AR6/ARG/arg_mtx.h>
@@ -63,7 +63,7 @@
 //  Private types and definitions.
 // ============================================================================
 
-#ifdef EDEN_USE_GLES2
+#if EDEN_USE_GLES2
 // Indices of GL ES program uniforms.
 enum {
     UNIFORM_MODELVIEW_PROJECTION_MATRIX,
@@ -101,7 +101,7 @@ typedef struct _EDEN_GL_FONT_TEXTURE_INFO {
 
 // When EDEN_GL_FONT_INFO_t.type==EDEN_GL_FONT_TYPE_GLUT_STROKE, tsi will be a pointer to this structure.
 typedef struct _EDEN_GL_FONT_GLUT_STROKE_INFO {
-#ifdef EDEN_USE_GLES2
+#if EDEN_USE_GLES2
     GLuint *programs; // Dynamically allocated to size gContextsActiveCount.
     GLint *uniforms; // Dynamically allocated to size gContextsActiveCount*UNIFORM_COUNT.
 #endif
@@ -496,7 +496,7 @@ EDEN_BOOL EdenGLFontSetupFontForContext(const int contextIndex, EDEN_GL_FONT_INF
             fontGlutStrokeInfo = (EDEN_GL_FONT_GLUT_STROKE_INFO *)fontInfo->tsi; // Type convenience.
 
             // If first time called, reserve space for the uniforms and programs.
-#ifdef EDEN_USE_GLES2
+#if EDEN_USE_GLES2
             fontGlutStrokeInfo->uniforms = (GLint *)calloc(gContextsActiveCount * UNIFORM_COUNT, sizeof(GLint));
             fontGlutStrokeInfo->programs = (GLuint *)calloc(gContextsActiveCount, sizeof(GLuint));
             if (!fontGlutStrokeInfo->uniforms || !fontGlutStrokeInfo->programs) {
@@ -509,7 +509,7 @@ EDEN_BOOL EdenGLFontSetupFontForContext(const int contextIndex, EDEN_GL_FONT_INF
 
         fontGlutStrokeInfo = (EDEN_GL_FONT_GLUT_STROKE_INFO *)fontInfo->tsi; // Type convenience.
         
-#ifdef EDEN_USE_GLES2
+#if EDEN_USE_GLES2
         GLuint vertShader = 0, fragShader = 0;
         // A simple shader pair which accepts just a vertex position. Fixed color, no lighting.
         const char vertShaderString[] =
@@ -603,12 +603,12 @@ EDEN_BOOL EdenGLFontCleanupFontForContext(const int contextIndex, EDEN_GL_FONT_I
         // Just for convenience of type.
         EDEN_GL_FONT_GLUT_STROKE_INFO *fontGlutStrokeInfo = (EDEN_GL_FONT_GLUT_STROKE_INFO *)fontInfo->tsi;
         
-#ifdef EDEN_USE_GLES2
+#if EDEN_USE_GLES2
         arglGLDestroyShaders(0, 0, fontGlutStrokeInfo->programs[contextIndex]);
 #endif
         fontGlutStrokeInfo->refCount--;
         if (fontGlutStrokeInfo->refCount == 0) {
-#ifdef EDEN_USE_GLES2
+#if EDEN_USE_GLES2
             free(fontGlutStrokeInfo->programs);
             free(fontGlutStrokeInfo->uniforms);
 #endif
@@ -639,7 +639,7 @@ static void drawSetup(const int contextIndex, struct _VTs *VTs)
     fontTextureInfo = (EDEN_GL_FONT_TEXTURE_INFO *)gFontSettings.font->tsi;
     
     // Set up for texture drawing.
-#ifdef EDEN_USE_GL
+#if EDEN_USE_GL
     EdenSurfacesTextureSet(contextIndex, fontTextureInfo->textureIndexPerContext[contextIndex]); // Select font texture.
     glStateCacheBlendFunc(GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR); // Blend by luminance.
     glStateCacheEnableBlend();
@@ -659,7 +659,7 @@ static void drawOneLine(const unsigned char *line, int contextIndex, const float
     unsigned char c;
 
     if (gFontSettings.font->type == EDEN_GL_FONT_TYPE_GLUT_STROKE) {
-#ifdef EDEN_USE_GL
+#if EDEN_USE_GL
         glColor4f(gFontSettings.colorRGBA[0], gFontSettings.colorRGBA[1], gFontSettings.colorRGBA[2], gFontSettings.colorRGBA[3]);
         while ((c = line[i++])) {
             if (c < ' ') continue;
@@ -667,7 +667,7 @@ static void drawOneLine(const unsigned char *line, int contextIndex, const float
             if (!gFontSettings.font->monospaced && c == ' ' && gFormattingSettings.wordExtraSpacing) glTranslatef(glutStrokeWidth(gFontSettings.font->fontDataPathname, ' ') * gFormattingSettings.wordExtraSpacing, 0.0f, 0.0f);
             glTranslatef(gFontSettings.font->naturalHeight * gFormattingSettings.characterSpacing, 0.0f, 0.0f);
         }
-#elif defined(EDEN_USE_GLES2)
+#elif EDEN_USE_GLES2
         EDEN_GL_FONT_GLUT_STROKE_INFO *gsi = (EDEN_GL_FONT_GLUT_STROKE_INFO *)gFontSettings.font->tsi;
         glUseProgram(gsi->programs[contextIndex]);
         glUniform4fv(gsi->uniforms[contextIndex*UNIFORM_COUNT + UNIFORM_COLOR], 1, gFontSettings.colorRGBA);
@@ -685,7 +685,7 @@ static void drawOneLine(const unsigned char *line, int contextIndex, const float
     } else if (gFontSettings.font->type == EDEN_GL_FONT_TYPE_TEXTURE) {
         while ((c = line[i++])) {
             if (c < ' ') continue;
-#ifdef EDEN_USE_GL
+#if EDEN_USE_GL
             glMatrixMode(GL_TEXTURE);
             glLoadIdentity();
             glTranslatef((float)(c%16)*0.0625f, 1.0f - (float)(c/16 + 1)*0.0625f, 0.0f); // Select the appropriate bit of font texture.
@@ -720,13 +720,13 @@ void EdenGLFontDrawLine(const int contextIndex, const float viewProjection[16], 
     
     if (gFontSettings.font->type == EDEN_GL_FONT_TYPE_TEXTURE) drawSetup(contextIndex, &VTs);
     fontScalef = gFontSettings.size/72.0f * gViewSettings.pixelsPerInch / gFontSettings.font->naturalHeight;
-#ifdef EDEN_USE_GL
+#if EDEN_USE_GL
     glPushMatrix();
     glTranslatef(x, y, 0.0f);
     glScalef(fontScalef, fontScalef, fontScalef);
     drawOneLine(line, 0 , NULL);
     glPopMatrix();
-#elif defined(EDEN_USE_GLES2)
+#elif EDEN_USE_GLES2
     float mvp[16];
     mtxLoadMatrixf(mvp, viewProjection);
     mtxTranslatef(mvp, x, y, 0.0f);
@@ -760,7 +760,7 @@ void EdenGLFontDrawBlock(const int contextIndex, const float viewProjection[16],
     
     if (gFontSettings.font->type == EDEN_GL_FONT_TYPE_TEXTURE) drawSetup(contextIndex, &VTs);
     fontScalef = gFontSettings.size/72.0f * gViewSettings.pixelsPerInch / gFontSettings.font->naturalHeight;
-#ifdef EDEN_USE_GL
+#if EDEN_USE_GL
     glPushMatrix();
     for (i = 0; i < lineCount; i++) {
         if (lines[i]) {
@@ -773,7 +773,7 @@ void EdenGLFontDrawBlock(const int contextIndex, const float viewProjection[16],
         }
     }
     glPopMatrix();
-#elif defined(EDEN_USE_GLES2)
+#elif EDEN_USE_GLES2
     for (i = 0; i < lineCount; i++) {
         if (lines[i]) {
             float mvp[16];

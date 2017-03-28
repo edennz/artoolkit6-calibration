@@ -63,10 +63,10 @@ typedef unsigned char bool;
 #include <Eden/EdenTime.h>	// EdenTimeAbsolutePlusOffset(), struct timespec, EdenTime_sleep()
 #include <Eden/EdenSurfaces.h>	// TEXTURE_INFO_t, TEXTURE_INDEX_t, SurfacesTextureLoad(), SurfacesTextureSet(), SurfacesTextureUnload()
 #include <Eden/EdenGLFont.h>
-#ifdef EDEN_USE_GL
+#if EDEN_USE_GL
 #  define USE_GL_STATE_CACHE 0
 #  include <Eden/glStateCache.h>
-#elif defined(EDEN_USE_GLES2)
+#elif EDEN_USE_GLES2
 #  include <AR6/ARG/glStateCache2.h>
 #  include <AR6/ARG/arg_shader_gl.h>
 #  include <AR6/ARG/arg_mtx.h>
@@ -112,7 +112,7 @@ static float gScreenWidth = 640.0f;
 static float gScreenHeight = 480.0f;
 static float gScreenScale = 1.0f;
 
-#ifdef EDEN_USE_GLES2
+#if EDEN_USE_GLES2
 // Indices of GL ES program uniforms.
 enum {
     UNIFORM_MODELVIEW_PROJECTION_MATRIX,
@@ -306,7 +306,7 @@ EDEN_BOOL EdenMessageInit(const int contextsActiveCount)
 	if (gMessageInited) return (FALSE);
 
     // OpenGL setup.
-#ifdef EDEN_USE_GLES2
+#if EDEN_USE_GLES2
     if (!program) {
         GLuint vertShader = 0, fragShader = 0;
         // A simple shader pair which accepts just a vertex position. Fixed color, no lighting.
@@ -397,7 +397,7 @@ EDEN_BOOL EdenMessageFinal(void)
 
     boxDestroy(&gBoxSettings);
     
-#ifdef EDEN_USE_GLES2
+#if EDEN_USE_GLES2
     arglGLDestroyShaders(0, 0, program);
 #endif
 
@@ -652,7 +652,7 @@ void EdenMessageDraw(const int contextIndex, const float viewProjection[16])
     pthread_mutex_lock(&gBoxSettings->lock);
 	if (gBoxSettings->lineCount) {
         // Draw the semi-transparent black shaded box and white outline.
-#ifdef EDEN_USE_GL
+#if EDEN_USE_GL
         glStateCacheBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glStateCacheEnableBlend();
         glVertexPointer(2, GL_FLOAT, 0, boxVertices);
@@ -667,7 +667,7 @@ void EdenMessageDraw(const int contextIndex, const float viewProjection[16])
         glDrawArrays(GL_LINE_LOOP, 0, 4);
         
         EdenGLFontDrawBlock(contextIndex, NULL, (const unsigned char **)gBoxSettings->lines, gBoxSettings->lineCount, 0.0f, 0.0f, H_OFFSET_VIEW_CENTER_TO_TEXT_CENTER, V_OFFSET_VIEW_CENTER_TO_TEXT_CENTER);
-#elif defined(EDEN_USE_GLES2)
+#elif EDEN_USE_GLES2
         glUseProgram(program);
         glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEW_PROJECTION_MATRIX], 1, GL_FALSE, viewProjection);
         glStateCacheBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
