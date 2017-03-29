@@ -40,6 +40,7 @@
 #include <AR6/AR/ar.h>
 #include <opencv2/core/core.hpp>
 #include <AR6/ARVideoSource.h>
+#include <map>
 
 #include <AR6/ARUtil/thread_sub.h>
 
@@ -53,7 +54,9 @@ public:
         ASYMMETRIC_CIRCLES_GRID
     };
     
-    Calibration(const CalibrationPatternType patternType, const int calibImageCountMax, const int chessboardCornerNumX, const int chessboardCornerNumY, const int chessboardSquareWidth, const int videoWidth, const int videoHeight);
+    static std::map<CalibrationPatternType, cv::Size> CalibrationPatternSizes;
+    
+    Calibration(const CalibrationPatternType patternType, const int calibImageCountMax, const cv::Size patternSize, const int chessboardSquareWidth, const int videoWidth, const int videoHeight);
     int calibImageCount() const {return (int)m_corners.size(); }
     int calibImageCountMax() const {return m_calibImageCountMax; }
     bool frame(ARVideoSource *vs);
@@ -78,13 +81,12 @@ private:
     // of a completed run.
     class CalibrationCornerFinderData {
     public:
-        CalibrationCornerFinderData(const CalibrationPatternType patternType_in, const int chessboardCornerNumX_in, const int chessboardCornerNumY_in, const int videoWidth_in, const int videoHeight_in);
+        CalibrationCornerFinderData(const CalibrationPatternType patternType_in, const cv::Size patternSize_in, const int videoWidth_in, const int videoHeight_in);
         CalibrationCornerFinderData(const CalibrationCornerFinderData& orig);
         const CalibrationCornerFinderData& operator=(const CalibrationCornerFinderData& orig);
         ~CalibrationCornerFinderData();
         CalibrationPatternType patternType;
-        int                  chessboardCornerNumX;
-        int                  chessboardCornerNumY;
+        cv::Size             patternSize;
         int                  videoWidth;
         int                  videoHeight;
         uint8_t             *videoFrame;
@@ -105,8 +107,7 @@ private:
     std::vector<std::vector<cv::Point2f> > m_corners; // Collected corner information which gets passed to the OpenCV calibration function.
     int                  m_calibImageCountMax;
     CalibrationPatternType m_patternType;
-    int                  m_chessboardCornerNumX;
-    int                  m_chessboardCornerNumY;
+    cv::Size             m_patternSize;
     int                  m_chessboardSquareWidth;
     int                  m_videoWidth;
     int                  m_videoHeight;

@@ -37,7 +37,7 @@
 
 #define _GNU_SOURCE // asprintf()
 
-#include "flow.h"
+#include "flow.hpp"
 
 #include <stdio.h> // asprintf()
 #include <pthread.h>

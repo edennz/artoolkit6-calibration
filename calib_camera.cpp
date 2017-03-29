@@ -67,8 +67,7 @@
 
 #include "fileUploader.h"
 #include "Calibration.hpp"
-#include "calc.h"
-#include "flow.h"
+#include "flow.hpp"
 #include "Eden/EdenMessage.h"
 #include "Eden/EdenGLFont.h"
 
@@ -202,7 +201,7 @@ static void startVideo(void)
     vs->configure(buf, true, NULL, NULL, 0);
     if (!vs->open()) {
         ARLOGe("Error: Unable to open video source.\n");
-        quit(-1);
+        EdenMessageShow((const unsigned char *)"Welcome to ARToolKit Camera Calibrator\n(c)2017 DAQRI LLC.\n\nUnable to open video source.\n\nPress 'p' for settings and help.");
     }
     gPostVideoSetupDone = false;
 }
@@ -447,7 +446,8 @@ int main(int argc, char *argv[])
                     // Calibration init.
                     //
                     
-                    gCalibration = new Calibration(Calibration::CalibrationPatternType::CHESSBOARD, gPreferencesCalibImageCountMax, gPreferencesChessboardCornerNumX, gPreferencesChessboardCornerNumY, gPreferencesChessboardSquareWidth, vs->getVideoWidth(), vs->getVideoHeight());
+                    cv::Size s = Calibration::CalibrationPatternSizes[Calibration::CalibrationPatternType::CHESSBOARD];
+                    gCalibration = new Calibration(Calibration::CalibrationPatternType::CHESSBOARD, gPreferencesCalibImageCountMax, s, gPreferencesChessboardSquareWidth, vs->getVideoWidth(), vs->getVideoHeight());
                     if (!gCalibration) {
                         ARLOGe("Error initialising calibration.\n");
                         exit (-1);
@@ -482,14 +482,13 @@ int main(int argc, char *argv[])
 
                 }
                 
-                // The display has changed.
-                drawView();
-                
             }
             
         } // vs->isOpen()
         
-        
+        // The display has changed.
+        drawView();
+                
         arUtilSleep(1); // 1 millisecond.
     }
     

@@ -88,11 +88,11 @@ set(SOURCE
     ../calib_camera.cpp
     ../calib_camera.h
     ../calc.cpp
-    ../calc.h
+    ../calc.hpp
     ../fileUploader.c
     ../fileUploader.h
-    ../flow.c
-    ../flow.h
+    ../flow.cpp
+    ../flow.hpp
     ../prefs.h
     ../prefsLibConfig.c
     ../prefsNull.c

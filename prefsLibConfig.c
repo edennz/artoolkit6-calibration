@@ -18,7 +18,7 @@
 #include <Eden/EdenMessage.h>
 #include <pthread.h>
 #include <AR6/ARVideo/video.h>
-#include "flow.h"
+#include "flow.hpp"
 #include <AR6/ARUtil/file_utils.h>
 #include "calib_camera.h"
 

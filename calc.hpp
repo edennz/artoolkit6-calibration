@@ -1,5 +1,5 @@
 /*
- *  calc.h
+ *  calc.hpp
  *  ARToolKit6
  *
  *  This file is part of ARToolKit.
@@ -39,10 +39,11 @@
 
 #include <AR6/AR/ar.h>
 #include <opencv2/core/core.hpp>
+#include "Calibration.hpp"
 
 void calc(const int capturedImageNum,
-		  const int chessboardCornerNumX,
-		  const int chessboardCornerNumY,
+          const Calibration::CalibrationPatternType patternType,
+		  const cv::Size patternSize,
 		  const float chessboardSquareWidth,
           const std::vector<std::vector<cv::Point2f> >& cornerSet,
 		  const int width,

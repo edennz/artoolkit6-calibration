@@ -35,31 +35,29 @@
  *
  */
 
-#include "calc.h"
+#include "calc.hpp"
 
 #include <opencv2/calib3d/calib3d.hpp>
 
 static ARdouble getSizeFactor(ARdouble dist_factor[], int xsize, int ysize, int dist_function_version);
 static void convParam(float intr[3][4], float dist[4], int xsize, int ysize, ARParam *param);
 
-enum Pattern { CHESSBOARD, CIRCLES_GRID, ASYMMETRIC_CIRCLES_GRID };
-
-static void calcChessboardCorners(cv::Size boardSize, float squareSize, std::vector<cv::Point3f>& corners, Pattern patternType = CHESSBOARD)
+static void calcChessboardCorners(const Calibration::CalibrationPatternType patternType, cv::Size patternSize, float patternSpacing, std::vector<cv::Point3f>& corners)
 {
     corners.resize(0);
     
-    switch(patternType) {
-        case CHESSBOARD:
-        case CIRCLES_GRID:
-            for (int i = 0; i < boardSize.width; i++)
-                for (int j = 0; j < boardSize.height; j++)
-                    corners.push_back(cv::Point3f(float(i*squareSize), float(j*squareSize), 0));
+    switch (patternType) {
+        case Calibration::CalibrationPatternType::CHESSBOARD:
+        case Calibration::CalibrationPatternType::CIRCLES_GRID:
+            for (int i = 0; i < patternSize.width; i++)
+                for (int j = 0; j < patternSize.height; j++)
+                    corners.push_back(cv::Point3f(float(i*patternSpacing), float(j*patternSpacing), 0));
             break;
             
-        case ASYMMETRIC_CIRCLES_GRID:
-            for (int i = 0; i < boardSize.width; i++)
-                for (int j = 0; j < boardSize.height; j++)
-                    corners.push_back(cv::Point3f(float((2*i + j % 2)*squareSize), float(j*squareSize), 0));
+        case Calibration::CalibrationPatternType::ASYMMETRIC_CIRCLES_GRID:
+            for (int i = 0; i < patternSize.width; i++)
+                for (int j = 0; j < patternSize.height; j++)
+                    corners.push_back(cv::Point3f(float((2*i + j % 2)*patternSpacing), float(j*patternSpacing), 0));
             break;
             
         default:
@@ -67,11 +65,10 @@ static void calcChessboardCorners(cv::Size boardSize, float squareSize, std::vec
     }
 }
 
-
 void calc(const int capturedImageNum,
-		  const int chessboardCornerNumX,
-		  const int chessboardCornerNumY,
-		  const float chessboardSquareWidth,
+          const Calibration::CalibrationPatternType patternType,
+          const cv::Size patternSize,
+		  const float patternSpacing,
 		  const std::vector<std::vector<cv::Point2f> >& cornerSet,
 		  const int width,
 		  const int height,
@@ -92,7 +89,7 @@ void calc(const int capturedImageNum,
 
     // Set up object points.
     std::vector<std::vector<cv::Point3f> > objectPoints(1);
-    calcChessboardCorners(cv::Size(chessboardCornerNumX, chessboardCornerNumY), chessboardSquareWidth, objectPoints[0], CHESSBOARD);
+    calcChessboardCorners(patternType, patternSize, patternSpacing, objectPoints[0]);
     objectPoints.resize(capturedImageNum, objectPoints[0]);
         
     cv::Mat intrinsics = cv::Mat::eye(3, 3, CV_64F);
@@ -106,7 +103,7 @@ void calc(const int capturedImageNum,
     double rms = calibrateCamera(objectPoints, cornerSet, cv::Size(width, height), intrinsics,
                                  distortionCoeff, rotationVectors, translationVectors, flags|cv::CALIB_FIX_K3|cv::CALIB_FIX_K4|cv::CALIB_FIX_K5);
     
-    ARLOGd("RMS error reported by calibrateCamera: %g\n", rms);
+    ARLOGi("RMS error reported by calibrateCamera: %g\n", rms);
     
     bool ok = checkRange(intrinsics) && checkRange(distortionCoeff);
     if (!ok) ARLOGe("cv::checkRange(intrinsics) && cv::checkRange(distortionCoeff) reported not OK.\n");
@@ -138,25 +135,25 @@ void calc(const int capturedImageNum,
 
     for (k = 0; k < capturedImageNum; k++) {
         for (i = 0; i < 3; i++) {
-            ((float*)(rotationVector->data.ptr))[i] = (float)rotationVectors.at(k).at<double>(i);
+            ((float *)(rotationVector->data.ptr))[i] = (float)rotationVectors.at(k).at<double>(i);
         }
-        cvRodrigues2(rotationVector, rotationMatrix
-        		, 0
-        		);
+        cvRodrigues2(rotationVector, rotationMatrix, 0);
         for (j = 0; j < 3; j++) {
             for (i = 0; i < 3; i++) {
-                trans[j][i] = ((float*)(rotationMatrix->data.ptr + rotationMatrix->step*j))[i];
+                trans[j][i] = ((float *)(rotationMatrix->data.ptr + rotationMatrix->step*j))[i];
             }
             trans[j][3] = (float)translationVectors.at(k).at<double>(j);
         }
         //arParamDispExt(trans);
 
         err = 0.0;
-        for (i = 0; i < chessboardCornerNumX; i++) {
-            for (j = 0; j < chessboardCornerNumY; j++) {
-                cx = trans[0][0] * chessboardSquareWidth*i + trans[0][1] * chessboardSquareWidth*j + trans[0][3];
-                cy = trans[1][0] * chessboardSquareWidth*i + trans[1][1] * chessboardSquareWidth*j + trans[1][3];
-                cz = trans[2][0] * chessboardSquareWidth*i + trans[2][1] * chessboardSquareWidth*j + trans[2][3];
+        for (i = 0; i < patternSize.width; i++) {
+            for (j = 0; j < patternSize.height; j++) {
+                float x = objectPoints[0][i * patternSize.height + j].x;
+                float y = objectPoints[0][i * patternSize.height + j].y;
+                cx = trans[0][0] * x + trans[0][1] * y + trans[0][3];
+                cy = trans[1][0] * x + trans[1][1] * y + trans[1][3];
+                cz = trans[2][0] * x + trans[2][1] * y + trans[2][3];
                 hx = param.mat[0][0] * cx + param.mat[0][1] * cy + param.mat[0][2] * cz + param.mat[0][3];
                 hy = param.mat[1][0] * cx + param.mat[1][1] * cy + param.mat[1][2] * cz + param.mat[1][3];
                 h  = param.mat[2][0] * cx + param.mat[2][1] * cy + param.mat[2][2] * cz + param.mat[2][3];
@@ -164,13 +161,13 @@ void calc(const int capturedImageNum,
                 sx = hx / h;
                 sy = hy / h;
                 arParamIdeal2Observ(param.dist_factor, sx, sy, &ox, &oy, param.dist_function_version);
-                sx = (ARdouble)cornerSet.at(k).at(i*chessboardCornerNumY + j).x;
-                sy = (ARdouble)cornerSet.at(k).at(i*chessboardCornerNumY + j).y;
+                sx = (ARdouble)cornerSet[k][i * patternSize.height + j].x;
+                sy = (ARdouble)cornerSet[k][i * patternSize.height + j].y;
                 err += (ox - sx)*(ox - sx) + (oy - sy)*(oy - sy);
             }
         }
-        err = sqrtf(err/(chessboardCornerNumX*chessboardCornerNumY));
-        ARLOG("Err[%2d]: %f[pixel]\n", k+1, err);
+        err = sqrtf(err/(patternSize.width*patternSize.height));
+        ARLOG("Err[%2d]: %f[pixel]\n", k + 1, err);
 
         // Track min, avg, and max error.
         if (err < err_min) err_min = err;

@@ -110,13 +110,13 @@
 		4A4793821E80CFD4002C3631 /* reveal-icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "reveal-icon@2x.png"; sourceTree = "<group>"; };
 		4A4793831E80CFD4002C3631 /* SettingsViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SettingsViewController.xib; sourceTree = "<group>"; };
 		4A4793981E80D195002C3631 /* calc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = calc.cpp; path = ../calc.cpp; sourceTree = "<group>"; };
-		4A4793991E80D195002C3631 /* calc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = calc.h; path = ../calc.h; sourceTree = "<group>"; };
+		4A4793991E80D195002C3631 /* calc.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = calc.hpp; path = ../calc.hpp; sourceTree = "<group>"; };
 		4A47939A1E80D195002C3631 /* Calibration.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Calibration.cpp; path = ../Calibration.cpp; sourceTree = "<group>"; };
 		4A47939B1E80D195002C3631 /* Calibration.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Calibration.hpp; path = ../Calibration.hpp; sourceTree = "<group>"; };
 		4A47939C1E80D195002C3631 /* fileUploader.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fileUploader.c; path = ../fileUploader.c; sourceTree = "<group>"; };
 		4A47939D1E80D195002C3631 /* fileUploader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fileUploader.h; path = ../fileUploader.h; sourceTree = "<group>"; };
 		4A4793A41E80D85A002C3631 /* flow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = flow.mm; sourceTree = "<group>"; };
-		4A4793A61E80D867002C3631 /* flow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = flow.h; path = ../flow.h; sourceTree = "<group>"; };
+		4A4793A61E80D867002C3631 /* flow.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = flow.hpp; path = ../flow.hpp; sourceTree = "<group>"; };
 		4A4793A91E80D945002C3631 /* Eden.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Eden.h; sourceTree = "<group>"; };
 		4A4793AA1E80D945002C3631 /* EdenError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EdenError.h; sourceTree = "<group>"; };
 		4A4793AB1E80D945002C3631 /* EdenGLFont.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EdenGLFont.c; sourceTree = "<group>"; };
@@ -232,13 +232,13 @@
 				4A47934E1E80CDBE002C3631 /* AppDelegate.m */,
 				4A0AB67F1E81DA6900F6EBB9 /* ARViewController.h */,
 				4A0AB6801E81DA6900F6EBB9 /* ARViewController.mm */,
-				4A4793991E80D195002C3631 /* calc.h */,
+				4A4793991E80D195002C3631 /* calc.hpp */,
 				4A4793981E80D195002C3631 /* calc.cpp */,
 				4A47939B1E80D195002C3631 /* Calibration.hpp */,
 				4A47939A1E80D195002C3631 /* Calibration.cpp */,
 				4A47939D1E80D195002C3631 /* fileUploader.h */,
 				4A47939C1E80D195002C3631 /* fileUploader.c */,
-				4A4793A61E80D867002C3631 /* flow.h */,
+				4A4793A61E80D867002C3631 /* flow.hpp */,
 				4A4793A41E80D85A002C3631 /* flow.mm */,
 				4A0AB6821E81DFCE00F6EBB9 /* prefs.h */,
 				4A4793671E80CF96002C3631 /* CameraFocusView.h */,

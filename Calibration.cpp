@@ -38,17 +38,16 @@
 #include "Calibration.hpp"
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include "calc.h"
+#include "calc.hpp"
 
 //
 // A class to encapsulate the inputs and outputs of a corner-finding run, and to allow for copying of the results
 // of a completed run.
 //
 
-Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const CalibrationPatternType patternType_in, const int chessboardCornerNumX_in, const int chessboardCornerNumY_in, const int videoWidth_in, const int videoHeight_in) :
+Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const CalibrationPatternType patternType_in, const cv::Size patternSize_in, const int videoWidth_in, const int videoHeight_in) :
     patternType(patternType_in),
-    chessboardCornerNumX(chessboardCornerNumX_in),
-    chessboardCornerNumY(chessboardCornerNumY_in),
+    patternSize(patternSize_in),
     videoWidth(videoWidth_in),
     videoHeight(videoHeight_in),
     cornerFoundAllFlag(0),
@@ -60,8 +59,7 @@ Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const Cali
 // copy constructor.
 Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const CalibrationCornerFinderData& orig) :
     patternType(orig.patternType),
-    chessboardCornerNumX(orig.chessboardCornerNumX),
-    chessboardCornerNumY(orig.chessboardCornerNumY),
+    patternSize(orig.patternSize),
     videoWidth(orig.videoWidth),
     videoHeight(orig.videoHeight),
     cornerFoundAllFlag(orig.cornerFoundAllFlag),
@@ -77,8 +75,7 @@ const Calibration::CalibrationCornerFinderData& Calibration::CalibrationCornerFi
     if (this != &orig) {
         dealloc();
         patternType = orig.patternType;
-        chessboardCornerNumX = orig.chessboardCornerNumX;
-        chessboardCornerNumY = orig.chessboardCornerNumY;
+        patternSize = orig.patternSize;
         videoWidth = orig.videoWidth;
         videoHeight = orig.videoHeight;
         cornerFoundAllFlag = orig.cornerFoundAllFlag;
@@ -122,12 +119,18 @@ void Calibration::CalibrationCornerFinderData::dealloc()
 // User-facing calibration functions.
 //
 
-Calibration::Calibration(const CalibrationPatternType patternType, const int calibImageCountMax, const int chessboardCornerNumX, const int chessboardCornerNumY, const int chessboardSquareWidth, const int videoWidth, const int videoHeight) :
-    m_cornerFinderData(patternType, chessboardCornerNumX, chessboardCornerNumY, videoWidth, videoHeight),
-    m_cornerFinderResultData(patternType, 0, 0, 0, 0),
+
+std::map<Calibration::CalibrationPatternType, cv::Size> Calibration::CalibrationPatternSizes = {
+    {Calibration::CalibrationPatternType::CHESSBOARD, cv::Size(7, 5)},
+    {Calibration::CalibrationPatternType::ASYMMETRIC_CIRCLES_GRID, cv::Size(4, 11)}
+};
+
+Calibration::Calibration(const CalibrationPatternType patternType, const int calibImageCountMax, const cv::Size patternSize, const int chessboardSquareWidth, const int videoWidth, const int videoHeight) :
+    m_cornerFinderData(patternType, patternSize, videoWidth, videoHeight),
+    m_cornerFinderResultData(patternType, patternSize, 0, 0),
     m_calibImageCountMax(calibImageCountMax),
-    m_chessboardCornerNumX(chessboardCornerNumX),
-    m_chessboardCornerNumY(chessboardCornerNumY),
+    m_patternType(patternType),
+    m_patternSize(patternSize),
     m_chessboardSquareWidth(chessboardSquareWidth),
     m_videoWidth(videoWidth),
     m_videoHeight(videoHeight),
@@ -205,13 +208,13 @@ void *Calibration::cornerFinder(THREAD_HANDLE_T *threadHandle)
         
         switch (cornerFinderDataPtr->patternType) {
             case CalibrationPatternType::CHESSBOARD:
-                cornerFinderDataPtr->cornerFoundAllFlag = cv::findChessboardCorners(cv::cvarrToMat(cornerFinderDataPtr->calibImage), cv::Size(cornerFinderDataPtr->chessboardCornerNumY, cornerFinderDataPtr->chessboardCornerNumX), cornerFinderDataPtr->corners, CV_CALIB_CB_FAST_CHECK|CV_CALIB_CB_ADAPTIVE_THRESH|CV_CALIB_CB_FILTER_QUADS);
+                cornerFinderDataPtr->cornerFoundAllFlag = cv::findChessboardCorners(cv::cvarrToMat(cornerFinderDataPtr->calibImage), cornerFinderDataPtr->patternSize, cornerFinderDataPtr->corners, CV_CALIB_CB_FAST_CHECK|CV_CALIB_CB_ADAPTIVE_THRESH|CV_CALIB_CB_FILTER_QUADS);
                 break;
             case CalibrationPatternType::CIRCLES_GRID:
-                cornerFinderDataPtr->cornerFoundAllFlag = cv::findCirclesGrid(cv::cvarrToMat(cornerFinderDataPtr->calibImage), cv::Size(cornerFinderDataPtr->chessboardCornerNumY, cornerFinderDataPtr->chessboardCornerNumX), cornerFinderDataPtr->corners, cv::CALIB_CB_SYMMETRIC_GRID);
+                cornerFinderDataPtr->cornerFoundAllFlag = cv::findCirclesGrid(cv::cvarrToMat(cornerFinderDataPtr->calibImage), cornerFinderDataPtr->patternSize, cornerFinderDataPtr->corners, cv::CALIB_CB_SYMMETRIC_GRID);
                 break;
             case CalibrationPatternType::ASYMMETRIC_CIRCLES_GRID:
-                cornerFinderDataPtr->cornerFoundAllFlag = cv::findCirclesGrid(cv::cvarrToMat(cornerFinderDataPtr->calibImage), cv::Size(cornerFinderDataPtr->chessboardCornerNumY, cornerFinderDataPtr->chessboardCornerNumX), cornerFinderDataPtr->corners, cv::CALIB_CB_ASYMMETRIC_GRID);
+                cornerFinderDataPtr->cornerFoundAllFlag = cv::findCirclesGrid(cv::cvarrToMat(cornerFinderDataPtr->calibImage), cornerFinderDataPtr->patternSize, cornerFinderDataPtr->corners, cv::CALIB_CB_ASYMMETRIC_GRID);
                 break;
         }
         ARLOGd("cornerFinderDataPtr->cornerFoundAllFlag=%d.\n", cornerFinderDataPtr->cornerFoundAllFlag);
@@ -271,7 +274,7 @@ bool Calibration::uncaptureAll(void)
 
 void Calibration::calib(ARParam *param_out, ARdouble *err_min_out, ARdouble *err_avg_out, ARdouble *err_max_out)
 {
-    calc((int)m_corners.size(), m_chessboardCornerNumX, m_chessboardCornerNumY, m_chessboardSquareWidth, m_corners, m_videoWidth, m_videoHeight, param_out, err_min_out, err_avg_out, err_max_out);
+    calc((int)m_corners.size(), m_patternType, m_patternSize, m_chessboardSquareWidth, m_corners, m_videoWidth, m_videoHeight, param_out, err_min_out, err_avg_out, err_max_out);
 }
 
 Calibration::~Calibration()

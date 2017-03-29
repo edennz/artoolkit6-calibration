@@ -1,5 +1,5 @@
 /*
- *  flow.h
+ *  flow.hpp
  *  ARToolKit6
  *
  *  This file is part of ARToolKit.
