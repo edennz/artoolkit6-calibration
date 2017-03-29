@@ -157,10 +157,8 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     ARView *vv;
     bool gPostVideoSetupDone;
     bool gCameraIsFrontFacing;
-    
-    // Marker detection.
-    long            gCallCountMarkerDetect;
-    BOOL drawRequired;
+    long gFrameCount;
+    BOOL gGotFrame;
 
     // Window and GL context.
     int contextWidth;
@@ -220,8 +218,8 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     vv = nullptr;
     gPostVideoSetupDone = false;
     gCameraIsFrontFacing = false;
-    gCallCountMarkerDetect = 0L;
-    drawRequired = FALSE;
+    gFrameCount = 0L;
+    gGotFrame = FALSE;
     contextWidth = 0;
     contextHeight = 0;
     contextWasUpdated = false;
@@ -242,6 +240,10 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     _resumeOnDidBecomeActive = NO;
     self.resumeOnDidBecomeActive = YES;
     
+#ifdef DEBUG
+    arLogLevel = AR_LOG_LEVEL_DEBUG;
+#endif
+
     // Preferences.
     gPreferences = initPreferences();
     gPreferenceCameraOpenToken = getPreferenceCameraOpenToken(gPreferences);
@@ -261,8 +263,36 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     
     if (!focusView) focusView = [[CameraFocusView alloc] initWithFrame:self.view.frame];
     
+    asprintf(&gFileUploadQueuePath, "%s/%s", arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_APP_CACHE_DIR), QUEUE_DIR);
+    // Check for QUEUE_DIR and create if not already existing.
+    if (!fileUploaderCreateQueueDir(gFileUploadQueuePath)) {
+        ARLOGe("Error: Could not create queue directory.\n");
+        exit(-1);
+    }
+    
+    fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
+    if (!fileUploadHandle) {
+        ARLOGe("Error: Could not initialise fileUploadHandle.\n");
+        exit(-1);
+    }
+    fileUploaderTickle(fileUploadHandle);
+    
+    // Calibration prefs.
+    if( gPreferencesChessboardCornerNumX == 0 ) gPreferencesChessboardCornerNumX = CHESSBOARD_CORNER_NUM_X;
+    if( gPreferencesChessboardCornerNumY == 0 ) gPreferencesChessboardCornerNumY = CHESSBOARD_CORNER_NUM_Y;
+    if( gPreferencesCalibImageCountMax == 0 )        gPreferencesCalibImageCountMax = CALIB_IMAGE_NUM;
+    if( gPreferencesChessboardSquareWidth == 0.0f )       gPreferencesChessboardSquareWidth = (float)CHESSBOARD_PATTERN_WIDTH;
+    ARLOGi("CHESSBOARD_CORNER_NUM_X = %d\n", gPreferencesChessboardCornerNumX);
+    ARLOGi("CHESSBOARD_CORNER_NUM_Y = %d\n", gPreferencesChessboardCornerNumY);
+    ARLOGi("CHESSBOARD_PATTERN_WIDTH = %f\n", gPreferencesChessboardSquareWidth);
+    ARLOGi("CALIB_IMAGE_NUM = %d\n", gPreferencesCalibImageCountMax);
+
     [self setupGL];
     
+    // Get start time.
+    gettimeofday(&gStartTime, NULL);
+    
+    [self startVideo];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -297,17 +327,24 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 
 - (void)dealloc
 {    
+    fileUploaderFinal(&fileUploadHandle);
+
     [self tearDownGL];
-    
     if ([EAGLContext currentContext] == self.context) {
         [EAGLContext setCurrentContext:nil];
     }
     
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:PreferencesChangedNotification object:nil];
+    
+    free(gPreferenceCameraOpenToken);
+    free(gPreferenceCameraResolutionToken);
+    free(gCalibrationServerUploadURL);
+    free(gCalibrationServerAuthenticationToken);
+    preferencesFinal(&gPreferences);
+    
     // Cleanup reimplemented GLKViewController properties.
     self.pauseOnWillResignActive = NO;
     self.resumeOnDidBecomeActive = NO;
-    
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:PreferencesChangedNotification object:nil];
 }
 
 - (void)didReceiveMemoryWarning
@@ -427,18 +464,34 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     vs = new ARVideoSource;
     if (!vs) {
         ARLOGe("Error: Unable to create video source.\n");
-        //quit(-1);
-    }
-    vs->configure(buf, true, NULL, NULL, 0);
-    if (!vs->open()) {
-        ARLOGe("Error: Unable to open video source.\n");
-        //quit(-1);
+        [self quit:-1];
+    } else {
+        vs->configure(buf, true, NULL, NULL, 0);
+        if (!vs->open()) {
+            ARLOGe("Error: Unable to open video source.\n");
+            EdenMessageShow(((const unsigned char *)NSLocalizedString(@"VideoOpenError",@"Welcome message when unable to open video source").UTF8String));
+        }
     }
     gPostVideoSetupDone = false;
 }
 
 - (void)stopVideo
 {
+    gGotFrame = FALSE;
+
+    // Stop calibration flow.
+    flowStopAndFinal();
+    
+    if (gCalibration) {
+        delete gCalibration;
+        gCalibration = nullptr;
+    }
+    
+    if (gArglSettingsCornerFinderImage) {
+        arglCleanup(gArglSettingsCornerFinderImage); // Clean up any left-over ARGL data.
+        gArglSettingsCornerFinderImage = NULL;
+    }
+
     delete vv;
     vv = nullptr;
     delete vs;
@@ -484,7 +537,6 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     if (changedCameraSettings) {
         // Changing camera settings requires complete cancelation of calibration flow,
         // closing of video source, and re-init.
-        flowStopAndFinal();
         [self stopVideo];
         [self startVideo];
     }
@@ -494,36 +546,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 - (void)setupGL
 {
     [EAGLContext setCurrentContext:self.context];
-    
-    
-#ifdef DEBUG
-    arLogLevel = AR_LOG_LEVEL_DEBUG;
-#endif
- 
-    asprintf(&gFileUploadQueuePath, "%s/%s", arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_APP_CACHE_DIR), QUEUE_DIR);
-    // Check for QUEUE_DIR and create if not already existing.
-    if (!fileUploaderCreateQueueDir(gFileUploadQueuePath)) {
-        ARLOGe("Error: Could not create queue directory.\n");
-        exit(-1);
-    }
-    
-    fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
-    if (!fileUploadHandle) {
-        ARLOGe("Error: Could not initialise fileUploadHandle.\n");
-        exit(-1);
-    }
-    fileUploaderTickle(fileUploadHandle);
-    
-    // Calibration prefs.
-    if( gPreferencesChessboardCornerNumX == 0 ) gPreferencesChessboardCornerNumX = CHESSBOARD_CORNER_NUM_X;
-    if( gPreferencesChessboardCornerNumY == 0 ) gPreferencesChessboardCornerNumY = CHESSBOARD_CORNER_NUM_Y;
-    if( gPreferencesCalibImageCountMax == 0 )        gPreferencesCalibImageCountMax = CALIB_IMAGE_NUM;
-    if( gPreferencesChessboardSquareWidth == 0.0f )       gPreferencesChessboardSquareWidth = (float)CHESSBOARD_PATTERN_WIDTH;
-    ARLOGi("CHESSBOARD_CORNER_NUM_X = %d\n", gPreferencesChessboardCornerNumX);
-    ARLOGi("CHESSBOARD_CORNER_NUM_Y = %d\n", gPreferencesChessboardCornerNumY);
-    ARLOGi("CHESSBOARD_PATTERN_WIDTH = %f\n", gPreferencesChessboardSquareWidth);
-    ARLOGi("CALIB_IMAGE_NUM = %d\n", gPreferencesCalibImageCountMax);
-    
+
     // Library setup.
     int contextsActiveCount = 1;
     EdenMessageInit(contextsActiveCount);
@@ -594,8 +617,6 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         uniforms[UNIFORM_MODELVIEW_PROJECTION_MATRIX] = glGetUniformLocation(program, "modelViewProjectionMatrix");
         uniforms[UNIFORM_COLOR] = glGetUniformLocation(program, "color");
     }
-
-    [self startVideo];
 }
 
 - (void) drawBackgroundWidth:(const float)width height:(const float)height x:(const float)x y:(const float)y border:(const bool)drawBorder projection:(GLfloat [16])p
@@ -689,19 +710,24 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     }
 }
 
+- (void)quit:(int)rc
+{
+    exit(rc);
+}
+
 - (void)update
 {
     if (vs->isOpen()) {
         if (vs->captureFrame()) {
-            gCallCountMarkerDetect++; // Increment ARToolKit FPS counter.
+            gFrameCount++; // Increment ARToolKit FPS counter.
 #ifdef DEBUG
-            if (gCallCountMarkerDetect % 150 == 0) {
-                ARLOGi("*** Camera - %f (frame/sec)\n", (double)gCallCountMarkerDetect/arUtilTimer());
-                gCallCountMarkerDetect = 0;
+            if (gFrameCount % 150 == 0) {
+                ARLOGi("*** Camera - %f (frame/sec)\n", (double)gFrameCount/arUtilTimer());
+                gFrameCount = 0;
                 arUtilTimerReset();
             }
 #endif
-            drawRequired = TRUE;
+            gGotFrame = TRUE;
         }
         
     } // vs->isOpen()
@@ -720,113 +746,115 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     GLfloat *vertices = NULL;
     GLint vertexCount;
     
-    if (!drawRequired) return;
-    
-    // Get frame time.
-    gettimeofday(&time, NULL);
-    
-    if (!gPostVideoSetupDone) {
+    if (gGotFrame) {
+        // Get frame time.
+        gettimeofday(&time, NULL);
         
-        [ARViewController displayToastWithMessage:[NSString stringWithFormat:@"Camera: %dx%d", vs->getVideoWidth(), vs->getVideoHeight()]];
-        
-        gCameraIsFrontFacing = false;
-        AR2VideoParamT *vid = vs->getAR2VideoParam();
-        
-        if (vid->module == AR_VIDEO_MODULE_AVFOUNDATION) {
-            int frontCamera;
-            if (ar2VideoGetParami(vid, AR_VIDEO_PARAM_AVFOUNDATION_CAMERA_POSITION, &frontCamera) >= 0) {
-                gCameraIsFrontFacing = (frontCamera == AR_VIDEO_AVFOUNDATION_CAMERA_POSITION_FRONT);
+        if (!gPostVideoSetupDone) {
+            
+            [ARViewController displayToastWithMessage:[NSString stringWithFormat:@"Camera: %dx%d", vs->getVideoWidth(), vs->getVideoHeight()]];
+            
+            gCameraIsFrontFacing = false;
+            AR2VideoParamT *vid = vs->getAR2VideoParam();
+            
+            if (vid->module == AR_VIDEO_MODULE_AVFOUNDATION) {
+                int frontCamera;
+                if (ar2VideoGetParami(vid, AR_VIDEO_PARAM_AVFOUNDATION_CAMERA_POSITION, &frontCamera) >= 0) {
+                    gCameraIsFrontFacing = (frontCamera == AR_VIDEO_AVFOUNDATION_CAMERA_POSITION_FRONT);
+                }
             }
-        }
-        bool contentRotate90, contentFlipV, contentFlipH;
-        if (gDisplayOrientation == 1) { // Landscape with top of device at left.
-            contentRotate90 = false;
-            contentFlipV = gCameraIsFrontFacing;
-            contentFlipH = gCameraIsFrontFacing;
-        } else if (gDisplayOrientation == 2) { // Portrait upside-down.
-            contentRotate90 = true;
-            contentFlipV = !gCameraIsFrontFacing;
-            contentFlipH = true;
-        } else if (gDisplayOrientation == 3) { // Landscape with top of device at right.
-            contentRotate90 = false;
-            contentFlipV = !gCameraIsFrontFacing;
-            contentFlipH = (!gCameraIsFrontFacing);
-        } else /*(gDisplayOrientation == 0)*/ { // Portait
-            contentRotate90 = true;
-            contentFlipV = gCameraIsFrontFacing;
-            contentFlipH = false;
+            bool contentRotate90, contentFlipV, contentFlipH;
+            if (gDisplayOrientation == 1) { // Landscape with top of device at left.
+                contentRotate90 = false;
+                contentFlipV = gCameraIsFrontFacing;
+                contentFlipH = gCameraIsFrontFacing;
+            } else if (gDisplayOrientation == 2) { // Portrait upside-down.
+                contentRotate90 = true;
+                contentFlipV = !gCameraIsFrontFacing;
+                contentFlipH = true;
+            } else if (gDisplayOrientation == 3) { // Landscape with top of device at right.
+                contentRotate90 = false;
+                contentFlipV = !gCameraIsFrontFacing;
+                contentFlipH = (!gCameraIsFrontFacing);
+            } else /*(gDisplayOrientation == 0)*/ { // Portait
+                contentRotate90 = true;
+                contentFlipV = gCameraIsFrontFacing;
+                contentFlipH = false;
+            }
+            
+            // Setup a route for rendering the color background image.
+            vv = new ARView;
+            if (!vv) {
+                ARLOGe("Error: unable to create video view.\n");
+                //quit(-1);
+            }
+            vv->setRotate90(contentRotate90);
+            vv->setFlipH(contentFlipH);
+            vv->setFlipV(contentFlipV);
+            vv->setScalingMode(ARView::ScalingMode::SCALE_MODE_FIT);
+            vv->initWithVideoSource(*vs, contextWidth, contextHeight);
+            ARLOGi("Content %dx%d (wxh) will display in GL context %dx%d%s.\n", vs->getVideoWidth(), vs->getVideoHeight(), contextWidth, contextHeight, (contentRotate90 ? " rotated" : ""));
+            vv->getViewport(gViewport);
+            
+            // Setup a route for rendering the mono background image.
+            ARParam idealParam;
+            arParamClear(&idealParam, vs->getVideoWidth(), vs->getVideoHeight(), AR_DIST_FUNCTION_VERSION_DEFAULT);
+            if ((gArglSettingsCornerFinderImage = arglSetupForCurrentContext(&idealParam, AR_PIXEL_FORMAT_MONO)) == NULL) {
+                ARLOGe("Unable to setup argl.\n");
+                //quit(-1);
+            }
+            if (!arglDistortionCompensationSet(gArglSettingsCornerFinderImage, FALSE)) {
+                ARLOGe("Unable to setup argl.\n");
+                //quit(-1);
+            }
+            arglSetRotate90(gArglSettingsCornerFinderImage, contentRotate90);
+            arglSetFlipV(gArglSettingsCornerFinderImage, contentFlipV);
+            arglSetFlipH(gArglSettingsCornerFinderImage, contentFlipH);
+            
+            //
+            // Calibration init.
+            //
+            
+            cv::Size s = Calibration::CalibrationPatternSizes[Calibration::CalibrationPatternType::CHESSBOARD];
+            gCalibration = new Calibration(Calibration::CalibrationPatternType::CHESSBOARD, gPreferencesCalibImageCountMax, s, gPreferencesChessboardSquareWidth, vs->getVideoWidth(), vs->getVideoHeight());
+            if (!gCalibration) {
+                ARLOGe("Error initialising calibration.\n");
+                exit (-1);
+            }
+            
+            if (!flowInitAndStart(gCalibration, saveParam, (__bridge void *)self)) {
+                ARLOGe("Error: Could not initialise and start flow.\n");
+                //quit(-1);
+            }
+            
+            // For FPS statistics.
+            arUtilTimerReset();
+            gFrameCount = 0;
+            
+            gPostVideoSetupDone = true;
+        } // !gPostVideoSetupDone
+        
+        if (contextWasUpdated) {
+            vv->setContextSize({contextWidth, contextHeight});
+            vv->getViewport(gViewport);
         }
         
-        // Setup a route for rendering the color background image.
-        vv = new ARView;
-        if (!vv) {
-            ARLOGe("Error: unable to create video view.\n");
-            //quit(-1);
-        }
-        vv->setRotate90(contentRotate90);
-        vv->setFlipH(contentFlipH);
-        vv->setFlipV(contentFlipV);
-        vv->setScalingMode(ARView::ScalingMode::SCALE_MODE_FIT);
-        vv->initWithVideoSource(*vs, contextWidth, contextHeight);
-        ARLOGi("Content %dx%d (wxh) will display in GL context %dx%d%s.\n", vs->getVideoWidth(), vs->getVideoHeight(), contextWidth, contextHeight, (contentRotate90 ? " rotated" : ""));
-        vv->getViewport(gViewport);
-        
-        // Setup a route for rendering the mono background image.
-        ARParam idealParam;
-        arParamClear(&idealParam, vs->getVideoWidth(), vs->getVideoHeight(), AR_DIST_FUNCTION_VERSION_DEFAULT);
-        if ((gArglSettingsCornerFinderImage = arglSetupForCurrentContext(&idealParam, AR_PIXEL_FORMAT_MONO)) == NULL) {
-            ARLOGe("Unable to setup argl.\n");
-            //quit(-1);
-        }
-        if (!arglDistortionCompensationSet(gArglSettingsCornerFinderImage, FALSE)) {
-            ARLOGe("Unable to setup argl.\n");
-            //quit(-1);
-        }
-        arglSetRotate90(gArglSettingsCornerFinderImage, contentRotate90);
-        arglSetFlipV(gArglSettingsCornerFinderImage, contentFlipV);
-        arglSetFlipH(gArglSettingsCornerFinderImage, contentFlipH);
-        
-        //
-        // Calibration init.
-        //
-        
-        cv::Size s = Calibration::CalibrationPatternSizes[Calibration::CalibrationPatternType::CHESSBOARD];
-        gCalibration = new Calibration(Calibration::CalibrationPatternType::CHESSBOARD, gPreferencesCalibImageCountMax, s, gPreferencesChessboardSquareWidth, vs->getVideoWidth(), vs->getVideoHeight());
-        if (!gCalibration) {
-            ARLOGe("Error initialising calibration.\n");
-            exit (-1);
+        FLOW_STATE state = flowStateGet();
+        if (state == FLOW_STATE_WELCOME || state == FLOW_STATE_DONE || state == FLOW_STATE_CALIBRATING) {
+            
+            // Upload the frame to OpenGL.
+            // Now done as part of the draw call.
+            
+        } else if (state == FLOW_STATE_CAPTURING) {
+            
+            gCalibration->frame(vs);
+            
         }
         
-        if (!flowInitAndStart(gCalibration, saveParam, (__bridge void *)self)) {
-            ARLOGe("Error: Could not initialise and start flow.\n");
-            //quit(-1);
-        }
-        
-        // For FPS statistics.
-        arUtilTimerReset();
-        gCallCountMarkerDetect = 0;
-        
-        gPostVideoSetupDone = true;
-    } // !gPostVideoSetupDone
-    
-    if (contextWasUpdated) {
-        vv->setContextSize({contextWidth, contextHeight});
-        vv->getViewport(gViewport);
+        // The display has changed.
+        gGotFrame = FALSE;
     }
-    
-    FLOW_STATE state = flowStateGet();
-    if (state == FLOW_STATE_WELCOME || state == FLOW_STATE_DONE || state == FLOW_STATE_CALIBRATING) {
-        
-        // Upload the frame to OpenGL.
-        // Now done as part of the draw call.
-        
-    } else if (state == FLOW_STATE_CAPTURING) {
-        
-        gCalibration->frame(vs);
-        
-    }
-    
-    // The display has changed.
+   
     
     // Clean the OpenGL context.
     glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -837,6 +865,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     //
     glViewport(gViewport[0], gViewport[1], gViewport[2], gViewport[3]);
     
+    FLOW_STATE state = flowStateGet();
     if (state == FLOW_STATE_WELCOME || state == FLOW_STATE_DONE || state == FLOW_STATE_CALIBRATING) {
         
         // Display the current frame
@@ -1288,7 +1317,8 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         toastView.frame = CGRectMake(0.0f, 0.0f, keyWindow.frame.size.width/2.0f, 28.0f);
         toastView.layer.cornerRadius = 7.0f;
         toastView.layer.masksToBounds = YES;
-        toastView.center = keyWindow.center;
+        //toastView.center = keyWindow.center;
+        toastView.center = CGPointMake(keyWindow.center.x, keyWindow.frame.size.height*0.85f);
         
         [keyWindow addSubview:toastView];
         

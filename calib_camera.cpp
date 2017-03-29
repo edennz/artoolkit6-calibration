@@ -155,9 +155,7 @@ static ARVideoSource *vs = nullptr;
 static ARView *vv = nullptr;
 static bool gPostVideoSetupDone = false;
 static bool gCameraIsFrontFacing = false;
-
-// Marker detection.
-static long            gCallCountMarkerDetect = 0;
+static long            gFrameCount = 0;
 
 // Window and GL context.
 static SDL_GLContext gSDLContext = NULL;
@@ -197,17 +195,31 @@ static void startVideo(void)
     if (!vs) {
         ARLOGe("Error: Unable to create video source.\n");
         quit(-1);
-    }
-    vs->configure(buf, true, NULL, NULL, 0);
-    if (!vs->open()) {
-        ARLOGe("Error: Unable to open video source.\n");
-        EdenMessageShow((const unsigned char *)"Welcome to ARToolKit Camera Calibrator\n(c)2017 DAQRI LLC.\n\nUnable to open video source.\n\nPress 'p' for settings and help.");
+    } else {
+        vs->configure(buf, true, NULL, NULL, 0);
+        if (!vs->open()) {
+            ARLOGe("Error: Unable to open video source.\n");
+            EdenMessageShow((const unsigned char *)"Welcome to ARToolKit Camera Calibrator\n(c)2017 DAQRI LLC.\n\nUnable to open video source.\n\nPress 'p' for settings and help.");
+        }
     }
     gPostVideoSetupDone = false;
 }
 
 static void stopVideo(void)
 {
+    // Stop calibration flow.
+    flowStopAndFinal();
+    
+    if (gCalibration) {
+        delete gCalibration;
+        gCalibration = nullptr;
+    }
+    
+    if (gArglSettingsCornerFinderImage) {
+        arglCleanup(gArglSettingsCornerFinderImage); // Clean up any left-over ARGL data.
+        gArglSettingsCornerFinderImage = NULL;
+    }
+    
     delete vv;
     vv = nullptr;
     delete vs;
@@ -253,7 +265,6 @@ static void rereadPreferences(void)
     if (changedCameraSettings) {
         // Changing camera settings requires complete cancelation of calibration flow,
         // closing of video source, and re-init.
-        flowStopAndFinal();
         stopVideo();
         startVideo();
     }
@@ -261,6 +272,10 @@ static void rereadPreferences(void)
 
 int main(int argc, char *argv[])
 {
+#ifdef DEBUG
+    arLogLevel = AR_LOG_LEVEL_DEBUG;
+#endif
+
     // Preferences.
     gPreferences = initPreferences();
     gPreferenceCameraOpenToken = getPreferenceCameraOpenToken(gPreferences);
@@ -375,11 +390,11 @@ int main(int argc, char *argv[])
         
         if (vs->isOpen()) {
             if (vs->captureFrame()) {
-                gCallCountMarkerDetect++; // Increment ARToolKit FPS counter.
+                gFrameCount++; // Increment ARToolKit FPS counter.
 #ifdef DEBUG
-                if (gCallCountMarkerDetect % 150 == 0) {
-                    ARLOGi("*** Camera - %f (frame/sec)\n", (double)gCallCountMarkerDetect/arUtilTimer());
-                    gCallCountMarkerDetect = 0;
+                if (gFrameCount % 150 == 0) {
+                    ARLOGi("*** Camera - %f (frame/sec)\n", (double)gFrameCount/arUtilTimer());
+                    gFrameCount = 0;
                     arUtilTimerReset();
                 }
 #endif
@@ -450,7 +465,7 @@ int main(int argc, char *argv[])
                     gCalibration = new Calibration(Calibration::CalibrationPatternType::CHESSBOARD, gPreferencesCalibImageCountMax, s, gPreferencesChessboardSquareWidth, vs->getVideoWidth(), vs->getVideoHeight());
                     if (!gCalibration) {
                         ARLOGe("Error initialising calibration.\n");
-                        exit (-1);
+                        quit(-1);
                     }
                     
                     if (!flowInitAndStart(gCalibration, saveParam, NULL)) {
@@ -460,7 +475,7 @@ int main(int argc, char *argv[])
                     
                     // For FPS statistics.
                     arUtilTimerReset();
-                    gCallCountMarkerDetect = 0;
+                    gFrameCount = 0;
                     
                     gPostVideoSetupDone = true;
                 } // !gPostVideoSetupDone
@@ -492,7 +507,7 @@ int main(int argc, char *argv[])
         arUtilSleep(1); // 1 millisecond.
     }
     
-    stop();
+    stopVideo();
     
     quit(0);
 }
@@ -503,21 +518,6 @@ void reshape(int w, int h)
     contextHeight = h;
     ARLOGd("Resized to %dx%d.\n", w, h);
     contextWasUpdated = true;
-}
-
-static void stop(void)
-{
-    // Stop calibration flow.
-    flowStopAndFinal();
-    
-    delete gCalibration;
-    
-    if (gArglSettingsCornerFinderImage) {
-        arglCleanup(gArglSettingsCornerFinderImage); // Clean up any left-over ARGL data.
-        gArglSettingsCornerFinderImage = NULL;
-    }
-    
-    stopVideo();
 }
 
 static void quit(int rc)
