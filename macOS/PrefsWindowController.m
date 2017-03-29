@@ -151,20 +151,15 @@ void showPreferences(void *preferences)
 char *getPreferenceCameraOpenToken(void *preferences)
 {
     NSString *cot = [[NSUserDefaults standardUserDefaults] stringForKey:@"cameraOpenToken"];
-    if (cot) return (strdup(cot.UTF8String));
+    if (cot.length != 0) return (strdup(cot.UTF8String));
     return NULL;
 }
 
 char *getPreferenceCameraResolutionToken(void *preferences)
 {
     NSString *cp = [[NSUserDefaults standardUserDefaults] stringForKey:@"cameraPreset"];
-    if (cp) {
-        char *ret;
-        if (asprintf(&ret, "-preset=%s", cp.UTF8String) < 0) {
-            ARLOGperror(NULL);
-            return NULL;
-        }
-        return ret;
+    if (cp.length != 0) {
+        return (strdup([NSString stringWithFormat:@"-preset=%@", cp].UTF8String));
     }
     return NULL;
 }
@@ -172,14 +167,14 @@ char *getPreferenceCameraResolutionToken(void *preferences)
 char *getPreferenceCalibrationServerUploadURL(void *preferences)
 {
     NSString *csuu = [[NSUserDefaults standardUserDefaults] stringForKey:@"calibrationServerUploadURL"];
-    if (csuu) return (strdup(csuu.UTF8String));
+    if (csuu.length != 0) return (strdup(csuu.UTF8String));
     return NULL;
 }
 
 char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
 {
     NSString *csat = [[NSUserDefaults standardUserDefaults] stringForKey:@"calibrationServerAuthenticationToken"];
-    if (csat) return (strdup(csat.UTF8String));
+    if (csat.length != 0) return (strdup(csat.UTF8String));
     return NULL;
 }
 

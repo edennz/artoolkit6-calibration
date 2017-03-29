@@ -206,7 +206,7 @@ void showPreferences(void *preferences)
 char *getPreferenceCameraOpenToken(void *preferences)
 {
     NSString *cameraSource = [[NSUserDefaults standardUserDefaults] objectForKey:kSettingCameraSourceStr];
-    if (cameraSource) {
+    if (cameraSource.length != 0) {
         if      ([cameraSource isEqualToString:kCameraSourceFront]) return strdup("-position=front");
         else if ([cameraSource isEqualToString:kCameraSourceRear]) return strdup("-position=rear");
     }
@@ -216,7 +216,7 @@ char *getPreferenceCameraOpenToken(void *preferences)
 char *getPreferenceCameraResolutionToken(void *preferences)
 {
     NSString *cameraResolution = [[NSUserDefaults standardUserDefaults] objectForKey:kSettingCameraResolutionStr];
-    if (cameraResolution) {
+    if (cameraResolution.length != 0) {
         return (strdup([NSString stringWithFormat:@"-preset=%@", cameraResolution].UTF8String));
     }
     return NULL;
@@ -225,14 +225,14 @@ char *getPreferenceCameraResolutionToken(void *preferences)
 char *getPreferenceCalibrationServerUploadURL(void *preferences)
 {
     NSString *csuu = [[NSUserDefaults standardUserDefaults] stringForKey:@"calibrationServerUploadURL"];
-    if (csuu) return (strdup(csuu.UTF8String));
+    if (csuu.length != 0) return (strdup(csuu.UTF8String));
     return NULL;
 }
 
 char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
 {
     NSString *csat = [[NSUserDefaults standardUserDefaults] stringForKey:@"calibrationServerAuthenticationToken"];
-    if (csat) return (strdup(csat.UTF8String));
+    if (csat.length != 0) return (strdup(csat.UTF8String));
     return NULL;
 }
 

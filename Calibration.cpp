@@ -37,42 +37,52 @@
 
 #include "Calibration.hpp"
 #include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/imgproc/imgproc_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
 #include "calc.h"
 
-Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const int chessboardCornerNumX_in, const int chessboardCornerNumY_in, const int videoWidth_in, const int videoHeight_in) :
+//
+// A class to encapsulate the inputs and outputs of a corner-finding run, and to allow for copying of the results
+// of a completed run.
+//
+
+Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const CalibrationPatternType patternType_in, const int chessboardCornerNumX_in, const int chessboardCornerNumY_in, const int videoWidth_in, const int videoHeight_in) :
+    patternType(patternType_in),
     chessboardCornerNumX(chessboardCornerNumX_in),
     chessboardCornerNumY(chessboardCornerNumY_in),
     videoWidth(videoWidth_in),
     videoHeight(videoHeight_in),
     cornerFoundAllFlag(0),
-    cornerCount(0)
+    corners()
 {
     init();
 }
 
+// copy constructor.
 Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const CalibrationCornerFinderData& orig) :
+    patternType(orig.patternType),
     chessboardCornerNumX(orig.chessboardCornerNumX),
     chessboardCornerNumY(orig.chessboardCornerNumY),
     videoWidth(orig.videoWidth),
     videoHeight(orig.videoHeight),
     cornerFoundAllFlag(orig.cornerFoundAllFlag),
-    cornerCount(orig.cornerCount)
+    corners(orig.corners)
 {
     init();
     copy(orig);
 }
 
+// copy assignement.
 const Calibration::CalibrationCornerFinderData& Calibration::CalibrationCornerFinderData::operator=(const Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData& orig)
 {
     if (this != &orig) {
         dealloc();
+        patternType = orig.patternType;
         chessboardCornerNumX = orig.chessboardCornerNumX;
         chessboardCornerNumY = orig.chessboardCornerNumY;
         videoWidth = orig.videoWidth;
         videoHeight = orig.videoHeight;
         cornerFoundAllFlag = orig.cornerFoundAllFlag;
-        cornerCount = orig.cornerCount;
+        corners = orig.corners;
         init();
         copy(orig);
     }
@@ -86,11 +96,6 @@ Calibration::CalibrationCornerFinderData::~CalibrationCornerFinderData()
 
 void Calibration::CalibrationCornerFinderData::init()
 {
-    if (chessboardCornerNumX > 0 && chessboardCornerNumY > 0) {
-        arMalloc(corners, CvPoint2D32f, chessboardCornerNumX * chessboardCornerNumY);
-    } else {
-        corners = nullptr;
-    }
     if (videoWidth > 0 && videoHeight > 0) {
         arMalloc(videoFrame, uint8_t, videoWidth * videoHeight);
         calibImage = cvCreateImageHeader(cvSize(videoWidth, videoHeight), IPL_DEPTH_8U, 1);
@@ -103,7 +108,6 @@ void Calibration::CalibrationCornerFinderData::init()
 
 void Calibration::CalibrationCornerFinderData::copy(const CalibrationCornerFinderData& orig)
 {
-    memcpy(corners, orig.corners, sizeof(CvPoint2D32f) * chessboardCornerNumX * chessboardCornerNumY);
     memcpy(videoFrame, orig.videoFrame, sizeof(uint8_t) * videoWidth * videoHeight);
 }
 
@@ -111,23 +115,24 @@ void Calibration::CalibrationCornerFinderData::dealloc()
 {
     if (calibImage) cvReleaseImageHeader(&calibImage);
     free(videoFrame);
-    free(corners);
 }
 
 
-Calibration::Calibration(const int calibImageCountMax, const int chessboardCornerNumX, const int chessboardCornerNumY, const int chessboardSquareWidth, const int videoWidth, const int videoHeight) :
-    m_cornerFinderData(chessboardCornerNumX, chessboardCornerNumY, videoWidth, videoHeight),
-    m_cornerFinderResultData(0, 0, 0, 0),
-    m_calibImageCount(0),
+//
+// User-facing calibration functions.
+//
+
+Calibration::Calibration(const CalibrationPatternType patternType, const int calibImageCountMax, const int chessboardCornerNumX, const int chessboardCornerNumY, const int chessboardSquareWidth, const int videoWidth, const int videoHeight) :
+    m_cornerFinderData(patternType, chessboardCornerNumX, chessboardCornerNumY, videoWidth, videoHeight),
+    m_cornerFinderResultData(patternType, 0, 0, 0, 0),
     m_calibImageCountMax(calibImageCountMax),
     m_chessboardCornerNumX(chessboardCornerNumX),
     m_chessboardCornerNumY(chessboardCornerNumY),
     m_chessboardSquareWidth(chessboardSquareWidth),
     m_videoWidth(videoWidth),
-    m_videoHeight(videoHeight)
+    m_videoHeight(videoHeight),
+    m_corners()
 {
-    arMalloc(m_corners, CvPoint2D32f, chessboardCornerNumX*chessboardCornerNumY*calibImageCountMax);
-    
     // Spawn the corner finder worker thread.
     m_cornerFinderThread = threadInit(0, (void *)(&m_cornerFinderData), cornerFinder);
     
@@ -143,7 +148,6 @@ bool Calibration::frame(ARVideoSource *vs)
     // First, see if an image has been completely processed.
     if (threadGetStatus(m_cornerFinderThread)) {
         threadEndWait(m_cornerFinderThread); // We know from status above that worker has already finished, so this just resets it.
-        ARLOGd("processFrame: corner find DONE.\n");
         
         // Copy the results.
         pthread_mutex_lock(&m_cornerFinderResultLock); // Results are also read by GL thread, so need to lock before modifying.
@@ -162,7 +166,6 @@ bool Calibration::frame(ARVideoSource *vs)
             vs->checkinFrame();
             
             // Kick off a new cycle of the cornerFinder. The results will be collected on a subsequent cycle.
-            ARLOGd("processFrame: corner find GO\n");
             threadStartSignal(m_cornerFinderThread);
         }
     }
@@ -173,12 +176,11 @@ bool Calibration::frame(ARVideoSource *vs)
     return true;
 }
 
-bool Calibration::cornerFinderResultsLockAndFetch(int *cornerFoundAllFlag, int *cornerCount, CvPoint2D32f **corners, ARUint8** videoFrame)
+bool Calibration::cornerFinderResultsLockAndFetch(int *cornerFoundAllFlag, std::vector<cv::Point2f>& corners, ARUint8** videoFrame)
 {
     pthread_mutex_lock(&m_cornerFinderResultLock);
     *cornerFoundAllFlag = m_cornerFinderResultData.cornerFoundAllFlag;
-    *cornerCount = m_cornerFinderResultData.cornerCount;
-    *corners = m_cornerFinderResultData.corners;
+    corners = m_cornerFinderResultData.corners;
     *videoFrame = m_cornerFinderResultData.videoFrame;
     return true;
 }
@@ -201,11 +203,17 @@ void *Calibration::cornerFinder(THREAD_HANDLE_T *threadHandle)
     
     while (threadStartWait(threadHandle) == 0) {
         
-        cornerFinderDataPtr->cornerFoundAllFlag = cvFindChessboardCorners(cornerFinderDataPtr->calibImage,
-                                                                  cvSize(cornerFinderDataPtr->chessboardCornerNumY, cornerFinderDataPtr->chessboardCornerNumX),
-                                                                  cornerFinderDataPtr->corners,
-                                                                  &(cornerFinderDataPtr->cornerCount),
-                                                                  CV_CALIB_CB_FAST_CHECK|CV_CALIB_CB_ADAPTIVE_THRESH|CV_CALIB_CB_FILTER_QUADS);
+        switch (cornerFinderDataPtr->patternType) {
+            case CalibrationPatternType::CHESSBOARD:
+                cornerFinderDataPtr->cornerFoundAllFlag = cv::findChessboardCorners(cv::cvarrToMat(cornerFinderDataPtr->calibImage), cv::Size(cornerFinderDataPtr->chessboardCornerNumY, cornerFinderDataPtr->chessboardCornerNumX), cornerFinderDataPtr->corners, CV_CALIB_CB_FAST_CHECK|CV_CALIB_CB_ADAPTIVE_THRESH|CV_CALIB_CB_FILTER_QUADS);
+                break;
+            case CalibrationPatternType::CIRCLES_GRID:
+                cornerFinderDataPtr->cornerFoundAllFlag = cv::findCirclesGrid(cv::cvarrToMat(cornerFinderDataPtr->calibImage), cv::Size(cornerFinderDataPtr->chessboardCornerNumY, cornerFinderDataPtr->chessboardCornerNumX), cornerFinderDataPtr->corners, cv::CALIB_CB_SYMMETRIC_GRID);
+                break;
+            case CalibrationPatternType::ASYMMETRIC_CIRCLES_GRID:
+                cornerFinderDataPtr->cornerFoundAllFlag = cv::findCirclesGrid(cv::cvarrToMat(cornerFinderDataPtr->calibImage), cv::Size(cornerFinderDataPtr->chessboardCornerNumY, cornerFinderDataPtr->chessboardCornerNumX), cornerFinderDataPtr->corners, cv::CALIB_CB_ASYMMETRIC_GRID);
+                break;
+        }
         ARLOGd("cornerFinderDataPtr->cornerFoundAllFlag=%d.\n", cornerFinderDataPtr->cornerFoundAllFlag);
         threadEndSignal(threadHandle);
     }
@@ -218,44 +226,30 @@ void *Calibration::cornerFinder(THREAD_HANDLE_T *threadHandle)
 
 bool Calibration::capture()
 {
-    CvPoint2D32f   *p1, *p2;
     int             i;
     
-    if (m_calibImageCount >= m_calibImageCountMax) return false;
+    if (m_corners.size() >= m_calibImageCountMax) return false;
    
     bool saved = false;
     
     pthread_mutex_lock(&m_cornerFinderResultLock);
     if (m_cornerFinderResultData.cornerFoundAllFlag) {
-        ARLOGd("Got all corners.\n");
         // Refine the corner positions.
-        cvFindCornerSubPix(m_cornerFinderResultData.calibImage,
-                           m_cornerFinderResultData.corners,
-                           m_chessboardCornerNumX*m_chessboardCornerNumY,
-                           cvSize(5,5),
-                           cvSize(-1,-1),
-                           cvTermCriteria(CV_TERMCRIT_ITER, 100, 0.1)  );
+        cornerSubPix(cv::cvarrToMat(m_cornerFinderResultData.calibImage), m_cornerFinderResultData.corners, cv::Size(5,5), cvSize(-1,-1), cv::TermCriteria(CV_TERMCRIT_ITER, 100, 0.1));
         
         // Save the corners.
-        p1 = m_cornerFinderResultData.corners;
-        p2 = &m_corners[m_calibImageCount * m_chessboardCornerNumX * m_chessboardCornerNumY];
-        for (i = 0; i < m_chessboardCornerNumX * m_chessboardCornerNumY; i++) {
-            *(p2++) = *(p1++);
-        }
+        m_corners.push_back(m_cornerFinderResultData.corners);
         saved = true;
-    } else {
-        ARLOGd("NOT got all corners.\n");
     }
     pthread_mutex_unlock(&m_cornerFinderResultLock);
 
     if (saved) {
-        ARLOG("---------- %2d/%2d -----------\n", m_calibImageCount + 1, m_calibImageCountMax);
-        for (i = 0; i < m_chessboardCornerNumX*m_chessboardCornerNumY; i++) {
-            ARLOG("  %f, %f\n", m_corners[m_calibImageCount*m_chessboardCornerNumX*m_chessboardCornerNumY + i].x, m_corners[m_calibImageCount*m_chessboardCornerNumX*m_chessboardCornerNumY + i].y);
+        ARLOG("---------- %2d/%2d -----------\n", (int)m_corners.size(), m_calibImageCountMax);
+        const std::vector<cv::Point2f>& corners = m_corners.back();
+        for (std::vector<cv::Point2f>::const_iterator it = corners.begin(); it < corners.end(); it++, i++) {
+            ARLOG("  %f, %f\n", it->x, it->y);
         }
-        ARLOG("---------- %2d/%2d -----------\n", m_calibImageCount + 1, m_calibImageCountMax);
-        
-        m_calibImageCount++;
+        ARLOG("---------- %2d/%2d -----------\n", (int)m_corners.size(), m_calibImageCountMax);
     }
     
     return (saved);
@@ -263,14 +257,21 @@ bool Calibration::capture()
 
 bool Calibration::uncapture(void)
 {
-    if (m_calibImageCount < 0) return false;
-    m_calibImageCount--;
+    if (m_corners.size() <= 0) return false;
+    m_corners.pop_back();
+    return true;
+}
+
+bool Calibration::uncaptureAll(void)
+{
+    if (m_corners.size() <= 0) return false;
+    m_corners.clear();
     return true;
 }
 
 void Calibration::calib(ARParam *param_out, ARdouble *err_min_out, ARdouble *err_avg_out, ARdouble *err_max_out)
 {
-    calc(m_calibImageCount, m_chessboardCornerNumX, m_chessboardCornerNumY, m_chessboardSquareWidth, m_corners, m_videoWidth, m_videoHeight, param_out, err_min_out, err_avg_out, err_max_out);
+    calc((int)m_corners.size(), m_chessboardCornerNumX, m_chessboardCornerNumY, m_chessboardSquareWidth, m_corners, m_videoWidth, m_videoHeight, param_out, err_min_out, err_avg_out, err_max_out);
 }
 
 Calibration::~Calibration()
@@ -285,8 +286,6 @@ Calibration::~Calibration()
     }
     
     // Calibration input cleanup.
-    free(m_corners);
-    m_corners = NULL;
 }
 
 

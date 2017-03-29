@@ -46,21 +46,29 @@
 class Calibration
 {
 public:
-    Calibration(const int calibImageCountMax, const int chessboardCornerNumX, const int chessboardCornerNumY, const int chessboardSquareWidth, const int videoWidth, const int videoHeight);
-    int calibImageCount() const {return m_calibImageCount; }
+    
+    enum class CalibrationPatternType {
+        CHESSBOARD,
+        CIRCLES_GRID,
+        ASYMMETRIC_CIRCLES_GRID
+    };
+    
+    Calibration(const CalibrationPatternType patternType, const int calibImageCountMax, const int chessboardCornerNumX, const int chessboardCornerNumY, const int chessboardSquareWidth, const int videoWidth, const int videoHeight);
+    int calibImageCount() const {return (int)m_corners.size(); }
     int calibImageCountMax() const {return m_calibImageCountMax; }
     bool frame(ARVideoSource *vs);
-    bool cornerFinderResultsLockAndFetch(int *cornerFoundAllFlag, int *cornerCount, CvPoint2D32f **corners, ARUint8** videoFrame);
+    bool cornerFinderResultsLockAndFetch(int *cornerFoundAllFlag, std::vector<cv::Point2f>& corners, ARUint8** videoFrame);
     bool cornerFinderResultsUnlock(void);
     bool capture();
     bool uncapture();
+    bool uncaptureAll();
     void calib(ARParam *param_out, ARdouble *err_min_out, ARdouble *err_avg_out, ARdouble *err_max_out);
     ~Calibration();
     
 private:
     
-    Calibration(const Calibration&) = delete;
-    Calibration& operator=(const Calibration&) = delete;
+    Calibration(const Calibration&) = delete; // No copy construction.
+    Calibration& operator=(const Calibration&) = delete; // No copy assignment.
     
     // This function runs the heavy-duty corner finding process on a secondary thread. Must be static so it can be
     // passed to threadInit().
@@ -70,10 +78,11 @@ private:
     // of a completed run.
     class CalibrationCornerFinderData {
     public:
-        CalibrationCornerFinderData(const int chessboardCornerNumX_in, const int chessboardCornerNumY_in, const int videoWidth_in, const int videoHeight_in);
+        CalibrationCornerFinderData(const CalibrationPatternType patternType_in, const int chessboardCornerNumX_in, const int chessboardCornerNumY_in, const int videoWidth_in, const int videoHeight_in);
         CalibrationCornerFinderData(const CalibrationCornerFinderData& orig);
         const CalibrationCornerFinderData& operator=(const CalibrationCornerFinderData& orig);
         ~CalibrationCornerFinderData();
+        CalibrationPatternType patternType;
         int                  chessboardCornerNumX;
         int                  chessboardCornerNumY;
         int                  videoWidth;
@@ -81,8 +90,7 @@ private:
         uint8_t             *videoFrame;
         IplImage            *calibImage;
         int                  cornerFoundAllFlag;
-        int                  cornerCount;
-        CvPoint2D32f        *corners;
+        std::vector<cv::Point2f> corners;
     private:
         void init();
         void copy(const CalibrationCornerFinderData& orig);
@@ -94,9 +102,9 @@ private:
     pthread_mutex_t      m_cornerFinderResultLock;
     CalibrationCornerFinderData m_cornerFinderResultData; // Corner finder results copy, for display to user.
     
-    CvPoint2D32f        *m_corners = NULL; // Collected corner information which gets passed to the OpenCV calibration function.
-    int                  m_calibImageCount;
+    std::vector<std::vector<cv::Point2f> > m_corners; // Collected corner information which gets passed to the OpenCV calibration function.
     int                  m_calibImageCountMax;
+    CalibrationPatternType m_patternType;
     int                  m_chessboardCornerNumX;
     int                  m_chessboardCornerNumY;
     int                  m_chessboardSquareWidth;

@@ -35,29 +35,19 @@
  *
  */
 
-#ifndef CALC_H
-#define CALC_H
+#pragma once
 
 #include <AR6/AR/ar.h>
-#include <opencv2/core/core_c.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <opencv2/core/core.hpp>
 
 void calc(const int capturedImageNum,
 		  const int chessboardCornerNumX,
 		  const int chessboardCornerNumY,
 		  const float chessboardSquareWidth,
-		  const CvPoint2D32f *cornerSet,
+          const std::vector<std::vector<cv::Point2f> >& cornerSet,
 		  const int width,
 		  const int height,
 		  ARParam *param_out,
 		  ARdouble *err_min_out,
 		  ARdouble *err_avg_out,
 		  ARdouble *err_max_out);
-
-#ifdef __cplusplus
-}
-#endif
-#endif // !CALC_H

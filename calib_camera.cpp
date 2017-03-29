@@ -447,7 +447,7 @@ int main(int argc, char *argv[])
                     // Calibration init.
                     //
                     
-                    gCalibration = new Calibration(gPreferencesCalibImageCountMax, gPreferencesChessboardCornerNumX, gPreferencesChessboardCornerNumY, gPreferencesChessboardSquareWidth, vs->getVideoWidth(), vs->getVideoHeight());
+                    gCalibration = new Calibration(Calibration::CalibrationPatternType::CHESSBOARD, gPreferencesCalibImageCountMax, gPreferencesChessboardCornerNumX, gPreferencesChessboardCornerNumY, gPreferencesChessboardSquareWidth, vs->getVideoWidth(), vs->getVideoHeight());
                     if (!gCalibration) {
                         ARLOGe("Error initialising calibration.\n");
                         exit (-1);
@@ -729,10 +729,9 @@ void drawView(void)
         
         // Grab a lock while we're using the data to prevent it being changed underneath us.
         int cornerFoundAllFlag;
-        int cornerCount;
-        CvPoint2D32f *corners;
+        std::vector<cv::Point2f> corners;
         ARUint8 *videoFrame;
-        gCalibration->cornerFinderResultsLockAndFetch(&cornerFoundAllFlag, &cornerCount, &corners, &videoFrame);
+        gCalibration->cornerFinderResultsLockAndFetch(&cornerFoundAllFlag, corners, &videoFrame);
         
         // Display the current frame.
         if (videoFrame) arglPixelBufferDataUpload(gArglSettingsCornerFinderImage, videoFrame);
@@ -769,7 +768,7 @@ void drawView(void)
         
         
         // Draw the crosses marking the corner positions.
-        vertexCount = cornerCount*4;
+        vertexCount = (GLint)corners.size()*4;
         if (vertexCount > 0) {
             float fontSizeScaled = FONT_SIZE * (float)vs->getVideoHeight()/(float)(gViewport[(gDisplayOrientation % 2) == 1 ? 3 : 2]);
             float colorRed[4] = {1.0f, 0.0f, 0.0f, 1.0f};
@@ -778,7 +777,7 @@ void drawView(void)
             EdenGLFontSetSize(fontSizeScaled);
             EdenGLFontSetColor(cornerFoundAllFlag ? colorRed : colorGreen);
             arMalloc(vertices, GLfloat, vertexCount*2); // 2 coords per vertex.
-            for (i = 0; i < cornerCount; i++) {
+            for (i = 0; i < corners.size(); i++) {
                 vertices[i*8    ] = corners[i].x - 5.0f;
                 vertices[i*8 + 1] = vs->getVideoHeight() - corners[i].y - 5.0f;
                 vertices[i*8 + 2] = corners[i].x + 5.0f;

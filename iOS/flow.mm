@@ -269,7 +269,7 @@ static void *flowThread(void *arg)
 			} else if (event == EVENT_BACK_BUTTON) {
 
 				if (!captureDoneSinceBackButtonLastPressed) {
-                    while (gFlowCalib->calibImageCount() > 0) gFlowCalib->uncapture();
+                    gFlowCalib->uncaptureAll();
                     break;
 				} else {
 					gFlowCalib->uncapture();
@@ -302,6 +302,7 @@ static void *flowThread(void *arg)
     		EdenMessageHide();
 
             if (gCallback) (*gCallback)(&param, err_min, err_avg, err_max, gCallbackUserdata);
+            gFlowCalib->uncaptureAll(); // prepare for next run.
 
 			// Calibration complete. Post results as status.
 			flowSetEventMask(EVENT_TOUCH);

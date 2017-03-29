@@ -72,7 +72,7 @@ void calc(const int capturedImageNum,
 		  const int chessboardCornerNumX,
 		  const int chessboardCornerNumY,
 		  const float chessboardSquareWidth,
-		  const CvPoint2D32f *cornerSet,
+		  const std::vector<std::vector<cv::Point2f> >& cornerSet,
 		  const int width,
 		  const int height,
 		  ARParam *param_out,
@@ -80,7 +80,7 @@ void calc(const int capturedImageNum,
 		  ARdouble *err_avg_out,
 		  ARdouble *err_max_out)
 {
-    int i, j, k, l;
+    int i, j, k;
 
     // Options.
     int flags = 0;
@@ -94,21 +94,7 @@ void calc(const int capturedImageNum,
     std::vector<std::vector<cv::Point3f> > objectPoints(1);
     calcChessboardCorners(cv::Size(chessboardCornerNumX, chessboardCornerNumY), chessboardSquareWidth, objectPoints[0], CHESSBOARD);
     objectPoints.resize(capturedImageNum, objectPoints[0]);
-    
-    // Set up image points.
-    std::vector<std::vector<cv::Point2f> > imagePoints;
-    l = 0;
-    for (k = 0; k < capturedImageNum; k++) {
-        std::vector<cv::Point2f> corners;
-        for (i = 0; i < chessboardCornerNumX; i++) {
-            for (j = 0; j < chessboardCornerNumY; j++) {
-                corners.push_back(cornerSet[l]);
-                l++;
-            }
-        }
-        imagePoints.push_back(corners);
-    }
-    
+        
     cv::Mat intrinsics = cv::Mat::eye(3, 3, CV_64F);
     if (flags & cv::CALIB_FIX_ASPECT_RATIO)
        intrinsics.at<double>(0,0) = aspectRatio;
@@ -117,7 +103,7 @@ void calc(const int capturedImageNum,
     std::vector<cv::Mat> rotationVectors;
     std::vector<cv::Mat> translationVectors;
     
-    double rms = calibrateCamera(objectPoints, imagePoints, cv::Size(width, height), intrinsics,
+    double rms = calibrateCamera(objectPoints, cornerSet, cv::Size(width, height), intrinsics,
                                  distortionCoeff, rotationVectors, translationVectors, flags|cv::CALIB_FIX_K3|cv::CALIB_FIX_K4|cv::CALIB_FIX_K5);
     
     ARLOGd("RMS error reported by calibrateCamera: %g\n", rms);
@@ -178,8 +164,8 @@ void calc(const int capturedImageNum,
                 sx = hx / h;
                 sy = hy / h;
                 arParamIdeal2Observ(param.dist_factor, sx, sy, &ox, &oy, param.dist_function_version);
-                sx = (ARdouble)imagePoints.at(k).at(i*chessboardCornerNumY + j).x;
-                sy = (ARdouble)imagePoints.at(k).at(i*chessboardCornerNumY + j).y;
+                sx = (ARdouble)cornerSet.at(k).at(i*chessboardCornerNumY + j).x;
+                sy = (ARdouble)cornerSet.at(k).at(i*chessboardCornerNumY + j).y;
                 err += (ox - sx)*(ox - sx) + (oy - sy)*(oy - sy);
             }
         }
