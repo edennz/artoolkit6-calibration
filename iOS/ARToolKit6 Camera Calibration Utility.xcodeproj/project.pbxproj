@@ -19,6 +19,9 @@
 		4A0AB6991E82218700F6EBB9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0AB6981E82218700F6EBB9 /* Foundation.framework */; };
 		4A0AB69B1E82219C00F6EBB9 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0AB69A1E82219C00F6EBB9 /* CoreMotion.framework */; };
 		4A0AB69D1E8224D800F6EBB9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4A0AB69C1E8224D800F6EBB9 /* Main.storyboard */; };
+		4A0E11781E8B39F00074C280 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E11771E8B39F00074C280 /* AVFoundation.framework */; };
+		4A0E117A1E8B3A0B0074C280 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E11791E8B3A0B0074C280 /* CoreMedia.framework */; };
+		4A0E117C1E8B3A150074C280 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E117B1E8B3A150074C280 /* AudioToolbox.framework */; };
 		4A47934C1E80CDBE002C3631 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A47934B1E80CDBE002C3631 /* main.m */; };
 		4A47934F1E80CDBE002C3631 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A47934E1E80CDBE002C3631 /* AppDelegate.m */; };
 		4A47936C1E80CF96002C3631 /* ARViewOverlay.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793661E80CF96002C3631 /* ARViewOverlay.m */; };
@@ -65,7 +68,7 @@
 /* Begin PBXFileReference section */
 		4A0AB67F1E81DA6900F6EBB9 /* ARViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARViewController.h; sourceTree = "<group>"; };
 		4A0AB6801E81DA6900F6EBB9 /* ARViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARViewController.mm; sourceTree = "<group>"; };
-		4A0AB6821E81DFCE00F6EBB9 /* prefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = prefs.h; sourceTree = "<group>"; };
+		4A0AB6821E81DFCE00F6EBB9 /* prefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = prefs.h; path = ../prefs.h; sourceTree = "<group>"; };
 		4A0AB6861E82209600F6EBB9 /* libAR6.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libAR6.a; sourceTree = "<group>"; };
 		4A0AB6871E82209600F6EBB9 /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcurl.a; sourceTree = "<group>"; };
 		4A0AB6881E82209600F6EBB9 /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libjpeg.a; sourceTree = "<group>"; };
@@ -77,6 +80,9 @@
 		4A0AB6981E82218700F6EBB9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		4A0AB69A1E82219C00F6EBB9 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		4A0AB69C1E8224D800F6EBB9 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
+		4A0E11771E8B39F00074C280 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		4A0E11791E8B3A0B0074C280 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		4A0E117B1E8B3A150074C280 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		4A4793471E80CDBE002C3631 /* ARToolKit6 Camera Calibration Utility.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ARToolKit6 Camera Calibration Utility.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A47934B1E80CDBE002C3631 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		4A47934D1E80CDBE002C3631 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -149,7 +155,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A0E117C1E8B3A150074C280 /* AudioToolbox.framework in Frameworks */,
+				4A0E117A1E8B3A0B0074C280 /* CoreMedia.framework in Frameworks */,
 				4A0AB69B1E82219C00F6EBB9 /* CoreMotion.framework in Frameworks */,
+				4A0E11781E8B39F00074C280 /* AVFoundation.framework in Frameworks */,
 				4A0AB6991E82218700F6EBB9 /* Foundation.framework in Frameworks */,
 				4A0AB6971E82218100F6EBB9 /* Accelerate.framework in Frameworks */,
 				4A0AB6951E82217D00F6EBB9 /* GLKit.framework in Frameworks */,
@@ -185,6 +194,9 @@
 		4A0AB68F1E82211600F6EBB9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4A0E117B1E8B3A150074C280 /* AudioToolbox.framework */,
+				4A0E11791E8B3A0B0074C280 /* CoreMedia.framework */,
+				4A0E11771E8B39F00074C280 /* AVFoundation.framework */,
 				4A0AB69A1E82219C00F6EBB9 /* CoreMotion.framework */,
 				4A0AB6981E82218700F6EBB9 /* Foundation.framework */,
 				4A0AB6961E82218100F6EBB9 /* Accelerate.framework */,
@@ -243,6 +255,7 @@
 			isa = PBXGroup;
 			children = (
 				4A0AB69C1E8224D800F6EBB9 /* Main.storyboard */,
+				4A4793831E80CFD4002C3631 /* SettingsViewController.xib */,
 				4A4793721E80CFD4002C3631 /* en.lproj */,
 				4A4793751E80CFD4002C3631 /* Images.xcassets */,
 				4A4793761E80CFD4002C3631 /* Iris-568h@2x.png */,
@@ -257,7 +270,6 @@
 				4A4793801E80CFD4002C3631 /* printusletter.pdf */,
 				4A4793811E80CFD4002C3631 /* reveal-icon.png */,
 				4A4793821E80CFD4002C3631 /* reveal-icon@2x.png */,
-				4A4793831E80CFD4002C3631 /* SettingsViewController.xib */,
 				4A47934B1E80CDBE002C3631 /* main.m */,
 				4A47935B1E80CDBF002C3631 /* Info.plist */,
 			);

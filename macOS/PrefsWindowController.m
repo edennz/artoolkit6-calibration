@@ -64,8 +64,10 @@
     
     NSString *csuu = [defaults stringForKey:@"calibrationServerUploadURL"];
     calibrationServerUploadURL.stringValue = (csuu ? csuu : @"");
+    calibrationServerUploadURL.placeholderString = @CALIBRATION_SERVER_UPLOAD_URL_DEFAULT;
     NSString *csat = [defaults stringForKey:@"calibrationServerAuthenticationToken"];
     calibrationServerAuthenticationToken.stringValue = (csat ? csat : @"");
+    calibrationServerAuthenticationToken.placeholderString = @CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT;
     
     showPrefsOnStartup.state = [defaults boolForKey:@"showPrefsOnStartup"];
 }

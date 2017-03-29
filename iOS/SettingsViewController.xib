@@ -5,18 +5,20 @@
     </device>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11757"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="SettingsViewController">
             <connections>
+                <outlet property="calibrationServerAuthenticationToken" destination="wGC-ZG-FQy" id="ceH-Q7-Uy2"/>
+                <outlet property="calibrationServerUploadURL" destination="I76-OV-c1I" id="5e9-aX-0tn"/>
                 <outlet property="cameraResolutionCell" destination="4ZG-aR-1x8" id="PEI-Of-DIj"/>
                 <outlet property="cameraResolutionSubLabel" destination="HHZ-II-XLa" id="fHL-Ia-Pzb"/>
                 <outlet property="cameraSourceSubLabel" destination="iKN-7d-Zjl" id="Rpe-j7-WET"/>
                 <outlet property="changeCameraCell" destination="cXx-8E-Ry4" id="aaY-52-MWS"/>
-                <outlet property="forceLandscapeCell" destination="xgg-as-3VB" id="SWK-Gr-nCr"/>
-                <outlet property="forceLandscapeSubLabel" destination="1dh-EP-EK4" id="Byk-yI-59J"/>
-                <outlet property="forceLandscapeSwitch" destination="jSg-1T-QIj" id="Bid-Wa-IOj"/>
+                <outlet property="csatCell" destination="TeG-UL-Kex" id="FTP-4u-HW9"/>
+                <outlet property="csuuCell" destination="FYT-p3-IcB" id="2aF-3m-CVf"/>
                 <outlet property="paperSizeCell" destination="df3-NW-fev" id="N7F-Ml-g1Z"/>
                 <outlet property="paperSizeCellSubLabel" destination="amD-6b-xk5" id="jLd-HI-Nr2"/>
                 <outlet property="tableView" destination="xGk-nw-Ovq" id="qC7-XT-EsS"/>
@@ -61,46 +63,6 @@
             <point key="canvasLocation" x="386.5" y="463.5"/>
         </view>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
-        <tableViewCell contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" rowHeight="70" id="xgg-as-3VB" userLabel="Force Landscape">
-            <rect key="frame" x="0.0" y="0.0" width="320" height="70"/>
-            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="xgg-as-3VB" id="1lt-v9-Cmm">
-                <rect key="frame" x="0.0" y="0.0" width="320" height="69"/>
-                <autoresizingMask key="autoresizingMask"/>
-                <subviews>
-                    <switch opaque="NO" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jSg-1T-QIj">
-                        <rect key="frame" x="263" y="8" width="51" height="31"/>
-                    </switch>
-                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Force Landscape Display" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="flU-vy-mRO">
-                        <rect key="frame" x="8" y="13" width="194" height="21"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                        <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                        <nil key="highlightedColor"/>
-                    </label>
-                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Display responds to device orientation" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1dh-EP-EK4">
-                        <rect key="frame" x="8" y="40" width="304" height="21"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                        <color key="textColor" red="0.19045928030303028" green="0.19045928030303028" blue="0.19045928030303028" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                        <nil key="highlightedColor"/>
-                    </label>
-                </subviews>
-                <constraints>
-                    <constraint firstItem="1dh-EP-EK4" firstAttribute="top" secondItem="flU-vy-mRO" secondAttribute="bottom" constant="6" id="0gJ-IP-jGa"/>
-                    <constraint firstItem="1dh-EP-EK4" firstAttribute="leading" secondItem="1lt-v9-Cmm" secondAttribute="leading" constant="8" id="ARO-um-pDx"/>
-                    <constraint firstItem="1dh-EP-EK4" firstAttribute="top" secondItem="flU-vy-mRO" secondAttribute="bottom" constant="6" id="JlZ-Tb-oAp"/>
-                    <constraint firstItem="flU-vy-mRO" firstAttribute="top" secondItem="1lt-v9-Cmm" secondAttribute="top" constant="13" id="Rg0-sU-woe"/>
-                    <constraint firstItem="1dh-EP-EK4" firstAttribute="top" secondItem="jSg-1T-QIj" secondAttribute="bottom" constant="1" id="Y6Q-2P-67h"/>
-                    <constraint firstItem="jSg-1T-QIj" firstAttribute="leading" secondItem="flU-vy-mRO" secondAttribute="trailing" constant="61" id="aDf-UJ-rDa"/>
-                    <constraint firstItem="jSg-1T-QIj" firstAttribute="top" secondItem="1lt-v9-Cmm" secondAttribute="top" constant="8" id="dmz-Dj-drp"/>
-                    <constraint firstItem="jSg-1T-QIj" firstAttribute="leading" secondItem="flU-vy-mRO" secondAttribute="trailing" constant="61" id="gNL-IB-YGh"/>
-                    <constraint firstAttribute="bottom" secondItem="1dh-EP-EK4" secondAttribute="bottom" constant="8" id="t4n-qa-dVJ"/>
-                    <constraint firstAttribute="trailing" secondItem="1dh-EP-EK4" secondAttribute="trailing" constant="8" id="wuW-CO-5PS"/>
-                    <constraint firstAttribute="trailing" secondItem="jSg-1T-QIj" secondAttribute="trailing" constant="8" id="zJo-Zl-mpP"/>
-                    <constraint firstItem="flU-vy-mRO" firstAttribute="leading" secondItem="1lt-v9-Cmm" secondAttribute="leading" constant="8" id="zbc-8i-OIv"/>
-                </constraints>
-            </tableViewCellContentView>
-            <point key="canvasLocation" x="386" y="840"/>
-        </tableViewCell>
         <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="62" id="4ZG-aR-1x8" userLabel="Camera Resolution">
             <rect key="frame" x="0.0" y="0.0" width="320" height="62"/>
             <autoresizingMask key="autoresizingMask"/>
@@ -199,6 +161,76 @@
                 </constraints>
             </tableViewCellContentView>
             <point key="canvasLocation" x="386" y="1173"/>
+        </tableViewCell>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="75" id="FYT-p3-IcB" userLabel="Calibration server upload URL">
+            <rect key="frame" x="0.0" y="0.0" width="365" height="75"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="FYT-p3-IcB" id="eG2-bU-Oal">
+                <rect key="frame" x="0.0" y="0.0" width="365" height="75"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Calibration server upload URL" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OGz-1R-dvW">
+                        <rect key="frame" x="8" y="8" width="349" height="21"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="I76-OV-c1I">
+                        <rect key="frame" x="8" y="37" width="349" height="30"/>
+                        <accessibility key="accessibilityConfiguration" label="Calibration server URL"/>
+                        <nil key="textColor"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                        <textInputTraits key="textInputTraits"/>
+                        <connections>
+                            <action selector="csuuEdited:" destination="-1" eventType="editingDidEnd" id="zdg-GF-v3x"/>
+                        </connections>
+                    </textField>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="OGz-1R-dvW" firstAttribute="leading" secondItem="eG2-bU-Oal" secondAttribute="leadingMargin" id="6Mg-Ij-gK2"/>
+                    <constraint firstItem="OGz-1R-dvW" firstAttribute="trailing" secondItem="I76-OV-c1I" secondAttribute="trailing" id="WB4-2b-gDw"/>
+                    <constraint firstItem="OGz-1R-dvW" firstAttribute="top" secondItem="eG2-bU-Oal" secondAttribute="topMargin" id="ecR-On-m0s"/>
+                    <constraint firstItem="I76-OV-c1I" firstAttribute="top" secondItem="OGz-1R-dvW" secondAttribute="bottom" constant="8" symbolic="YES" id="rrH-u0-rby"/>
+                    <constraint firstItem="OGz-1R-dvW" firstAttribute="leading" secondItem="I76-OV-c1I" secondAttribute="leading" id="tBB-Ua-HEM"/>
+                    <constraint firstAttribute="trailingMargin" secondItem="OGz-1R-dvW" secondAttribute="trailing" id="wMy-XY-DsD"/>
+                </constraints>
+            </tableViewCellContentView>
+            <point key="canvasLocation" x="800.5" y="1064.5"/>
+        </tableViewCell>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="76" id="TeG-UL-Kex" userLabel="Calibration server authentication token">
+            <rect key="frame" x="0.0" y="0.0" width="365" height="76"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="TeG-UL-Kex" id="Hcw-sX-Evn">
+                <rect key="frame" x="0.0" y="0.0" width="365" height="76"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Calibration server authentication token" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DEp-4n-f6z">
+                        <rect key="frame" x="8" y="8" width="349" height="21"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="wGC-ZG-FQy">
+                        <rect key="frame" x="8" y="37" width="349" height="30"/>
+                        <accessibility key="accessibilityConfiguration" label="Calibration server authentication token"/>
+                        <nil key="textColor"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                        <textInputTraits key="textInputTraits"/>
+                        <connections>
+                            <action selector="csatEdited:" destination="-1" eventType="editingDidEnd" id="e36-FX-tjn"/>
+                        </connections>
+                    </textField>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="wGC-ZG-FQy" firstAttribute="bottom" secondItem="Hcw-sX-Evn" secondAttribute="bottomMargin" id="1aB-UP-T4B"/>
+                    <constraint firstAttribute="trailingMargin" secondItem="wGC-ZG-FQy" secondAttribute="trailing" id="8Jz-K1-SJ2"/>
+                    <constraint firstItem="wGC-ZG-FQy" firstAttribute="top" secondItem="DEp-4n-f6z" secondAttribute="bottom" constant="8" symbolic="YES" id="az6-88-fB4"/>
+                    <constraint firstItem="wGC-ZG-FQy" firstAttribute="leading" secondItem="DEp-4n-f6z" secondAttribute="leading" id="o3k-rb-EPB"/>
+                    <constraint firstItem="wGC-ZG-FQy" firstAttribute="trailing" secondItem="DEp-4n-f6z" secondAttribute="trailing" id="uER-Me-OBR"/>
+                    <constraint firstItem="wGC-ZG-FQy" firstAttribute="leading" secondItem="Hcw-sX-Evn" secondAttribute="leadingMargin" id="v6K-yj-VCh"/>
+                </constraints>
+            </tableViewCellContentView>
+            <point key="canvasLocation" x="800.5" y="923"/>
         </tableViewCell>
     </objects>
 </document>
