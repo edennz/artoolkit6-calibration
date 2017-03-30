@@ -55,6 +55,7 @@ public:
     };
     
     static std::map<CalibrationPatternType, cv::Size> CalibrationPatternSizes;
+    static std::map<CalibrationPatternType, float> CalibrationPatternSpacings;
     
     Calibration(const CalibrationPatternType patternType, const int calibImageCountMax, const cv::Size patternSize, const int chessboardSquareWidth, const int videoWidth, const int videoHeight);
     int calibImageCount() const {return (int)m_corners.size(); }

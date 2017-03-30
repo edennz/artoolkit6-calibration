@@ -71,7 +71,7 @@
 #include "Eden/EdenMessage.h"
 #include "Eden/EdenGLFont.h"
 
-#include "prefs.h"
+#include "prefs.hpp"
 
 
 #include "calib_camera.h"
@@ -125,17 +125,16 @@ unsigned char *MD5(const unsigned char *d, size_t n, unsigned char *md);
 // ============================================================================
 
 // Prefs.
-static int gPreferencesCalibImageCountMax = 0;
-static int gPreferencesChessboardCornerNumX = 0;
-static int gPreferencesChessboardCornerNumY = 0;
-static float gPreferencesChessboardSquareWidth = 0.0f;
-
 static void *gPreferences = NULL;
 Uint32 gSDLEventPreferencesChanged = 0;
 static char *gPreferenceCameraOpenToken = NULL;
 static char *gPreferenceCameraResolutionToken = NULL;
 static char *gCalibrationServerUploadURL = NULL;
 static char *gCalibrationServerAuthenticationToken = NULL;
+static int gPreferencesCalibImageCountMax = CALIB_IMAGE_NUM;
+static Calibration::CalibrationPatternType gCalibrationPatternType;
+static cv::Size gCalibrationPatternSize;
+static float gCalibrationPatternSpacing;
 
 //
 // Calibration.
@@ -155,7 +154,7 @@ static ARVideoSource *vs = nullptr;
 static ARView *vv = nullptr;
 static bool gPostVideoSetupDone = false;
 static bool gCameraIsFrontFacing = false;
-static long            gFrameCount = 0;
+static long gFrameCount = 0;
 
 // Window and GL context.
 static SDL_GLContext gSDLContext = NULL;
@@ -177,13 +176,12 @@ static ARGL_CONTEXT_SETTINGS_REF gArglSettingsCornerFinderImage = NULL;
 //	Function prototypes
 // ============================================================================
 
-static void stop(void);
 static void quit(int rc);
 static void reshape(int w, int h);
 static void drawView(void);
 
-static void          init(int argc, char *argv[]);
-static void          usage(char *com);
+//static void          init(int argc, char *argv[]);
+//static void          usage(char *com);
 static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, ARdouble err_max, void *userdata);
 
 static void startVideo(void)
@@ -262,6 +260,16 @@ static void rereadPreferences(void)
         gPreferenceCameraOpenToken = cot;
         changedCameraSettings = true;
     }
+    Calibration::CalibrationPatternType patternType = getPreferencesCalibrationPatternType(gPreferences);
+    cv::Size patternSize = getPreferencesCalibrationPatternSize(gPreferences);
+    float patternSpacing = getPreferencesCalibrationPatternSpacing(gPreferences);
+    if (patternType != gCalibrationPatternType || patternSize != gCalibrationPatternSize || patternSpacing != gCalibrationPatternSpacing) {
+        gCalibrationPatternType = patternType;
+        gCalibrationPatternSize = patternSize;
+        gCalibrationPatternSpacing = patternSpacing;
+        changedCameraSettings = true;
+    }
+
     if (changedCameraSettings) {
         // Changing camera settings requires complete cancelation of calibration flow,
         // closing of video source, and re-init.
@@ -284,6 +292,9 @@ int main(int argc, char *argv[])
     if (!gCalibrationServerUploadURL) gCalibrationServerUploadURL = strdup(CALIBRATION_SERVER_UPLOAD_URL_DEFAULT);
     gCalibrationServerAuthenticationToken = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
     if (!gCalibrationServerAuthenticationToken) gCalibrationServerAuthenticationToken = strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT);
+    gCalibrationPatternType = getPreferencesCalibrationPatternType(gPreferences);
+    gCalibrationPatternSize = getPreferencesCalibrationPatternSize(gPreferences);
+    gCalibrationPatternSpacing = getPreferencesCalibrationPatternSpacing(gPreferences);
     
     // Initialize SDL.
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -334,14 +345,10 @@ int main(int argc, char *argv[])
     fileUploaderTickle(fileUploadHandle);
     
     // Calibration prefs.
-    if( gPreferencesChessboardCornerNumX == 0 ) gPreferencesChessboardCornerNumX = CHESSBOARD_CORNER_NUM_X;
-    if( gPreferencesChessboardCornerNumY == 0 ) gPreferencesChessboardCornerNumY = CHESSBOARD_CORNER_NUM_Y;
-    if( gPreferencesCalibImageCountMax == 0 )        gPreferencesCalibImageCountMax = CALIB_IMAGE_NUM;
-    if( gPreferencesChessboardSquareWidth == 0.0f )       gPreferencesChessboardSquareWidth = (float)CHESSBOARD_PATTERN_WIDTH;
-    ARLOGi("CHESSBOARD_CORNER_NUM_X = %d\n", gPreferencesChessboardCornerNumX);
-    ARLOGi("CHESSBOARD_CORNER_NUM_Y = %d\n", gPreferencesChessboardCornerNumY);
-    ARLOGi("CHESSBOARD_PATTERN_WIDTH = %f\n", gPreferencesChessboardSquareWidth);
-    ARLOGi("CALIB_IMAGE_NUM = %d\n", gPreferencesCalibImageCountMax);
+    ARLOGi("Calbration pattern size X = %d\n", gCalibrationPatternSize.width);
+    ARLOGi("Calbration pattern size Y = %d\n", gCalibrationPatternSize.height);
+    ARLOGi("Calbration pattern spacing = %f\n", gCalibrationPatternSpacing);
+    ARLOGi("Calibration image count maximum = %d\n", gPreferencesCalibImageCountMax);
     
     // Library setup.
     int contextsActiveCount = 1;
@@ -461,8 +468,7 @@ int main(int argc, char *argv[])
                     // Calibration init.
                     //
                     
-                    cv::Size s = Calibration::CalibrationPatternSizes[Calibration::CalibrationPatternType::CHESSBOARD];
-                    gCalibration = new Calibration(Calibration::CalibrationPatternType::CHESSBOARD, gPreferencesCalibImageCountMax, s, gPreferencesChessboardSquareWidth, vs->getVideoWidth(), vs->getVideoHeight());
+                    gCalibration = new Calibration(gCalibrationPatternType, gPreferencesCalibImageCountMax, gCalibrationPatternSize, gCalibrationPatternSpacing, vs->getVideoWidth(), vs->getVideoHeight());
                     if (!gCalibration) {
                         ARLOGe("Error initialising calibration.\n");
                         quit(-1);

@@ -22,11 +22,12 @@
 		4A0E11781E8B39F00074C280 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E11771E8B39F00074C280 /* AVFoundation.framework */; };
 		4A0E117A1E8B3A0B0074C280 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E11791E8B3A0B0074C280 /* CoreMedia.framework */; };
 		4A0E117C1E8B3A150074C280 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E117B1E8B3A150074C280 /* AudioToolbox.framework */; };
+		4A0E11841E8CAAFA0074C280 /* prefsNull.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A0E11831E8CAAFA0074C280 /* prefsNull.cpp */; };
 		4A47934C1E80CDBE002C3631 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A47934B1E80CDBE002C3631 /* main.m */; };
 		4A47934F1E80CDBE002C3631 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A47934E1E80CDBE002C3631 /* AppDelegate.m */; };
 		4A47936C1E80CF96002C3631 /* ARViewOverlay.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793661E80CF96002C3631 /* ARViewOverlay.m */; };
 		4A47936D1E80CF96002C3631 /* CameraFocusView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793681E80CF96002C3631 /* CameraFocusView.m */; };
-		4A47936E1E80CF96002C3631 /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A47936A1E80CF96002C3631 /* SettingsViewController.m */; };
+		4A47936E1E80CF96002C3631 /* SettingsViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4A47936A1E80CF96002C3631 /* SettingsViewController.mm */; };
 		4A4793861E80CFD4002C3631 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4A4793731E80CFD4002C3631 /* Localizable.strings */; };
 		4A4793871E80CFD4002C3631 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A4793751E80CFD4002C3631 /* Images.xcassets */; };
 		4A4793881E80CFD4002C3631 /* Iris-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A4793761E80CFD4002C3631 /* Iris-568h@2x.png */; };
@@ -68,7 +69,7 @@
 /* Begin PBXFileReference section */
 		4A0AB67F1E81DA6900F6EBB9 /* ARViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARViewController.h; sourceTree = "<group>"; };
 		4A0AB6801E81DA6900F6EBB9 /* ARViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ARViewController.mm; sourceTree = "<group>"; };
-		4A0AB6821E81DFCE00F6EBB9 /* prefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = prefs.h; path = ../prefs.h; sourceTree = "<group>"; };
+		4A0AB6821E81DFCE00F6EBB9 /* prefs.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = prefs.hpp; path = ../prefs.hpp; sourceTree = "<group>"; };
 		4A0AB6861E82209600F6EBB9 /* libAR6.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libAR6.a; sourceTree = "<group>"; };
 		4A0AB6871E82209600F6EBB9 /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcurl.a; sourceTree = "<group>"; };
 		4A0AB6881E82209600F6EBB9 /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libjpeg.a; sourceTree = "<group>"; };
@@ -83,6 +84,7 @@
 		4A0E11771E8B39F00074C280 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		4A0E11791E8B3A0B0074C280 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		4A0E117B1E8B3A150074C280 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		4A0E11831E8CAAFA0074C280 /* prefsNull.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = prefsNull.cpp; path = ../prefsNull.cpp; sourceTree = "<group>"; };
 		4A4793471E80CDBE002C3631 /* ARToolKit6 Camera Calibration Utility.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ARToolKit6 Camera Calibration Utility.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A47934B1E80CDBE002C3631 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		4A47934D1E80CDBE002C3631 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -93,7 +95,7 @@
 		4A4793671E80CF96002C3631 /* CameraFocusView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CameraFocusView.h; sourceTree = "<group>"; };
 		4A4793681E80CF96002C3631 /* CameraFocusView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CameraFocusView.m; sourceTree = "<group>"; };
 		4A4793691E80CF96002C3631 /* SettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
-		4A47936A1E80CF96002C3631 /* SettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
+		4A47936A1E80CF96002C3631 /* SettingsViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SettingsViewController.mm; sourceTree = "<group>"; };
 		4A4793741E80CFD4002C3631 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Localizable.strings; sourceTree = "<group>"; };
 		4A4793751E80CFD4002C3631 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		4A4793761E80CFD4002C3631 /* Iris-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Iris-568h@2x.png"; sourceTree = "<group>"; };
@@ -240,11 +242,12 @@
 				4A47939C1E80D195002C3631 /* fileUploader.c */,
 				4A4793A61E80D867002C3631 /* flow.hpp */,
 				4A4793A41E80D85A002C3631 /* flow.mm */,
-				4A0AB6821E81DFCE00F6EBB9 /* prefs.h */,
+				4A0AB6821E81DFCE00F6EBB9 /* prefs.hpp */,
+				4A0E11831E8CAAFA0074C280 /* prefsNull.cpp */,
 				4A4793671E80CF96002C3631 /* CameraFocusView.h */,
 				4A4793681E80CF96002C3631 /* CameraFocusView.m */,
 				4A4793691E80CF96002C3631 /* SettingsViewController.h */,
-				4A47936A1E80CF96002C3631 /* SettingsViewController.m */,
+				4A47936A1E80CF96002C3631 /* SettingsViewController.mm */,
 				4A0AB6851E82056200F6EBB9 /* old */,
 				4A4793A81E80D945002C3631 /* Eden */,
 			);
@@ -454,11 +457,12 @@
 				4ADE9C191E8887B200F04AC0 /* readtex.c in Sources */,
 				4ADE9C1C1E8887CF00F04AC0 /* glut_bitmap.c in Sources */,
 				4ADE9C231E8887CF00F04AC0 /* glut_stroke.c in Sources */,
+				4A0E11841E8CAAFA0074C280 /* prefsNull.cpp in Sources */,
 				4A47934C1E80CDBE002C3631 /* main.m in Sources */,
 				4A4793A01E80D195002C3631 /* fileUploader.c in Sources */,
 				4ADE9C1E1E8887CF00F04AC0 /* glut_hel10.c in Sources */,
 				4ADE9C1B1E8887CF00F04AC0 /* glut_9x15.c in Sources */,
-				4A47936E1E80CF96002C3631 /* SettingsViewController.m in Sources */,
+				4A47936E1E80CF96002C3631 /* SettingsViewController.mm in Sources */,
 				4ADE9C201E8887CF00F04AC0 /* glut_hel18.c in Sources */,
 				4ADE9C171E88863600F04AC0 /* EdenGLFont.c in Sources */,
 				4ADE9C221E8887CF00F04AC0 /* glut_roman.c in Sources */,

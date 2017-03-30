@@ -1,5 +1,5 @@
 /*
- *  SettingsViewController.h
+ *  prefsNull.cpp
  *  ARToolKit6
  *
  *  This file is part of ARToolKit.
@@ -28,35 +28,66 @@
  *  are not obligated to do so. If you do not wish to do so, delete this exception
  *  statement from your version.
  *
- *  Copyright 2015-2017 Daqri LLC. All Rights Reserved.
+ *  Copyright 2017-2017 Daqri LLC. All Rights Reserved.
  *
- *  Author(s): Philip Lamb, Patrick Felong.
+ *  Author(s): Philip Lamb
  *
  */
 
 
-#import <UIKit/UIKit.h>
+#include <stdio.h>
+#include <AR6/AR/config.h>
+#include "prefs.hpp"
 
-static NSString* const kSettingCameraResolutionStr = @"SettingCameraResolution";
-static NSString* const kSettingCameraSourceStr = @"SettingCameraSource";
-static NSString* const kSettingPaperSizeStr = @"SettingPaperSize";
-static NSString *const kSettingCalibrationPatternType = @"calibrationPatternType";
-static NSString *const kSettingCalibrationPatternSizeWidth = @"calibrationPatternSizeWidth";
-static NSString *const kSettingCalibrationPatternSizeHeight = @"calibrationPatternSizeHeight";
-static NSString *const kSettingCalibrationPatternSpacing = @"calibrationPatternSpacing";
-static NSString *const kSettingCalibrationServerUploadURL = @"calibrationServerUploadURL";
-static NSString *const kSettingCalibrationServerAuthenticationToken = @"calibrationServerAuthenticationToken";
+#if !TARGET_PLATFORM_MACOS && !TARGET_PLATFORM_LINUX && !TARGET_PLATFORM_IOS
 
-static NSString* const kCameraSourceFront = @"Front";
-static NSString* const kCameraSourceRear = @"Rear";
+void *initPreferences(void)
+{
+    return (NULL);
+}
 
-static NSString* const kPaperSizeA4Str = @"A4";
-static NSString* const kPaperSizeUSLetterStr = @"US Letter";
+void preferencesFinal(void **preferences_p)
+{
+}
 
-static NSString *const kCalibrationPatternTypeChessboardStr = @"Chessboard";
-static NSString *const kCalibrationPatternTypeCirclesStr = @"Circles";
-static NSString *const kCalibrationPatternTypeAsymmetricCirclesStr = @"Asymmetric circles";
+void showPreferences(void *preferences)
+{
+}
 
-@interface SettingsViewController : UIViewController <UITableViewDelegate, UITableViewDataSource>
+char *getPreferenceCameraOpenToken(void *preferences)
+{
+    return NULL;
+}
 
-@end
+char *getPreferenceCameraResolutionToken(void *preferences)
+{
+    return NULL;
+}
+
+char *getPreferenceCalibrationServerUploadURL(void *preferences)
+{
+    return strdup(CALIBRATION_SERVER_UPLOAD_URL_DEFAULT);
+}
+
+char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
+{
+    return strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT);
+}
+#endif // !TARGET_PLATFORM_MACOS && !TARGET_PLATFORM_LINUX && !TARGET_PLATFORM_IOS
+
+#if !TARGET_PLATFORM_MACOS && !TARGET_PLATFORM_IOS
+Calibration::CalibrationPatternType getPreferencesCalibrationPatternType(void *preferences)
+{
+    return CALIBRATION_PATTERN_TYPE_DEFAULT;
+}
+
+cv::Size getPreferencesCalibrationPatternSize(void *preferences)
+{
+    return Calibration::CalibrationPatternSizes[CALIBRATION_PATTERN_TYPE_DEFAULT];
+}
+
+float getPreferencesCalibrationPatternSpacing(void *preferences)
+{
+    return Calibration::CalibrationPatternSpacings[CALIBRATION_PATTERN_TYPE_DEFAULT];
+}
+#endif // !TARGET_PLATFORM_IOS

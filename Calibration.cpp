@@ -125,6 +125,11 @@ std::map<Calibration::CalibrationPatternType, cv::Size> Calibration::Calibration
     {Calibration::CalibrationPatternType::ASYMMETRIC_CIRCLES_GRID, cv::Size(4, 11)}
 };
 
+std::map<Calibration::CalibrationPatternType, float> Calibration::CalibrationPatternSpacings = {
+    {Calibration::CalibrationPatternType::CHESSBOARD, 30.0f},
+    {Calibration::CalibrationPatternType::ASYMMETRIC_CIRCLES_GRID, 40.0f}
+};
+
 Calibration::Calibration(const CalibrationPatternType patternType, const int calibImageCountMax, const cv::Size patternSize, const int chessboardSquareWidth, const int videoWidth, const int videoHeight) :
     m_cornerFinderData(patternType, patternSize, videoWidth, videoHeight),
     m_cornerFinderResultData(patternType, patternSize, 0, 0),

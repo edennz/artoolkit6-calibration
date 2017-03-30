@@ -1,5 +1,5 @@
 /*
- *  PrefsWindowController.h
+ *  prefs.hpp
  *  ARToolKit6
  *
  *  This file is part of ARToolKit.
@@ -34,17 +34,37 @@
  *
  */
 
-#ifndef __PrefsWindowController_h__
-#define __PrefsWindowController_h__
+#ifndef prefs_hpp
+#define prefs_hpp
 
-#if __OBJC__
+#include "Calibration.hpp"
 
-#import <Cocoa/Cocoa.h>
 
-@interface PrefsWindowController : NSWindowController
-{
+// Data upload.
+#define CALIBRATION_SERVER_UPLOAD_URL_DEFAULT "https://omega.artoolworks.com/app/calib_camera/upload.php"
+// Until we implement nonce-based hashing, use of the plain md5 of the calibration server authentication token is vulnerable to replay attack.
+// The calibration server authentication token itself needs to be hidden in the binary.
+#define CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT "com.artoolworks.utils.calib_camera.116D5A95-E17B-266E-39E4-E5DED6C07C53" // MD5 = {0x32, 0x57, 0x5a, 0x6f, 0x69, 0xa4, 0x11, 0x5a, 0x25, 0x49, 0xae, 0x55, 0x6b, 0xd2, 0x2a, 0xda}
+#define CALIBRATION_PATTERN_TYPE_DEFAULT Calibration::CalibrationPatternType::CHESSBOARD
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void *initPreferences(void);
+void showPreferences(void *preferences);
+void preferencesFinal(void **preferences_p);
+
+char *getPreferenceCameraOpenToken(void *preferences);
+char *getPreferenceCameraResolutionToken(void *preferences);
+char *getPreferenceCalibrationServerUploadURL(void *preferences);
+char *getPreferenceCalibrationServerAuthenticationToken(void *preferences);
+Calibration::CalibrationPatternType getPreferencesCalibrationPatternType(void *preferences);
+cv::Size getPreferencesCalibrationPatternSize(void *preferences);
+float getPreferencesCalibrationPatternSpacing(void *preferences);
+
+
+#ifdef __cplusplus
 }
-@end
-
-#endif // __OBJC__
-#endif // !__PrefsWindowController_h__
+#endif
+#endif /* prefs_hpp */

@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		4A0720F91E6637FE00084FB6 /* PrefsWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4A0720F81E6637FE00084FB6 /* PrefsWindow.xib */; };
+		4A0E117E1E8CAA770074C280 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E117D1E8CAA770074C280 /* Foundation.framework */; };
+		4A0E11801E8CAA830074C280 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E117F1E8CAA830074C280 /* CoreFoundation.framework */; };
+		4A0E11821E8CAA940074C280 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E11811E8CAA940074C280 /* AppKit.framework */; };
 		4A47933D1E7F676E002C3631 /* Calibration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A47933B1E7F676E002C3631 /* Calibration.cpp */; };
 		4A5FA0B41DFE138D00795630 /* readtex.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0B31DFE138D00795630 /* readtex.c */; };
 		4A5FA0B71DFE13B300795630 /* EdenMessage.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0B61DFE13B300795630 /* EdenMessage.c */; };
@@ -38,9 +41,9 @@
 		4A9143771DF666E200DF4FEE /* glut_swidth.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143651DF666E200DF4FEE /* glut_swidth.c */; };
 		4A9143781DF666E200DF4FEE /* glut_tr10.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143661DF666E200DF4FEE /* glut_tr10.c */; };
 		4A9143791DF666E200DF4FEE /* glut_tr24.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A9143671DF666E200DF4FEE /* glut_tr24.c */; };
-		4AB6B1881E68B89C0034F03C /* prefsNull.c in Sources */ = {isa = PBXBuildFile; fileRef = 4AB6B1871E68B89C0034F03C /* prefsNull.c */; };
-		4AD419991E6FB37300DC036C /* PrefsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A0720FB1E663EBA00084FB6 /* PrefsWindowController.m */; };
-		4AD4199A1E6FB3C000DC036C /* prefsLibConfig.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A6223CF1E6CFBA8002F0096 /* prefsLibConfig.c */; };
+		4AB6B1881E68B89C0034F03C /* prefsNull.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4AB6B1871E68B89C0034F03C /* prefsNull.cpp */; };
+		4AD419991E6FB37300DC036C /* PrefsWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4A0720FB1E663EBA00084FB6 /* PrefsWindowController.mm */; };
+		4AD4199A1E6FB3C000DC036C /* prefsLibConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A6223CF1E6CFBA8002F0096 /* prefsLibConfig.cpp */; };
 		4AEB0DC41E418FAD00765B3B /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AEB0DC31E418FAD00765B3B /* libcurl.tbd */; };
 		4AEB0DCA1E41900600765B3B /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AEB0DC91E41900600765B3B /* libjpeg.a */; };
 		4AEB0DCB1E41940A00765B3B /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AEB0DC71E418FF000765B3B /* SDL2.framework */; };
@@ -77,7 +80,10 @@
 /* Begin PBXFileReference section */
 		4A0720F81E6637FE00084FB6 /* PrefsWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PrefsWindow.xib; sourceTree = "<group>"; };
 		4A0720FA1E663EBA00084FB6 /* PrefsWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrefsWindowController.h; sourceTree = "<group>"; };
-		4A0720FB1E663EBA00084FB6 /* PrefsWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrefsWindowController.m; sourceTree = "<group>"; };
+		4A0720FB1E663EBA00084FB6 /* PrefsWindowController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PrefsWindowController.mm; sourceTree = "<group>"; };
+		4A0E117D1E8CAA770074C280 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		4A0E117F1E8CAA830074C280 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		4A0E11811E8CAA940074C280 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		4A47933B1E7F676E002C3631 /* Calibration.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Calibration.cpp; path = ../Calibration.cpp; sourceTree = "<group>"; };
 		4A47933C1E7F676E002C3631 /* Calibration.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Calibration.hpp; path = ../Calibration.hpp; sourceTree = "<group>"; };
 		4A5FA0B31DFE138D00795630 /* readtex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = readtex.c; sourceTree = "<group>"; };
@@ -89,7 +95,7 @@
 		4A5FA0BC1DFE155D00795630 /* EdenUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EdenUtil.c; sourceTree = "<group>"; };
 		4A5FA0BE1DFE156B00795630 /* EdenUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EdenUtil.h; sourceTree = "<group>"; };
 		4A5FA0BF1DFE160500795630 /* calib_camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = calib_camera.h; path = ../calib_camera.h; sourceTree = "<group>"; };
-		4A6223CF1E6CFBA8002F0096 /* prefsLibConfig.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = prefsLibConfig.c; path = ../prefsLibConfig.c; sourceTree = "<group>"; };
+		4A6223CF1E6CFBA8002F0096 /* prefsLibConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = prefsLibConfig.cpp; path = ../prefsLibConfig.cpp; sourceTree = "<group>"; };
 		4A6FD7271E42C7A900C6471A /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
 		4A6FD7291E42C7C200C6471A /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		4A7FEB3D1E43F35E003783F7 /* libopencv_world.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopencv_world.a; sourceTree = "<group>"; };
@@ -298,8 +304,8 @@
 		4A91436A1DF666E200DF4FEE /* gluttext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gluttext.h; sourceTree = "<group>"; };
 		4A91437A1DF6676F00DF4FEE /* EdenError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EdenError.h; sourceTree = "<group>"; };
 		4A91437B1DF6677600DF4FEE /* EdenGLFont.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EdenGLFont.h; sourceTree = "<group>"; };
-		4AB6B1861E68B7C60034F03C /* prefs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = prefs.h; path = ../prefs.h; sourceTree = "<group>"; };
-		4AB6B1871E68B89C0034F03C /* prefsNull.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = prefsNull.c; path = ../prefsNull.c; sourceTree = "<group>"; };
+		4AB6B1861E68B7C60034F03C /* prefs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = prefs.hpp; path = ../prefs.hpp; sourceTree = "<group>"; };
+		4AB6B1871E68B89C0034F03C /* prefsNull.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = prefsNull.cpp; path = ../prefsNull.cpp; sourceTree = "<group>"; };
 		4AEB0DC31E418FAD00765B3B /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
 		4AEB0DC71E418FF000765B3B /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
 		4AEB0DC91E41900600765B3B /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libjpeg.a; sourceTree = "<group>"; };
@@ -312,6 +318,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A0E11821E8CAA940074C280 /* AppKit.framework in Frameworks */,
+				4A0E11801E8CAA830074C280 /* CoreFoundation.framework in Frameworks */,
+				4A0E117E1E8CAA770074C280 /* Foundation.framework in Frameworks */,
 				4A6FD72A1E42C7C200C6471A /* Accelerate.framework in Frameworks */,
 				4A6FD7281E42C7A900C6471A /* OpenCL.framework in Frameworks */,
 				4A7FEB421E43F422003783F7 /* libzlib.a in Frameworks */,
@@ -369,11 +378,11 @@
 				4A9142191DF645A900DF4FEE /* fileUploader.c */,
 				4A9143511DF6660700DF4FEE /* flow.hpp */,
 				4A9143521DF6660700DF4FEE /* flow.cpp */,
-				4AB6B1861E68B7C60034F03C /* prefs.h */,
-				4AB6B1871E68B89C0034F03C /* prefsNull.c */,
-				4A6223CF1E6CFBA8002F0096 /* prefsLibConfig.c */,
+				4AB6B1861E68B7C60034F03C /* prefs.hpp */,
+				4AB6B1871E68B89C0034F03C /* prefsNull.cpp */,
+				4A6223CF1E6CFBA8002F0096 /* prefsLibConfig.cpp */,
 				4A0720FA1E663EBA00084FB6 /* PrefsWindowController.h */,
-				4A0720FB1E663EBA00084FB6 /* PrefsWindowController.m */,
+				4A0720FB1E663EBA00084FB6 /* PrefsWindowController.mm */,
 				4A9143541DF666E200DF4FEE /* Eden */,
 			);
 			name = Source;
@@ -806,6 +815,9 @@
 		4AEB0DC21E418FAD00765B3B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4A0E11811E8CAA940074C280 /* AppKit.framework */,
+				4A0E117F1E8CAA830074C280 /* CoreFoundation.framework */,
+				4A0E117D1E8CAA770074C280 /* Foundation.framework */,
 				4A6FD7291E42C7C200C6471A /* Accelerate.framework */,
 				4A6FD7271E42C7A900C6471A /* OpenCL.framework */,
 				4AEB0DC31E418FAD00765B3B /* libcurl.tbd */,
@@ -886,7 +898,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4AB6B1881E68B89C0034F03C /* prefsNull.c in Sources */,
+				4AB6B1881E68B89C0034F03C /* prefsNull.cpp in Sources */,
 				4A9143731DF666E200DF4FEE /* glut_hel18.c in Sources */,
 				4A91436F1DF666E200DF4FEE /* glut_bitmap.c in Sources */,
 				4AEC04B21DFF6FB8008678C3 /* glStateCache.c in Sources */,
@@ -896,7 +908,7 @@
 				4A5FA0BD1DFE155D00795630 /* EdenUtil.c in Sources */,
 				4A9143711DF666E200DF4FEE /* glut_hel10.c in Sources */,
 				4A9143721DF666E200DF4FEE /* glut_hel12.c in Sources */,
-				4AD419991E6FB37300DC036C /* PrefsWindowController.m in Sources */,
+				4AD419991E6FB37300DC036C /* PrefsWindowController.mm in Sources */,
 				4A5FA0BB1DFE140000795630 /* EdenTime.c in Sources */,
 				4A9143751DF666E200DF4FEE /* glut_roman.c in Sources */,
 				4A9143781DF666E200DF4FEE /* glut_tr10.c in Sources */,
@@ -912,7 +924,7 @@
 				4A9143701DF666E200DF4FEE /* glut_bwidth.c in Sources */,
 				4A91421B1DF645A900DF4FEE /* calc.cpp in Sources */,
 				4A91436C1DF666E200DF4FEE /* EdenSurfaces.c in Sources */,
-				4AD4199A1E6FB3C000DC036C /* prefsLibConfig.c in Sources */,
+				4AD4199A1E6FB3C000DC036C /* prefsLibConfig.cpp in Sources */,
 				4A91436B1DF666E200DF4FEE /* EdenGLFont.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
