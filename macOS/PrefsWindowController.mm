@@ -227,6 +227,11 @@ static NSString *const kCalibrationPatternTypeAsymmetricCirclesStr = @"Asymmetri
     SDL_PushEvent(&event);
 }
 
+-(void) showHelp:(id)sender
+{
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/artoolkit/artoolkit6/wiki/Camera-calibration-macOS"]];
+}
+
 @end
 
 //
@@ -244,7 +249,7 @@ void *initPreferences(void)
     PrefsWindowController *pwc = [[PrefsWindowController alloc] initWithWindowNibName:@"PrefsWindow"];
     
     // Register the Preferences menu item in the app menu.
-    NSMenu *appMenu = [NSApp.mainMenu itemAtIndex: 0].submenu;
+    NSMenu *appMenu = [NSApp.mainMenu itemAtIndex:0].submenu;
     for (NSMenuItem *mi in appMenu.itemArray) {
         if ([mi.title isEqualToString:@"Preferences…"]) {
             mi.target = pwc;
@@ -253,6 +258,17 @@ void *initPreferences(void)
             break;
         }
     }
+    
+    // Add the Help menu and an item for the app.
+    NSMenu *helpMenu = [[NSMenu alloc] initWithTitle:@"Help"];
+    NSMenuItem *helpMenu0 = [[NSMenuItem alloc] init];
+    helpMenu0.submenu = helpMenu;
+    NSString *appName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
+    NSMenuItem *helpMenuItem = [[NSMenuItem alloc] initWithTitle:[appName stringByAppendingString:@" Help"] action:@selector(showHelp:) keyEquivalent:@"?"];
+    helpMenuItem.target = pwc;
+    [helpMenu addItem:helpMenuItem];
+    [NSApp.mainMenu addItem:helpMenu0];
+    NSApp.helpMenu = helpMenu;
     
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"showPrefsOnStartup"]) {
         showPreferences((__bridge void *)pwc);
