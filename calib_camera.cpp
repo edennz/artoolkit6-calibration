@@ -284,6 +284,12 @@ int main(int argc, char *argv[])
     arLogLevel = AR_LOG_LEVEL_DEBUG;
 #endif
 
+    // Initialize SDL.
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        ARLOGe("Error: SDL initialisation failed. SDL error: '%s'.\n", SDL_GetError());
+        return -1;
+    }
+    
     // Preferences.
     gPreferences = initPreferences();
     gPreferenceCameraOpenToken = getPreferenceCameraOpenToken(gPreferences);
@@ -295,12 +301,6 @@ int main(int argc, char *argv[])
     gCalibrationPatternType = getPreferencesCalibrationPatternType(gPreferences);
     gCalibrationPatternSize = getPreferencesCalibrationPatternSize(gPreferences);
     gCalibrationPatternSpacing = getPreferencesCalibrationPatternSpacing(gPreferences);
-    
-    // Initialize SDL.
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        ARLOGe("Error: SDL initialisation failed. SDL error: '%s'.\n", SDL_GetError());
-        return -1;
-    }
     
     gSDLEventPreferencesChanged = SDL_RegisterEvents(1);
     
