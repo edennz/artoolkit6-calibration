@@ -1008,7 +1008,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     // If background tasks are proceeding, draw a status box.
     char uploadStatus[UPLOAD_STATUS_BUFFER_LEN];
     int status = fileUploaderStatusGet(fileUploadHandle, uploadStatus, &time);
-    if (status) {
+    if (status > 0) {
         const int squareSize = (int)(16.0f * (float)gDisplayDPI / 160.f) ;
         float x, y, w, h;
         float textWidth = EdenGLFontGetLineWidth((unsigned char *)uploadStatus);

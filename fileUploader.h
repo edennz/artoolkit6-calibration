@@ -82,7 +82,7 @@ void fileUploaderFinal(FILE_UPLOAD_HANDLE_t **handle_p);
 
 bool fileUploaderTickle(FILE_UPLOAD_HANDLE_t *handle);
 
-// -2 = An error.
+// -1 = An error.
 // 0 = no background tasks or messages.
 // 1 = background task currently in progress.
 // 2 = background task complete, message still to be shown.
