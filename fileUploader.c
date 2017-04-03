@@ -195,6 +195,7 @@ bool fileUploaderCreateQueueDir(const char *queueDirPath)
         }
     }
 
+    ARLOGd("fileUploaderCreateQueueDir(\"%s\") OK.\n", queueDirPath);
     return (true);
 }
 
@@ -299,14 +300,17 @@ static void *fileUploader(THREAD_HANDLE_T *threadHandle)
     	    	break;
     	    }
 
-    	    // HACK TO WORK AROUND ISSUE OF MISSING CAfile (default: /etc/ssl/certs/ca-certificates.crt) AND EMPTY CApath.
-    	    // TODO: Supply our own certificate for omega.artoolworks.com.
-    	    curlErr = curl_easy_setopt(curlHandle, CURLOPT_SSL_VERIFYPEER, 0L);
-    	    if (curlErr != CURLE_OK) {
-    	    	ARLOGe("Error setting CURL SSL options: %s (%d)\n", curl_easy_strerror(curlErr), curlErr);
-            	errorCode = -1;
-    	    	break;
-    	    }
+            // The commented-out section below disables SSL peer verification. Uncommenting this will make
+            // https connections insecure, but will allow (for example) connections to a server using a
+            // self-signed SSL certificate and when you have not provided CURL with a CAfile via
+            // 'curl_easy_setopt(curlHandle, CURLOPT_CAPATH, capath);'.
+            // (default capath: /etc/ssl/certs/ca-certificates.crt)
+    	    //curlErr = curl_easy_setopt(curlHandle, CURLOPT_SSL_VERIFYPEER, 0L);
+    	    //if (curlErr != CURLE_OK) {
+    	    //	ARLOGe("Error setting CURL SSL options: %s (%d)\n", curl_easy_strerror(curlErr), curlErr);
+            //	errorCode = -1;
+    	    //	break;
+    	    //}
 
     	    // Build the form.
     	    struct curl_httppost* post = NULL;

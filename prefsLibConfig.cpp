@@ -264,7 +264,7 @@ char *getPreferenceCalibrationServerUploadURL(void *preferences)
     
     const char *s = config_setting_get_string(prefs->settingCSUU);
     if (s && s[0]) return strdup(s);
-    return NULL;
+    return (strdup(CALIBRATION_SERVER_UPLOAD_URL_DEFAULT));
 }
 
 char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
@@ -274,7 +274,7 @@ char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
     
     const char *s = config_setting_get_string(prefs->settingCSAT);
     if (s && s[0]) return strdup(s);
-    return NULL;
+    return (strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT));
 }
 
 void preferencesFinal(void **preferences_p)

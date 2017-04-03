@@ -307,14 +307,14 @@ char *getPreferenceCalibrationServerUploadURL(void *preferences)
 {
     NSString *csuu = [[NSUserDefaults standardUserDefaults] stringForKey:kSettingCalibrationServerUploadURL];
     if (csuu.length != 0) return (strdup(csuu.UTF8String));
-    return NULL;
+    return (strdup(CALIBRATION_SERVER_UPLOAD_URL_DEFAULT));
 }
 
 char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
 {
     NSString *csat = [[NSUserDefaults standardUserDefaults] stringForKey:kSettingCalibrationServerAuthenticationToken];
     if (csat.length != 0) return (strdup(csat.UTF8String));
-    return NULL;
+    return (strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT));
 }
 
 Calibration::CalibrationPatternType getPreferencesCalibrationPatternType(void *preferences)

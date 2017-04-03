@@ -246,9 +246,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     gPreferenceCameraOpenToken = getPreferenceCameraOpenToken(gPreferences);
     gPreferenceCameraResolutionToken = getPreferenceCameraResolutionToken(gPreferences);
     gCalibrationServerUploadURL = getPreferenceCalibrationServerUploadURL(gPreferences);
-    if (!gCalibrationServerUploadURL) gCalibrationServerUploadURL = strdup(CALIBRATION_SERVER_UPLOAD_URL_DEFAULT);
     gCalibrationServerAuthenticationToken = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
-    if (!gCalibrationServerAuthenticationToken) gCalibrationServerAuthenticationToken = strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT);
     gCalibrationPatternType = getPreferencesCalibrationPatternType(gPreferences);
     gCalibrationPatternSize = getPreferencesCalibrationPatternSize(gPreferences);
     gCalibrationPatternSpacing = getPreferencesCalibrationPatternSpacing(gPreferences);
@@ -273,7 +271,6 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
     if (!fileUploadHandle) {
         ARLOGe("Error: Could not initialise fileUploadHandle.\n");
-        exit(-1);
     }
     fileUploaderTickle(fileUploadHandle);
     
@@ -505,6 +502,9 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         gCalibrationServerUploadURL = csuu;
         fileUploaderFinal(&fileUploadHandle);
         fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
+        if (!fileUploadHandle) {
+            ARLOGe("Error: Could not initialise fileUploadHandle.\n");
+        }
     }
     char *csat = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
     if (csat && gCalibrationServerAuthenticationToken && strcmp(gCalibrationServerAuthenticationToken, csat) == 0) {
@@ -1078,7 +1078,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         // UTC date and time, in format "1999-12-31 23:59:59 UTC".
         if (goodWrite) {
             char timestamp[26+8] = "";
-            if (!strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S %z", timeptr)) {
+            if (!strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S +0000", timeptr)) { // Use explicit "+0000" rather than %z because %z is undefined either UTC or local time zone when timestamp is created with gmtime().
                 ARLOGe("Error formatting time and date.\n");
                 goodWrite = false;
             } else {
@@ -1211,7 +1211,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         }
         
         if (!goodWrite) {
-            // Delete the index and param files.
+            // If something went wrong, delete the index and param files.
             if (remove(indexPathname) < 0) {
                 ARLOGe("Error removing temporary file '%s'.\n", indexPathname);
                 ARLOGperror(NULL);
