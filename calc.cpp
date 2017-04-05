@@ -38,6 +38,7 @@
 #include "calc.hpp"
 
 #include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/core/core_c.h>
 
 static ARdouble getSizeFactor(ARdouble dist_factor[], int xsize, int ysize, int dist_function_version);
 static void convParam(float intr[3][4], float dist[4], int xsize, int ysize, ARParam *param);

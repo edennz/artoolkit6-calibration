@@ -87,15 +87,17 @@ include(${ARTOOLKIT6_HOME}/SDK/lib/AR6/AR6.cmake)
 set(SOURCE
     ../calib_camera.cpp
     ../calib_camera.h
+    ../Calibration.hpp
+    ../Calibration.cpp
     ../calc.cpp
     ../calc.hpp
     ../fileUploader.c
     ../fileUploader.h
     ../flow.cpp
     ../flow.hpp
-    ../prefs.h
-    ../prefsLibConfig.c
-    ../prefsNull.c
+    ../prefs.hpp
+    ../prefsLibConfig.cpp
+    ../prefsNull.cpp
     ../Eden/Eden.h
     ../Eden/EdenError.h
     ../Eden/EdenGLFont.c

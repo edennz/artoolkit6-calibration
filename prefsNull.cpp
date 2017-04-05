@@ -73,9 +73,7 @@ char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
 {
     return strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT);
 }
-#endif // !TARGET_PLATFORM_MACOS && !TARGET_PLATFORM_LINUX && !TARGET_PLATFORM_IOS
 
-#if !TARGET_PLATFORM_MACOS && !TARGET_PLATFORM_IOS
 Calibration::CalibrationPatternType getPreferencesCalibrationPatternType(void *preferences)
 {
     return CALIBRATION_PATTERN_TYPE_DEFAULT;
@@ -90,4 +88,4 @@ float getPreferencesCalibrationPatternSpacing(void *preferences)
 {
     return Calibration::CalibrationPatternSpacings[CALIBRATION_PATTERN_TYPE_DEFAULT];
 }
-#endif // !TARGET_PLATFORM_IOS
+#endif

@@ -45,7 +45,7 @@
 // of a completed run.
 //
 
-Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const CalibrationPatternType patternType_in, const cv::Size patternSize_in, const int videoWidth_in, const int videoHeight_in) :
+Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const Calibration::CalibrationPatternType patternType_in, const cv::Size patternSize_in, const int videoWidth_in, const int videoHeight_in) :
     patternType(patternType_in),
     patternSize(patternSize_in),
     videoWidth(videoWidth_in),
@@ -57,7 +57,7 @@ Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const Cali
 }
 
 // copy constructor.
-Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const CalibrationCornerFinderData& orig) :
+Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const Calibration::CalibrationCornerFinderData& orig) :
     patternType(orig.patternType),
     patternSize(orig.patternSize),
     videoWidth(orig.videoWidth),
@@ -70,7 +70,7 @@ Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData(const Cali
 }
 
 // copy assignement.
-const Calibration::CalibrationCornerFinderData& Calibration::CalibrationCornerFinderData::operator=(const Calibration::CalibrationCornerFinderData::CalibrationCornerFinderData& orig)
+const Calibration::CalibrationCornerFinderData& Calibration::CalibrationCornerFinderData::operator=(const Calibration::CalibrationCornerFinderData& orig)
 {
     if (this != &orig) {
         dealloc();

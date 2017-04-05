@@ -35,13 +35,15 @@
  */
 
 
-#define _GNU_SOURCE
+#ifndef _GNU_SOURCE
+#  define _GNU_SOURCE
+#endif
 
 #include <AR6/AR/ar.h>
 #if TARGET_PLATFORM_LINUX
 
 #include <stdio.h>
-#include "prefs.h"
+#include "prefs.hpp"
 #include <libconfig.h>
 #include <Eden/EdenMessage.h>
 #include <pthread.h>
@@ -58,13 +60,30 @@ typedef struct {
     config_setting_t *settingCOT;
     config_setting_t *settingCSUU;
     config_setting_t *settingCSAT;
+    config_setting_t *settingCalibrationPatternType;
+    config_setting_t *settingCalibrationPatternSizeWidth;
+    config_setting_t *settingCalibrationPatternSizeHeight;
+    config_setting_t *settingCalibrationPatternSpacing;
 } prefsLibConfig_t;
+
+static const char *kSettingCameraOpenToken = "cameraOpenToken";
+static const char *kSettingCalibrationServerUploadURL = "calibrationServerUploadURL";
+static const char *kSettingCalibrationServerAuthenticationToken = "calibrationServerAuthenticationToken";
+static const char *kSettingCalibrationPatternType = "calibrationPatternType";
+static const char *kSettingCalibrationPatternSizeWidth = "calibrationPatternSizeWidth";
+static const char *kSettingCalibrationPatternSizeHeight = "calibrationPatternSizeHeight";
+static const char *kSettingCalibrationPatternSpacing = "calibrationPatternSpacing";
+
+static const char *kCalibrationPatternTypeChessboardStr = "Chessboard";
+static const char *kCalibrationPatternTypeCirclesStr = "Circles";
+static const char *kCalibrationPatternTypeAsymmetricCirclesStr = "Asymmetric circles";
 
 void *showPreferencesThread(void *);
 
 void *initPreferences(void)
 {
     prefsLibConfig_t *prefs;
+    int err;
     
     arMallocClear(prefs, prefsLibConfig_t, 1);
     config_init(&prefs->config);
@@ -77,7 +96,7 @@ void *initPreferences(void)
     ARLOGd("Preferences config path is '%s'.\n", prefs->prefsPath);
     
     // Attempt to read config, initialising any unconfigured values to defaults.
-    int err = test_f(prefs->prefsPath, NULL);
+    err = test_f(prefs->prefsPath, NULL);
     if (err < 0) {
         ARLOGperror(NULL);
         goto bail;
@@ -89,13 +108,21 @@ void *initPreferences(void)
             ARLOGe("Error reading configuration file '%s': %s.\n", prefs->prefsPath, config_error_text(&prefs->config));
             goto bail;
         }
-        prefs->settingCOT = config_setting_get_member(root, "cameraOpenToken");
-        prefs->settingCSUU = config_setting_get_member(root, "calibrationServerUploadURL");
-        prefs->settingCSAT = config_setting_get_member(root, "calibrationServerAuthenticationToken");
+        prefs->settingCOT = config_setting_get_member(root, kSettingCameraOpenToken);
+        prefs->settingCSUU = config_setting_get_member(root, kSettingCalibrationServerUploadURL);
+        prefs->settingCSAT = config_setting_get_member(root, kSettingCalibrationServerAuthenticationToken);
+        prefs->settingCalibrationPatternType = config_setting_get_member(root, kSettingCalibrationPatternType);
+        prefs->settingCalibrationPatternSizeWidth = config_setting_get_member(root, kSettingCalibrationPatternSizeWidth);
+        prefs->settingCalibrationPatternSizeHeight = config_setting_get_member(root, kSettingCalibrationPatternSizeHeight);
+        prefs->settingCalibrationPatternSpacing = config_setting_get_member(root, kSettingCalibrationPatternSpacing);
     }
-    if (!prefs->settingCOT) prefs->settingCOT = config_setting_add(root, "cameraOpenToken", CONFIG_TYPE_STRING);
-    if (!prefs->settingCSUU) prefs->settingCSUU = config_setting_add(root, "calibrationServerUploadURL", CONFIG_TYPE_STRING);
-    if (!prefs->settingCSAT) prefs->settingCSAT = config_setting_add(root, "calibrationServerAuthenticationToken", CONFIG_TYPE_STRING);
+    if (!prefs->settingCOT) prefs->settingCOT = config_setting_add(root, kSettingCameraOpenToken, CONFIG_TYPE_STRING);
+    if (!prefs->settingCSUU) prefs->settingCSUU = config_setting_add(root, kSettingCalibrationServerUploadURL, CONFIG_TYPE_STRING);
+    if (!prefs->settingCSAT) prefs->settingCSAT = config_setting_add(root, kSettingCalibrationServerAuthenticationToken, CONFIG_TYPE_STRING);
+    if (!prefs->settingCalibrationPatternType) prefs->settingCalibrationPatternType = config_setting_add(root, kSettingCalibrationPatternType, CONFIG_TYPE_STRING);
+    if (!prefs->settingCalibrationPatternSizeWidth) prefs->settingCalibrationPatternSizeWidth = config_setting_add(root, kSettingCalibrationPatternSizeWidth, CONFIG_TYPE_INT);
+    if (!prefs->settingCalibrationPatternSizeHeight) prefs->settingCalibrationPatternSizeHeight = config_setting_add(root, kSettingCalibrationPatternSizeHeight, CONFIG_TYPE_INT);
+    if (!prefs->settingCalibrationPatternSpacing) prefs->settingCalibrationPatternSpacing = config_setting_add(root, kSettingCalibrationPatternSpacing, CONFIG_TYPE_FLOAT);
     
     return ((void *)prefs);
     
@@ -125,6 +152,9 @@ void *showPreferencesThread(void *arg)
         PREFS_OPTION_1,
         PREFS_OPTION_2,
         PREFS_OPTION_3,
+        PREFS_OPTION_4,
+        PREFS_OPTION_5,
+        PREFS_OPTION_6,
         PREFS_END
     };
     enum state state = PREFS_BEGIN;
@@ -141,7 +171,17 @@ void *showPreferencesThread(void *arg)
     
     while (state != PREFS_END) {
         if (state == PREFS_BEGIN) {
-            const char prompt[] = "Preferences\n\n1. Camera.\n2. Calibration server URL.\n3. Calibration server authentication token.\n\nPress [esc] to finish or type number and press [return] ";
+            const char prompt[] =
+                "Preferences\n"
+                "\n"
+                "1. Camera.\n"
+                "2. Calibration server URL.\n"
+                "3. Calibration server authentication token.\n"
+                "4. Calibration pattern type.\n"
+                "5. Calibration pattern size.\n"
+                "6. Calibration pattern spacing.\n"
+                "\n"
+                "Press [esc] to finish or type number and press [return] ";
             EdenMessageInput((const unsigned char *)prompt, 1, 1, 1, 0, 0);
             inputa = EdenMessageInputGetInput();
             if (!inputa) state = PREFS_END;
@@ -153,6 +193,9 @@ void *showPreferencesThread(void *arg)
                 if (inputi == 1) state = PREFS_OPTION_1;
                 else if (inputi == 2) state = PREFS_OPTION_2;
                 else if (inputi == 3) state = PREFS_OPTION_3;
+                else if (inputi == 4) state = PREFS_OPTION_4;
+                else if (inputi == 5) state = PREFS_OPTION_5;
+                else if (inputi == 6) state = PREFS_OPTION_6;
             }
         } else if (state == PREFS_OPTION_1) {
             ARVideoSourceInfoListT *sil = ar2VideoCreateSourceInfoList("");
@@ -188,10 +231,11 @@ void *showPreferencesThread(void *arg)
                 state = PREFS_BEGIN;
             }
         } else if (state == PREFS_OPTION_2) {
+            const char *s = config_setting_get_string(prefs->settingCSUU);
             char prompt[4096] = "Preferences: Calibration server URL.\n\n";
             size_t len;
             len = strlen(prompt);
-            snprintf(prompt + len, sizeof(prompt) - len, "Current value is '%s'.\n\nPress [esc] to leave unchanged, [return] to use default, or type new setting and press [return] ", "");
+            snprintf(prompt + len, sizeof(prompt) - len, "Current value is '%s'.\n\nPress [esc] to leave unchanged, [return] to use default, or type new setting and press [return] ", s ? s : "");
             EdenMessageInput((const unsigned char *)prompt, 0, 2048, 0, 0, 0);
             inputa = EdenMessageInputGetInput();
             if (!inputa) state = PREFS_BEGIN;
@@ -204,10 +248,11 @@ void *showPreferencesThread(void *arg)
                 state = PREFS_BEGIN;
             }
         } else if (state == PREFS_OPTION_3) {
+            const char *s = config_setting_get_string(prefs->settingCSAT);
             char prompt[4096] = "Preferences: Calibration server authentication token.\n\n";
             size_t len;
             len = strlen(prompt);
-            snprintf(prompt + len, sizeof(prompt) - len, "Current value is '%s'.\n\nPress [esc] to leave unchanged, [return] to use default, or type new setting and press [return] ", "");
+            snprintf(prompt + len, sizeof(prompt) - len, "Current value is '%s'.\n\nPress [esc] to leave unchanged, [return] to use default, or type new setting and press [return] ", s ? s : "");
             EdenMessageInput((const unsigned char *)prompt, 0, 2048, 0, 0, 0);
             inputa = EdenMessageInputGetInput();
             if (!inputa) state = PREFS_BEGIN;
@@ -217,6 +262,79 @@ void *showPreferencesThread(void *arg)
                     ARLOGd("User chose calibration server authentication token '%s'.\n", (const char *)inputa);
                 }
                 free(inputa);
+                state = PREFS_BEGIN;
+            }
+        } else if (state == PREFS_OPTION_4) {
+            const char *s = config_setting_get_string(prefs->settingCalibrationPatternType);
+            char prompt[4096] = "Preferences: Calibration pattern type.\n\n1. Chessboard\n2. Circles\n3. Asymmetric circles.\n";
+            size_t len;
+            len = strlen(prompt);
+            snprintf(prompt + len, sizeof(prompt) - len, "Current value is '%s'.\n\nPress [esc] to leave unchanged, or type a number and press [return] ", s ? s : "");
+            EdenMessageInput((const unsigned char *)prompt, 1, 1, 1, 0, 0);
+            inputa = EdenMessageInputGetInput();
+            if (!inputa) state = PREFS_BEGIN;
+            else if (!inputa[0] || sscanf((const char *)inputa, "%d", &inputi) < 1) {
+                free(inputa);
+                state = PREFS_BEGIN;
+            } else {
+                free(inputa);
+                const char *typeA = NULL;
+                Calibration::CalibrationPatternType type;
+                if (inputi == 1) {
+                    typeA = kCalibrationPatternTypeChessboardStr;
+                    type = Calibration::CalibrationPatternType::CHESSBOARD;
+                } else if (inputi == 2) {
+                    typeA = kCalibrationPatternTypeCirclesStr;
+                    type = Calibration::CalibrationPatternType::CIRCLES_GRID;
+                } else if (inputi == 3) {
+                    typeA = kCalibrationPatternTypeAsymmetricCirclesStr;
+                    type = Calibration::CalibrationPatternType::ASYMMETRIC_CIRCLES_GRID;
+                }
+                if (typeA) {
+                    config_setting_set_string(prefs->settingCalibrationPatternType, typeA);
+                    config_setting_set_int(prefs->settingCalibrationPatternSizeWidth, Calibration::CalibrationPatternSizes[type].width);
+                    config_setting_set_int(prefs->settingCalibrationPatternSizeHeight, Calibration::CalibrationPatternSizes[type].height);
+                    config_setting_set_float(prefs->settingCalibrationPatternSpacing,  Calibration::CalibrationPatternSpacings[type]);
+                    ARLOGd("User chose calibration pattern type '%s'.\n", type);
+                }
+                state = PREFS_BEGIN;
+            }
+        } else if (state == PREFS_OPTION_5) {
+            int w = config_setting_get_int(prefs->settingCalibrationPatternSizeWidth);
+            int h = config_setting_get_int(prefs->settingCalibrationPatternSizeHeight);
+            char prompt[4096] = "Preferences: Calibration pattern size.\n\n";
+            size_t len;
+            len = strlen(prompt);
+            snprintf(prompt + len, sizeof(prompt) - len, "Current size is %dx%d.\n\nPress [esc] to leave unchanged, or type new values and press [return] ", w, h);
+            EdenMessageInput((const unsigned char *)prompt, 1, 7, 0, 0, 0);
+            inputa = EdenMessageInputGetInput();
+            if (!inputa) state = PREFS_BEGIN;
+            else if (!inputa[0] || sscanf((const char *)inputa, "%dx%d", &w, &h) < 2) {
+                free(inputa);
+                state = PREFS_BEGIN;
+            } else {
+                free(inputa);
+                config_setting_set_int(prefs->settingCalibrationPatternSizeWidth, w);
+                config_setting_set_int(prefs->settingCalibrationPatternSizeHeight, h);
+                ARLOGd("User chose calibration pattern size %dx%d.\n", w, h);
+                state = PREFS_BEGIN;
+            }
+        } else if (state == PREFS_OPTION_6) {
+            float f = config_setting_get_float(prefs->settingCalibrationPatternSpacing);
+            char prompt[4096] = "Preferences: Calibration pattern spacing.\n\n";
+            size_t len;
+            len = strlen(prompt);
+            snprintf(prompt + len, sizeof(prompt) - len, "Current spacing is %.2f.\n\nPress [esc] to leave unchanged, or type new value and press [return] ", f);
+            EdenMessageInput((const unsigned char *)prompt, 1, 20, 0, 1, 0);
+            inputa = EdenMessageInputGetInput();
+            if (!inputa) state = PREFS_BEGIN;
+            else if (!inputa[0] || sscanf((const char *)inputa, "%f", &f) < 1) {
+                free(inputa);
+                state = PREFS_BEGIN;
+            } else {
+                free(inputa);
+                config_setting_set_float(prefs->settingCalibrationPatternSpacing, f);
+                ARLOGd("User chose calibration pattern spacing %.2f.\n", f);
                 state = PREFS_BEGIN;
             }
         }
@@ -275,6 +393,44 @@ char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
     const char *s = config_setting_get_string(prefs->settingCSAT);
     if (s && s[0]) return strdup(s);
     return (strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT));
+}
+
+Calibration::CalibrationPatternType getPreferencesCalibrationPatternType(void *preferences)
+{
+    Calibration::CalibrationPatternType patternType = CALIBRATION_PATTERN_TYPE_DEFAULT;
+    prefsLibConfig_t *prefs = (prefsLibConfig_t *)preferences;
+    if (!prefs) return patternType;
+    
+    const char *s = config_setting_get_string(prefs->settingCalibrationPatternType);
+    if (s && s[0]) {
+        if (strcmp(s, kCalibrationPatternTypeChessboardStr) == 0) patternType = Calibration::CalibrationPatternType::CHESSBOARD;
+        else if (strcmp(s, kCalibrationPatternTypeCirclesStr) == 0) patternType = Calibration::CalibrationPatternType::CIRCLES_GRID;
+        else if (strcmp(s, kCalibrationPatternTypeAsymmetricCirclesStr) == 0) patternType = Calibration::CalibrationPatternType::ASYMMETRIC_CIRCLES_GRID;
+    }
+
+    return patternType;
+}
+
+cv::Size getPreferencesCalibrationPatternSize(void *preferences)
+{
+    prefsLibConfig_t *prefs = (prefsLibConfig_t *)preferences;
+    if (!prefs) return Calibration::CalibrationPatternSizes[CALIBRATION_PATTERN_TYPE_DEFAULT];
+    
+    int w = config_setting_get_int(prefs->settingCalibrationPatternSizeWidth);
+    int h = config_setting_get_int(prefs->settingCalibrationPatternSizeHeight);
+    if (w > 0 && h > 0) return cv::Size(w, h);
+    return Calibration::CalibrationPatternSizes[CALIBRATION_PATTERN_TYPE_DEFAULT];
+}
+
+float getPreferencesCalibrationPatternSpacing(void *preferences)
+{
+    prefsLibConfig_t *prefs = (prefsLibConfig_t *)preferences;
+    if (!prefs) return Calibration::CalibrationPatternSpacings[CALIBRATION_PATTERN_TYPE_DEFAULT];
+    
+    float f = config_setting_get_int(prefs->settingCalibrationPatternSpacing);
+    if (f > 0.0f) return f;
+    
+    return Calibration::CalibrationPatternSpacings[CALIBRATION_PATTERN_TYPE_DEFAULT];
 }
 
 void preferencesFinal(void **preferences_p)
