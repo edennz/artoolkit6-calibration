@@ -1046,10 +1046,9 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         
         // Hash the shared secret.
         if (goodWrite) {
-            char ss[] = CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT;
             unsigned char ss_md5[MD5_DIGEST_LENGTH];
             char ss_ascii[MD5_DIGEST_LENGTH*2 + 1]; // space for null terminator.
-            if (!MD5((unsigned char *)ss, (MD5_COUNT_t)strlen(ss), ss_md5)) {
+            if (!MD5((unsigned char *)gCalibrationServerAuthenticationToken, (MD5_COUNT_t)strlen(gCalibrationServerAuthenticationToken), ss_md5)) {
                 ARLOGe("Error calculating md5.\n");
                 goodWrite = false;
             } else {
