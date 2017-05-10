@@ -55,11 +55,16 @@
 @property (nonatomic, strong) IBOutlet UITableViewCell *paperSizeCell;
 @property (nonatomic, strong) IBOutlet UILabel *paperSizeCellSubLabel;
 
-@property (strong, nonatomic) IBOutlet UITableViewCell *csuuCell;
+@property (strong, nonatomic) IBOutlet UITableViewCell *saveCalibrationCell;
+@property (weak, nonatomic) IBOutlet UISwitch *saveCalibrationSwitch;
+@property (strong, nonatomic) IBOutlet UITableViewCell *uploadCalibrationUserCell;
+@property (weak, nonatomic) IBOutlet UISwitch *saveCalibSwitch;
+@property (weak, nonatomic) IBOutlet UISwitch *uploadCalibrationUserSwitch;
 @property (weak, nonatomic) IBOutlet UITextField *calibrationServerUploadURL;
-
-@property (strong, nonatomic) IBOutlet UITableViewCell *csatCell;
 @property (weak, nonatomic) IBOutlet UITextField *calibrationServerAuthenticationToken;
+
+@property (strong, nonatomic) IBOutlet UITableViewCell *uploadCalibrationCanonicalCell;
+@property (weak, nonatomic) IBOutlet UISwitch *uploadCalibrationCanonicalSwitch;
 
 @property (strong, nonatomic) IBOutlet UITableViewCell *calibrationPatternCell;
 @property (weak, nonatomic) IBOutlet UISegmentedControl *calibrationPatternTypeControl;
@@ -86,15 +91,23 @@
     self.cameraResPresets = [NSArray arrayWithObjects:@"cif", @"480p" /*@"vga"*/, @"720p", @"1080p", @"low", @"medium", @"high", nil];
     
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    BOOL uploadOn = [defaults boolForKey:kSettingCalibrationServerUpload];
+    self.saveCalibSwitch.enabled = uploadOn;
+    self.saveCalibSwitch.on = uploadOn ? [defaults boolForKey:kSettingCalibrationSave] : TRUE;
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    self.uploadCalibrationCanonicalSwitch.on = uploadOn;
+#else
+    self.uploadCalibrationUserSwitch.on = uploadOn;
     if ([defaults objectForKey:kSettingCalibrationServerUploadURL] != nil) {
         [self.calibrationServerUploadURL setText:[defaults objectForKey:kSettingCalibrationServerUploadURL]];
     }
-    [self.calibrationServerUploadURL setPlaceholder:@CALIBRATION_SERVER_UPLOAD_URL_DEFAULT];
-    
+    [self.calibrationServerUploadURL setPlaceholder:@"https://example.com/upload.php"];
     if ([defaults objectForKey:kSettingCalibrationServerAuthenticationToken] != nil) {
         [self.calibrationServerAuthenticationToken setText:[defaults objectForKey:kSettingCalibrationServerAuthenticationToken]];
     }
-    [self.calibrationServerAuthenticationToken setPlaceholder:@CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT];
+    [self.calibrationServerAuthenticationToken setPlaceholder:@""];
+#endif
 
     if ([defaults objectForKey:kSettingCameraResolutionStr] != nil) [self.cameraResolutionSubLabel setText:[defaults objectForKey:kSettingCameraResolutionStr]];
     if ([defaults objectForKey:kSettingCameraSourceStr] != nil) [self.cameraSourceSubLabel setText:[defaults objectForKey:kSettingCameraSourceStr]];
@@ -134,6 +147,23 @@
     [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
     [[NSNotificationCenter defaultCenter] postNotificationName:PreferencesChangedNotification object:self];
 }
+
+- (IBAction)saveCalibChanged:(id)sender
+{
+    [[NSUserDefaults standardUserDefaults] setBool:self.saveCalibSwitch.on forKey:kSettingCalibrationSave];
+}
+
+- (IBAction)uploadOnChanged:(id)sender
+{
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    BOOL uploadOn = self.uploadCalibrationCanonicalSwitch.on;
+#else
+    BOOL uploadOn = self.uploadCalibrationUserSwitch.on;
+#endif
+    [[NSUserDefaults standardUserDefaults] setBool:uploadOn forKey:kSettingCalibrationServerUpload];
+    self.saveCalibSwitch.enabled = uploadOn;
+    self.saveCalibSwitch.on = uploadOn ? [[NSUserDefaults standardUserDefaults] boolForKey:kSettingCalibrationSave] : TRUE;
+ }
 
 - (IBAction)csatEdited:(id)sender
 {
@@ -257,7 +287,7 @@
 {
     if (section == 0) return @"CAMERA SETTINGS";
     if (section == 1) return @"PRINT SETTINGS";
-    if (section == 2) return @"CALIBRATION SERVER SETTINGS";
+    if (section == 2) return @"CALIBRATION SAVING SETTINGS";
     if (section == 3) return @"CALIBRATION PATTERN SETTINGS";
     return nil;
 }
@@ -279,8 +309,12 @@
     } else if (indexPath.section == 1) {
         if (indexPath.row == 0) return self.paperSizeCell;
     } else if (indexPath.section == 2) {
-        if (indexPath.row == 0) return self.csuuCell;
-        if (indexPath.row == 1) return self.csatCell;
+        if (indexPath.row == 0) return self.saveCalibrationCell;
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+        if (indexPath.row == 1) return self.uploadCalibrationCanonicalCell;
+#else
+        if (indexPath.row == 1) return self.uploadCalibrationUserCell;
+#endif
     } else if (indexPath.section == 3) {
         if (indexPath.row == 0) return self.calibrationPatternCell;
     }
@@ -306,8 +340,12 @@
     } else if (indexPath.section == 1) {
         if (indexPath.row == 0) return 62.0f;
     } else if (indexPath.section == 2) {
-        if (indexPath.row == 0) return 76.0f;
-        if (indexPath.row == 1) return 76.0f;
+        if (indexPath.row == 0) return 46.0f;
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+        if (indexPath.row == 1) return 46.0f;
+#else
+        if (indexPath.row == 1) return 180.0f;
+#endif
     } else if (indexPath.section == 3) {
         if (indexPath.row == 0) return 186.0f;
    }
@@ -350,18 +388,40 @@ char *getPreferenceCameraResolutionToken(void *preferences)
     return NULL;
 }
 
+bool getPreferenceCalibrationSave(void *preferences)
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    BOOL uploadOn = [defaults boolForKey:kSettingCalibrationServerUpload];
+    return (uploadOn ? [defaults boolForKey:kSettingCalibrationSave] : TRUE);
+}
+
 char *getPreferenceCalibrationServerUploadURL(void *preferences)
 {
-    NSString *csuu = [[NSUserDefaults standardUserDefaults] stringForKey:kSettingCalibrationServerUploadURL];
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    if (![defaults boolForKey:kSettingCalibrationServerUpload]) return (NULL);
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    return (strdup(ARTOOLKIT6_CSUU));
+#else
+    NSString *csuu = [defaults stringForKey:kSettingCalibrationServerUploadURL];
     if (csuu.length != 0) return (strdup(csuu.UTF8String));
-    return (strdup(CALIBRATION_SERVER_UPLOAD_URL_DEFAULT));
+    return (NULL);
+#endif
 }
 
 char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
 {
-    NSString *csat = [[NSUserDefaults standardUserDefaults] stringForKey:kSettingCalibrationServerAuthenticationToken];
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    if (![defaults boolForKey:kSettingCalibrationServerUpload]) return (NULL);
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    return (strdup(ARTOOLKIT6_CSAT));
+#else
+    NSString *csat = [defaults stringForKey:kSettingCalibrationServerAuthenticationToken];
     if (csat.length != 0) return (strdup(csat.UTF8String));
-    return (strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT));
+    return (NULL);
+#endif
 }
 
 Calibration::CalibrationPatternType getPreferencesCalibrationPatternType(void *preferences)

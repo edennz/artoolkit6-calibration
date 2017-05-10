@@ -64,14 +64,19 @@ char *getPreferenceCameraResolutionToken(void *preferences)
     return NULL;
 }
 
+bool getPreferenceCalibrationSave(void *preferences)
+{
+    return false;
+}
+
 char *getPreferenceCalibrationServerUploadURL(void *preferences)
 {
-    return strdup(CALIBRATION_SERVER_UPLOAD_URL_DEFAULT);
+    return NULL;
 }
 
 char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
 {
-    return strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT);
+    return NULL;
 }
 
 Calibration::CalibrationPatternType getPreferencesCalibrationPatternType(void *preferences)

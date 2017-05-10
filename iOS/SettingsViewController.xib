@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="12120" systemVersion="16E195" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11757"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12088"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -18,17 +18,22 @@
                 <outlet property="calibrationPatternSizeWidthStepper" destination="Pfl-9I-qtc" id="NPN-0w-rTo"/>
                 <outlet property="calibrationPatternSpacing" destination="uUe-6w-ULb" id="2KP-Z5-nv2"/>
                 <outlet property="calibrationPatternTypeControl" destination="Sl4-Jr-dU2" id="nAw-m1-GCX"/>
-                <outlet property="calibrationServerAuthenticationToken" destination="wGC-ZG-FQy" id="ceH-Q7-Uy2"/>
-                <outlet property="calibrationServerUploadURL" destination="I76-OV-c1I" id="5e9-aX-0tn"/>
+                <outlet property="calibrationServerAuthenticationToken" destination="KuG-PF-TX1" id="dss-jI-ptn"/>
+                <outlet property="calibrationServerUploadURL" destination="ct0-vP-Y5e" id="h1B-pA-8EC"/>
                 <outlet property="cameraResolutionCell" destination="4ZG-aR-1x8" id="PEI-Of-DIj"/>
                 <outlet property="cameraResolutionSubLabel" destination="HHZ-II-XLa" id="fHL-Ia-Pzb"/>
                 <outlet property="cameraSourceSubLabel" destination="iKN-7d-Zjl" id="Rpe-j7-WET"/>
                 <outlet property="changeCameraCell" destination="cXx-8E-Ry4" id="aaY-52-MWS"/>
-                <outlet property="csatCell" destination="TeG-UL-Kex" id="FTP-4u-HW9"/>
-                <outlet property="csuuCell" destination="FYT-p3-IcB" id="2aF-3m-CVf"/>
                 <outlet property="paperSizeCell" destination="df3-NW-fev" id="N7F-Ml-g1Z"/>
                 <outlet property="paperSizeCellSubLabel" destination="amD-6b-xk5" id="jLd-HI-Nr2"/>
+                <outlet property="saveCalibSwitch" destination="c4o-CJ-Bqz" id="igI-OZ-LLd"/>
+                <outlet property="saveCalibrationCell" destination="Ccf-8K-iVv" id="ZCr-mJ-Hcu"/>
+                <outlet property="saveCalibrationSwitch" destination="c4o-CJ-Bqz" id="vg3-pX-jnS"/>
                 <outlet property="tableView" destination="xGk-nw-Ovq" id="qC7-XT-EsS"/>
+                <outlet property="uploadCalibrationCanonicalCell" destination="isB-P9-5Rz" id="ICq-1C-ua7"/>
+                <outlet property="uploadCalibrationCanonicalSwitch" destination="I68-DW-TEg" id="bC9-Te-sxS"/>
+                <outlet property="uploadCalibrationUserCell" destination="qkl-xR-bxi" id="iZB-zS-3nU"/>
+                <outlet property="uploadCalibrationUserSwitch" destination="iPh-3E-N2Z" id="eF9-2Y-vDS"/>
                 <outlet property="view" destination="A5m-rX-XxV" id="4Bi-z4-q7V"/>
             </connections>
         </placeholder>
@@ -74,7 +79,7 @@
             <rect key="frame" x="0.0" y="0.0" width="320" height="62"/>
             <autoresizingMask key="autoresizingMask"/>
             <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="4ZG-aR-1x8" id="LFm-Vh-KzF">
-                <rect key="frame" x="0.0" y="0.0" width="320" height="61"/>
+                <rect key="frame" x="0.0" y="0.0" width="320" height="61.5"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" horizontalCompressionResistancePriority="751" verticalCompressionResistancePriority="751" text="Camera Resolution" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qbn-0R-U8r">
@@ -107,7 +112,7 @@
             <rect key="frame" x="0.0" y="0.0" width="320" height="62"/>
             <autoresizingMask key="autoresizingMask"/>
             <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="cXx-8E-Ry4" id="xka-e2-h8q">
-                <rect key="frame" x="0.0" y="0.0" width="320" height="61"/>
+                <rect key="frame" x="0.0" y="0.0" width="320" height="61.5"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" horizontalCompressionResistancePriority="751" verticalCompressionResistancePriority="751" text="Change Camera" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KAt-4h-r8R">
@@ -140,7 +145,7 @@
             <rect key="frame" x="0.0" y="0.0" width="320" height="62"/>
             <autoresizingMask key="autoresizingMask"/>
             <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="df3-NW-fev" id="Y7J-uz-VYQ">
-                <rect key="frame" x="0.0" y="0.0" width="320" height="61"/>
+                <rect key="frame" x="0.0" y="0.0" width="320" height="61.5"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" horizontalCompressionResistancePriority="751" verticalCompressionResistancePriority="751" text="Paper Size" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="HMw-Um-ViN">
@@ -173,71 +178,19 @@
             <rect key="frame" x="0.0" y="0.0" width="365" height="75"/>
             <autoresizingMask key="autoresizingMask"/>
             <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="FYT-p3-IcB" id="eG2-bU-Oal">
-                <rect key="frame" x="0.0" y="0.0" width="365" height="74"/>
+                <rect key="frame" x="0.0" y="0.0" width="365" height="74.5"/>
                 <autoresizingMask key="autoresizingMask"/>
-                <subviews>
-                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Calibration server upload URL" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OGz-1R-dvW">
-                        <rect key="frame" x="8" y="8" width="349" height="21"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                        <nil key="textColor"/>
-                        <nil key="highlightedColor"/>
-                    </label>
-                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="I76-OV-c1I">
-                        <rect key="frame" x="8" y="37" width="349" height="30"/>
-                        <accessibility key="accessibilityConfiguration" label="Calibration server URL"/>
-                        <nil key="textColor"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                        <textInputTraits key="textInputTraits"/>
-                        <connections>
-                            <action selector="csuuEdited:" destination="-1" eventType="editingDidEnd" id="zdg-GF-v3x"/>
-                        </connections>
-                    </textField>
-                </subviews>
-                <constraints>
-                    <constraint firstItem="OGz-1R-dvW" firstAttribute="leading" secondItem="eG2-bU-Oal" secondAttribute="leadingMargin" id="6Mg-Ij-gK2"/>
-                    <constraint firstItem="OGz-1R-dvW" firstAttribute="trailing" secondItem="I76-OV-c1I" secondAttribute="trailing" id="WB4-2b-gDw"/>
-                    <constraint firstItem="OGz-1R-dvW" firstAttribute="top" secondItem="eG2-bU-Oal" secondAttribute="topMargin" id="ecR-On-m0s"/>
-                    <constraint firstItem="I76-OV-c1I" firstAttribute="top" secondItem="OGz-1R-dvW" secondAttribute="bottom" constant="8" symbolic="YES" id="rrH-u0-rby"/>
-                    <constraint firstItem="OGz-1R-dvW" firstAttribute="leading" secondItem="I76-OV-c1I" secondAttribute="leading" id="tBB-Ua-HEM"/>
-                    <constraint firstAttribute="trailingMargin" secondItem="OGz-1R-dvW" secondAttribute="trailing" id="wMy-XY-DsD"/>
-                </constraints>
             </tableViewCellContentView>
-            <point key="canvasLocation" x="800.5" y="1064.5"/>
+            <point key="canvasLocation" x="814" y="990"/>
         </tableViewCell>
-        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="76" id="TeG-UL-Kex" userLabel="Calibration server authentication token">
-            <rect key="frame" x="0.0" y="0.0" width="365" height="76"/>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="99" id="TeG-UL-Kex" userLabel="Calibration server authentication token">
+            <rect key="frame" x="0.0" y="0.0" width="365" height="99"/>
             <autoresizingMask key="autoresizingMask"/>
             <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="TeG-UL-Kex" id="Hcw-sX-Evn">
-                <rect key="frame" x="0.0" y="0.0" width="365" height="75"/>
+                <rect key="frame" x="0.0" y="0.0" width="365" height="98.5"/>
                 <autoresizingMask key="autoresizingMask"/>
-                <subviews>
-                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Calibration server authentication token" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DEp-4n-f6z">
-                        <rect key="frame" x="8" y="8" width="349" height="21"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                        <nil key="textColor"/>
-                        <nil key="highlightedColor"/>
-                    </label>
-                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="wGC-ZG-FQy">
-                        <rect key="frame" x="8" y="37" width="349" height="30"/>
-                        <accessibility key="accessibilityConfiguration" label="Calibration server authentication token"/>
-                        <nil key="textColor"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                        <textInputTraits key="textInputTraits"/>
-                        <connections>
-                            <action selector="csatEdited:" destination="-1" eventType="editingDidEnd" id="e36-FX-tjn"/>
-                        </connections>
-                    </textField>
-                </subviews>
-                <constraints>
-                    <constraint firstItem="wGC-ZG-FQy" firstAttribute="bottom" secondItem="Hcw-sX-Evn" secondAttribute="bottomMargin" id="1aB-UP-T4B"/>
-                    <constraint firstAttribute="trailingMargin" secondItem="wGC-ZG-FQy" secondAttribute="trailing" id="8Jz-K1-SJ2"/>
-                    <constraint firstItem="wGC-ZG-FQy" firstAttribute="top" secondItem="DEp-4n-f6z" secondAttribute="bottom" constant="8" symbolic="YES" id="az6-88-fB4"/>
-                    <constraint firstItem="wGC-ZG-FQy" firstAttribute="leading" secondItem="DEp-4n-f6z" secondAttribute="leading" id="o3k-rb-EPB"/>
-                    <constraint firstItem="wGC-ZG-FQy" firstAttribute="trailing" secondItem="DEp-4n-f6z" secondAttribute="trailing" id="uER-Me-OBR"/>
-                    <constraint firstItem="wGC-ZG-FQy" firstAttribute="leading" secondItem="Hcw-sX-Evn" secondAttribute="leadingMargin" id="v6K-yj-VCh"/>
-                </constraints>
             </tableViewCellContentView>
-            <point key="canvasLocation" x="800.5" y="923"/>
+            <point key="canvasLocation" x="1141" y="952"/>
         </tableViewCell>
         <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="186" id="Pch-iv-S9G">
             <rect key="frame" x="0.0" y="0.0" width="367" height="186"/>
@@ -348,7 +301,131 @@
                     <constraint firstItem="uUe-6w-ULb" firstAttribute="trailing" secondItem="16D-5H-6Z7" secondAttribute="trailing" id="tPl-8x-D3Z"/>
                 </constraints>
             </tableViewCellContentView>
-            <point key="canvasLocation" x="799.5" y="1258"/>
+            <point key="canvasLocation" x="813" y="1243"/>
+        </tableViewCell>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="46" id="Ccf-8K-iVv" userLabel="Save calibration">
+            <rect key="frame" x="0.0" y="0.0" width="365" height="46"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="Ccf-8K-iVv" id="CRE-A8-gCC">
+                <rect key="frame" x="0.0" y="0.0" width="365" height="45.5"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="c4o-CJ-Bqz">
+                        <rect key="frame" x="308" y="8" width="51" height="31"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <connections>
+                            <action selector="saveCalibChanged:" destination="-1" eventType="valueChanged" id="Ug8-ma-j5y"/>
+                        </connections>
+                    </switch>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Save calibration" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="R0k-wU-Os8">
+                        <rect key="frame" x="8" y="13" width="349" height="21"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+            </tableViewCellContentView>
+            <point key="canvasLocation" x="813.5" y="688"/>
+        </tableViewCell>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="180" id="qkl-xR-bxi" userLabel="Upload calibration to my server">
+            <rect key="frame" x="0.0" y="0.0" width="365" height="180"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="qkl-xR-bxi" id="6om-Nd-QD9">
+                <rect key="frame" x="0.0" y="0.0" width="365" height="179.5"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Upload calibration to my server" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bOv-OJ-6D1">
+                        <rect key="frame" x="8" y="13" width="349" height="21"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="iPh-3E-N2Z">
+                        <rect key="frame" x="308" y="8" width="51" height="31"/>
+                        <connections>
+                            <action selector="uploadOnChanged:" destination="-1" eventType="valueChanged" id="08k-4p-rfc"/>
+                        </connections>
+                    </switch>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="My calibration server authentication token" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="axa-aE-DVk">
+                        <rect key="frame" x="8" y="112" width="349" height="21"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="KuG-PF-TX1">
+                        <rect key="frame" x="8" y="141" width="349" height="30"/>
+                        <accessibility key="accessibilityConfiguration" label="Calibration server authentication token"/>
+                        <nil key="textColor"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                        <textInputTraits key="textInputTraits"/>
+                        <connections>
+                            <action selector="csatEdited:" destination="-1" eventType="editingDidEnd" id="pUM-kh-Wdn"/>
+                        </connections>
+                    </textField>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="My calibration server upload URL" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Bxa-f6-JKq">
+                        <rect key="frame" x="8" y="47" width="349" height="21"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="ct0-vP-Y5e">
+                        <rect key="frame" x="8" y="76" width="349" height="30"/>
+                        <accessibility key="accessibilityConfiguration" label="Calibration server URL"/>
+                        <nil key="textColor"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                        <textInputTraits key="textInputTraits"/>
+                        <connections>
+                            <action selector="csuuEdited:" destination="-1" eventType="editingDidEnd" id="lKD-IG-gCg"/>
+                        </connections>
+                    </textField>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="axa-aE-DVk" firstAttribute="top" secondItem="ct0-vP-Y5e" secondAttribute="bottom" constant="6" id="32j-Jt-8qr"/>
+                    <constraint firstItem="Bxa-f6-JKq" firstAttribute="top" secondItem="bOv-OJ-6D1" secondAttribute="bottom" constant="13" id="QVX-b7-Gbf"/>
+                    <constraint firstItem="axa-aE-DVk" firstAttribute="trailing" secondItem="iPh-3E-N2Z" secondAttribute="trailing" id="RDU-iv-roV"/>
+                    <constraint firstItem="KuG-PF-TX1" firstAttribute="trailing" secondItem="axa-aE-DVk" secondAttribute="trailing" id="S3x-LK-CO2"/>
+                    <constraint firstItem="KuG-PF-TX1" firstAttribute="leading" secondItem="axa-aE-DVk" secondAttribute="leading" id="Spm-6H-dgs"/>
+                    <constraint firstItem="Bxa-f6-JKq" firstAttribute="leading" secondItem="ct0-vP-Y5e" secondAttribute="leading" id="XeM-b8-z9m"/>
+                    <constraint firstItem="bOv-OJ-6D1" firstAttribute="centerY" secondItem="iPh-3E-N2Z" secondAttribute="centerY" id="cg3-Ex-cWw"/>
+                    <constraint firstItem="axa-aE-DVk" firstAttribute="trailing" secondItem="ct0-vP-Y5e" secondAttribute="trailing" id="dIH-uK-Qvx"/>
+                    <constraint firstAttribute="bottomMargin" secondItem="KuG-PF-TX1" secondAttribute="bottom" constant="0.5" id="hbe-Yr-ljn"/>
+                    <constraint firstItem="KuG-PF-TX1" firstAttribute="top" secondItem="axa-aE-DVk" secondAttribute="bottom" constant="8" symbolic="YES" id="l1d-ea-EOn"/>
+                    <constraint firstItem="axa-aE-DVk" firstAttribute="trailing" secondItem="bOv-OJ-6D1" secondAttribute="trailing" id="ld6-5a-APd"/>
+                    <constraint firstItem="axa-aE-DVk" firstAttribute="leading" secondItem="6om-Nd-QD9" secondAttribute="leadingMargin" id="pHS-f3-z2c"/>
+                    <constraint firstItem="axa-aE-DVk" firstAttribute="leading" secondItem="bOv-OJ-6D1" secondAttribute="leading" id="sfE-vd-AcW"/>
+                    <constraint firstItem="Bxa-f6-JKq" firstAttribute="trailing" secondItem="ct0-vP-Y5e" secondAttribute="trailing" id="sgV-eC-aIS"/>
+                    <constraint firstItem="axa-aE-DVk" firstAttribute="leading" secondItem="ct0-vP-Y5e" secondAttribute="leading" id="tM8-WA-jaI"/>
+                    <constraint firstItem="ct0-vP-Y5e" firstAttribute="top" secondItem="Bxa-f6-JKq" secondAttribute="bottom" constant="8" symbolic="YES" id="vcD-GF-8Wn"/>
+                    <constraint firstItem="axa-aE-DVk" firstAttribute="trailing" secondItem="6om-Nd-QD9" secondAttribute="trailingMargin" id="xor-h3-Ttb"/>
+                </constraints>
+            </tableViewCellContentView>
+            <point key="canvasLocation" x="822.5" y="859"/>
+        </tableViewCell>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="46" id="isB-P9-5Rz" userLabel="Upload calibration to artoolkit.org">
+            <rect key="frame" x="0.0" y="0.0" width="365" height="46"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="isB-P9-5Rz" id="sew-Vr-HFo">
+                <rect key="frame" x="0.0" y="0.0" width="365" height="45.5"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="I68-DW-TEg">
+                        <rect key="frame" x="308" y="8" width="51" height="31"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <connections>
+                            <action selector="uploadOnChanged:" destination="-1" eventType="valueChanged" id="Kwi-0Z-77W"/>
+                        </connections>
+                    </switch>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Upload calibration to artoolkit.org" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ltu-Zn-Bye">
+                        <rect key="frame" x="8" y="13" width="349" height="21"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+            </tableViewCellContentView>
+            <point key="canvasLocation" x="811.5" y="1082"/>
         </tableViewCell>
     </objects>
 </document>

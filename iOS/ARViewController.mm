@@ -51,6 +51,7 @@
 #include <AR6/ARUtil/system.h>
 #include <AR6/ARUtil/thread_sub.h>
 #include <AR6/ARUtil/time.h>
+#include <AR6/ARUtil/file_utils.h>
 #include <AR6/ARG/arg.h>
 #include <AR6/ARG/arg_mtx.h>
 #include <AR6/ARG/arg_shader_gl.h>
@@ -129,6 +130,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 
     void *gPreferences;
     //Uint32 gSDLEventPreferencesChanged;
+    bool gCalibrationSave;
     char *gPreferenceCameraOpenToken;
     char *gPreferenceCameraResolutionToken;
     char *gCalibrationServerUploadURL;
@@ -245,6 +247,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     gPreferences = initPreferences();
     gPreferenceCameraOpenToken = getPreferenceCameraOpenToken(gPreferences);
     gPreferenceCameraResolutionToken = getPreferenceCameraResolutionToken(gPreferences);
+    gCalibrationSave = getPreferenceCalibrationSave(gPreferences);
     gCalibrationServerUploadURL = getPreferenceCalibrationServerUploadURL(gPreferences);
     gCalibrationServerAuthenticationToken = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
     gCalibrationPatternType = getPreferencesCalibrationPatternType(gPreferences);
@@ -268,11 +271,13 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         exit(-1);
     }
     
-    fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
-    if (!fileUploadHandle) {
-        ARLOGe("Error: Could not initialise fileUploadHandle.\n");
+    if (gCalibrationServerUploadURL) {
+        fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
+        if (!fileUploadHandle) {
+            ARLOGe("Error: Could not initialise fileUploadHandle.\n");
+        }
+        fileUploaderTickle(fileUploadHandle);
     }
-    fileUploaderTickle(fileUploadHandle);
     
     // Calibration prefs.
     ARLOGi("Calbration pattern size X = %d\n", gCalibrationPatternSize.width);
@@ -494,6 +499,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
 - (void) rereadPreferences
 {
     // Re-read preferences.
+    gCalibrationSave = getPreferenceCalibrationSave(gPreferences);
     char *csuu = getPreferenceCalibrationServerUploadURL(gPreferences);
     if (csuu && gCalibrationServerUploadURL && strcmp(gCalibrationServerUploadURL, csuu) == 0) {
         free(csuu);
@@ -501,9 +507,11 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         free(gCalibrationServerUploadURL);
         gCalibrationServerUploadURL = csuu;
         fileUploaderFinal(&fileUploadHandle);
-        fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
-        if (!fileUploadHandle) {
-            ARLOGe("Error: Could not initialise fileUploadHandle.\n");
+        if (csuu) {
+            fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
+            if (!fileUploadHandle) {
+                ARLOGe("Error: Could not initialise fileUploadHandle.\n");
+            }
         }
     }
     char *csat = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
@@ -1006,19 +1014,21 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     }
     
     // If background tasks are proceeding, draw a status box.
-    char uploadStatus[UPLOAD_STATUS_BUFFER_LEN];
-    int status = fileUploaderStatusGet(fileUploadHandle, uploadStatus, &time);
-    if (status > 0) {
-        const int squareSize = (int)(16.0f * (float)gDisplayDPI / 160.f) ;
-        float x, y, w, h;
-        float textWidth = EdenGLFontGetLineWidth((unsigned char *)uploadStatus);
-        w = textWidth + 3*squareSize + 2*4.0f /*text margin*/ + 2*4.0f /* box margin */;
-        h = MAX(FONT_SIZE, 3*squareSize) + 2*4.0f /* box margin */;
-        x = right - (w + 2.0f);
-        y = statusBarHeight + 2.0f;
-        [self drawBackgroundWidth:w height:h x:x y:y border:true projection:p];
-//        if (status == 1) drawBusyIndicator((int)(x + 4.0f + 1.5f*squareSize), (int)(y + 4.0f + 1.5f*squareSize), squareSize, &time);
-        EdenGLFontDrawLine(0, p, (unsigned char *)uploadStatus, x + 4.0f + 3*squareSize, y + (h - FONT_SIZE)/2.0f, H_OFFSET_VIEW_LEFT_EDGE_TO_TEXT_LEFT_EDGE, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
+    if (fileUploadHandle) {
+        char uploadStatus[UPLOAD_STATUS_BUFFER_LEN];
+        int status = fileUploaderStatusGet(fileUploadHandle, uploadStatus, &time);
+        if (status > 0) {
+            const int squareSize = (int)(16.0f * (float)gDisplayDPI / 160.f) ;
+            float x, y, w, h;
+            float textWidth = EdenGLFontGetLineWidth((unsigned char *)uploadStatus);
+            w = textWidth + 3*squareSize + 2*4.0f /*text margin*/ + 2*4.0f /* box margin */;
+            h = MAX(FONT_SIZE, 3*squareSize) + 2*4.0f /* box margin */;
+            x = right - (w + 2.0f);
+            y = statusBarHeight + 2.0f;
+            [self drawBackgroundWidth:w height:h x:x y:y border:true projection:p];
+            //        if (status == 1) drawBusyIndicator((int)(x + 4.0f + 1.5f*squareSize), (int)(y + 4.0f + 1.5f*squareSize), squareSize, &time);
+            EdenGLFontDrawLine(0, p, (unsigned char *)uploadStatus, x + 4.0f + 3*squareSize, y + (h - FONT_SIZE)/2.0f, H_OFFSET_VIEW_LEFT_EDGE_TO_TEXT_LEFT_EDGE, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
+        }
     }
     
     // If a message should be onscreen, draw it.
@@ -1051,12 +1061,33 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     // Save the parameter file.
     snprintf(paramPathname, SAVEPARAM_PATHNAME_LEN, "%s/%s/%06d-camera_para.dat", arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_APP_CACHE_DIR), QUEUE_DIR, ID);
     
-    //if (arParamSave(strcat(strcat(docsPath,"/"),paramPathname), 1, param) < 0) {
     if (arParamSave(paramPathname, 1, param) < 0) {
         
         ARLOGe("Error writing camera_para.dat file.\n");
         
     } else {
+        
+        if (gCalibrationSave) {
+            char *tmp = arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_TMP_DIR);
+            if (!tmp) {
+                ARLOGe("Error getting tmp dir.\n");
+            } else {
+                char *calibrationSavePathname;
+                if (asprintf(&calibrationSavePathname, "%s/camera_para.dat", tmp) < 0) {
+                    ARLOGe("Error asprintf.\n");
+                } else {
+                    if (cp_f(paramPathname, calibrationSavePathname) != 0) {
+                        ARLOGperror("Error writing camera_para.dat file");
+                    } else {
+                        [self showSaveCalibrationDialog:[NSString stringWithUTF8String:calibrationSavePathname]];
+                    }
+                    free(calibrationSavePathname);
+                }
+                free(tmp);
+            }
+        }
+        
+        if (!gCalibrationServerUploadURL) return;
         
         //
         // Write an upload index file with the data for the server database entry.
@@ -1254,6 +1285,19 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
     alertController.modalPresentationStyle = UIModalPresentationPopover;
     [alertController.popoverPresentationController setBarButtonItem:self.menuButton];
     [self presentViewController:alertController animated:YES completion:nil];
+}
+
+- (void)showSaveCalibrationDialog:(NSString *)paramFilePath
+{
+    NSURL *paramFileURL = [NSURL fileURLWithPath:paramFilePath];
+    
+    if (!self.docInteractionController) {
+        self.docInteractionController = [UIDocumentInteractionController interactionControllerWithURL:paramFileURL];
+        self.docInteractionController.delegate = self;
+    } else {
+        self.docInteractionController.URL = paramFileURL;
+    }
+    [self.docInteractionController presentOptionsMenuFromBarButtonItem:self.menuButton animated:YES];
 }
 
 - (void)showPrintDialog

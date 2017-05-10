@@ -234,8 +234,6 @@ void *Calibration::cornerFinder(THREAD_HANDLE_T *threadHandle)
 
 bool Calibration::capture()
 {
-    int             i;
-    
     if (m_corners.size() >= m_calibImageCountMax) return false;
    
     bool saved = false;
@@ -254,7 +252,7 @@ bool Calibration::capture()
     if (saved) {
         ARLOG("---------- %2d/%2d -----------\n", (int)m_corners.size(), m_calibImageCountMax);
         const std::vector<cv::Point2f>& corners = m_corners.back();
-        for (std::vector<cv::Point2f>::const_iterator it = corners.begin(); it < corners.end(); it++, i++) {
+        for (std::vector<cv::Point2f>::const_iterator it = corners.begin(); it < corners.end(); it++) {
             ARLOG("  %f, %f\n", it->x, it->y);
         }
         ARLOG("---------- %2d/%2d -----------\n", (int)m_corners.size(), m_calibImageCountMax);
