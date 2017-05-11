@@ -23,6 +23,7 @@
 		4A0E117A1E8B3A0B0074C280 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E11791E8B3A0B0074C280 /* CoreMedia.framework */; };
 		4A0E117C1E8B3A150074C280 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E117B1E8B3A150074C280 /* AudioToolbox.framework */; };
 		4A0E11841E8CAAFA0074C280 /* prefsNull.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A0E11831E8CAAFA0074C280 /* prefsNull.cpp */; };
+		4A0EBFCF1EC3E37600B0D585 /* prefDefaults.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4A0EBFCE1EC3E37600B0D585 /* prefDefaults.plist */; };
 		4A47934C1E80CDBE002C3631 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A47934B1E80CDBE002C3631 /* main.m */; };
 		4A47934F1E80CDBE002C3631 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A47934E1E80CDBE002C3631 /* AppDelegate.m */; };
 		4A47936C1E80CF96002C3631 /* ARViewOverlay.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A4793661E80CF96002C3631 /* ARViewOverlay.m */; };
@@ -85,6 +86,7 @@
 		4A0E11791E8B3A0B0074C280 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		4A0E117B1E8B3A150074C280 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		4A0E11831E8CAAFA0074C280 /* prefsNull.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = prefsNull.cpp; path = ../prefsNull.cpp; sourceTree = "<group>"; };
+		4A0EBFCE1EC3E37600B0D585 /* prefDefaults.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = prefDefaults.plist; sourceTree = "<group>"; };
 		4A4793471E80CDBE002C3631 /* ARToolKit6 Camera Calibration Utility.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ARToolKit6 Camera Calibration Utility.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A47934B1E80CDBE002C3631 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		4A47934D1E80CDBE002C3631 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -275,6 +277,7 @@
 				4A4793821E80CFD4002C3631 /* reveal-icon@2x.png */,
 				4A47934B1E80CDBE002C3631 /* main.m */,
 				4A47935B1E80CDBF002C3631 /* Info.plist */,
+				4A0EBFCE1EC3E37600B0D585 /* prefDefaults.plist */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -428,6 +431,7 @@
 				4A47938A1E80CFD4002C3631 /* Iris-iPad@2x.png in Resources */,
 				4A4793861E80CFD4002C3631 /* Localizable.strings in Resources */,
 				4A4793881E80CFD4002C3631 /* Iris-568h@2x.png in Resources */,
+				4A0EBFCF1EC3E37600B0D585 /* prefDefaults.plist in Resources */,
 				4A4793891E80CFD4002C3631 /* Iris-iPad.png in Resources */,
 				4A4793921E80CFD4002C3631 /* printusletter.pdf in Resources */,
 			);

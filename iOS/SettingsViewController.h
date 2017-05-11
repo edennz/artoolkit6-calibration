@@ -45,7 +45,8 @@ static NSString *const kSettingCalibrationPatternSizeWidth = @"calibrationPatter
 static NSString *const kSettingCalibrationPatternSizeHeight = @"calibrationPatternSizeHeight";
 static NSString *const kSettingCalibrationPatternSpacing = @"calibrationPatternSpacing";
 static NSString *const kSettingCalibrationSave = @"calibrationSave";
-static NSString *const kSettingCalibrationServerUpload = @"calibrationServerUpload";
+static NSString *const kSettingCalibrationServerUploadCanonical = @"calibrationServerUploadCanonical";
+static NSString *const kSettingCalibrationServerUploadUser = @"calibrationServerUploadUser";
 static NSString *const kSettingCalibrationServerUploadURL = @"calibrationServerUploadURL";
 static NSString *const kSettingCalibrationServerAuthenticationToken = @"calibrationServerAuthenticationToken";
 

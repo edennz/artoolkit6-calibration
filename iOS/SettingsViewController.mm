@@ -92,12 +92,11 @@
     
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     
-    BOOL uploadOn = [defaults boolForKey:kSettingCalibrationServerUpload];
-    self.saveCalibSwitch.enabled = uploadOn;
-    self.saveCalibSwitch.on = uploadOn ? [defaults boolForKey:kSettingCalibrationSave] : TRUE;
 #if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    BOOL uploadOn = [defaults boolForKey:kSettingCalibrationServerUploadCanonical];
     self.uploadCalibrationCanonicalSwitch.on = uploadOn;
 #else
+    BOOL uploadOn = [defaults boolForKey:kSettingCalibrationServerUploadUser];
     self.uploadCalibrationUserSwitch.on = uploadOn;
     if ([defaults objectForKey:kSettingCalibrationServerUploadURL] != nil) {
         [self.calibrationServerUploadURL setText:[defaults objectForKey:kSettingCalibrationServerUploadURL]];
@@ -108,6 +107,8 @@
     }
     [self.calibrationServerAuthenticationToken setPlaceholder:@""];
 #endif
+    self.saveCalibSwitch.enabled = uploadOn;
+    self.saveCalibSwitch.on = uploadOn ? [defaults boolForKey:kSettingCalibrationSave] : TRUE;
 
     if ([defaults objectForKey:kSettingCameraResolutionStr] != nil) [self.cameraResolutionSubLabel setText:[defaults objectForKey:kSettingCameraResolutionStr]];
     if ([defaults objectForKey:kSettingCameraSourceStr] != nil) [self.cameraSourceSubLabel setText:[defaults objectForKey:kSettingCameraSourceStr]];
@@ -157,10 +158,11 @@
 {
 #if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
     BOOL uploadOn = self.uploadCalibrationCanonicalSwitch.on;
+    [[NSUserDefaults standardUserDefaults] setBool:uploadOn forKey:kSettingCalibrationServerUploadCanonical];
 #else
     BOOL uploadOn = self.uploadCalibrationUserSwitch.on;
+    [[NSUserDefaults standardUserDefaults] setBool:uploadOn forKey:kSettingCalibrationServerUploadUser];
 #endif
-    [[NSUserDefaults standardUserDefaults] setBool:uploadOn forKey:kSettingCalibrationServerUpload];
     self.saveCalibSwitch.enabled = uploadOn;
     self.saveCalibSwitch.on = uploadOn ? [[NSUserDefaults standardUserDefaults] boolForKey:kSettingCalibrationSave] : TRUE;
  }
@@ -362,6 +364,7 @@
 
 void *initPreferences(void)
 {
+    [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary                                                           dictionaryWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"prefDefaults" ofType:@"plist"]]];
     return (NULL);
 }
 
@@ -392,7 +395,11 @@ bool getPreferenceCalibrationSave(void *preferences)
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     
-    BOOL uploadOn = [defaults boolForKey:kSettingCalibrationServerUpload];
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    BOOL uploadOn = [defaults boolForKey:kSettingCalibrationServerUploadCanonical];
+#else
+    BOOL uploadOn = [defaults boolForKey:kSettingCalibrationServerUploadUser];
+#endif
     return (uploadOn ? [defaults boolForKey:kSettingCalibrationSave] : TRUE);
 }
 
@@ -400,10 +407,11 @@ char *getPreferenceCalibrationServerUploadURL(void *preferences)
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     
-    if (![defaults boolForKey:kSettingCalibrationServerUpload]) return (NULL);
 #if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    if (![defaults boolForKey:kSettingCalibrationServerUploadCanonical]) return (NULL);
     return (strdup(ARTOOLKIT6_CSUU));
 #else
+    if (![defaults boolForKey:kSettingCalibrationServerUploadUser]) return (NULL);
     NSString *csuu = [defaults stringForKey:kSettingCalibrationServerUploadURL];
     if (csuu.length != 0) return (strdup(csuu.UTF8String));
     return (NULL);
@@ -414,10 +422,11 @@ char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     
-    if (![defaults boolForKey:kSettingCalibrationServerUpload]) return (NULL);
 #if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    if (![defaults boolForKey:kSettingCalibrationServerUploadCanonical]) return (NULL);
     return (strdup(ARTOOLKIT6_CSAT));
 #else
+    if (![defaults boolForKey:kSettingCalibrationServerUploadUser]) return (NULL);
     NSString *csat = [defaults stringForKey:kSettingCalibrationServerAuthenticationToken];
     if (csat.length != 0) return (strdup(csat.UTF8String));
     return (NULL);
