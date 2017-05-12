@@ -50,8 +50,8 @@ static void calcChessboardCorners(const Calibration::CalibrationPatternType patt
     switch (patternType) {
         case Calibration::CalibrationPatternType::CHESSBOARD:
         case Calibration::CalibrationPatternType::CIRCLES_GRID:
-            for (int i = 0; i < patternSize.width; i++)
-                for (int j = 0; j < patternSize.height; j++)
+            for (int j = 0; j < patternSize.height; j++)
+                for (int i = 0; i < patternSize.width; i++)
                     corners.push_back(cv::Point3f(float(i*patternSpacing), float(j*patternSpacing), 0));
             break;
             
