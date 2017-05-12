@@ -11,6 +11,7 @@
 		4A0E117E1E8CAA770074C280 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E117D1E8CAA770074C280 /* Foundation.framework */; };
 		4A0E11801E8CAA830074C280 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E117F1E8CAA830074C280 /* CoreFoundation.framework */; };
 		4A0E11821E8CAA940074C280 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A0E11811E8CAA940074C280 /* AppKit.framework */; };
+		4A0EBFD11EC3EA9500B0D585 /* prefDefaults.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4A0EBFD01EC3EA9500B0D585 /* prefDefaults.plist */; };
 		4A47933D1E7F676E002C3631 /* Calibration.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A47933B1E7F676E002C3631 /* Calibration.cpp */; };
 		4A5FA0B41DFE138D00795630 /* readtex.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0B31DFE138D00795630 /* readtex.c */; };
 		4A5FA0B71DFE13B300795630 /* EdenMessage.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A5FA0B61DFE13B300795630 /* EdenMessage.c */; };
@@ -84,6 +85,7 @@
 		4A0E117D1E8CAA770074C280 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		4A0E117F1E8CAA830074C280 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		4A0E11811E8CAA940074C280 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		4A0EBFD01EC3EA9500B0D585 /* prefDefaults.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = prefDefaults.plist; sourceTree = "<group>"; };
 		4A47933B1E7F676E002C3631 /* Calibration.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Calibration.cpp; path = ../Calibration.cpp; sourceTree = "<group>"; };
 		4A47933C1E7F676E002C3631 /* Calibration.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Calibration.hpp; path = ../Calibration.hpp; sourceTree = "<group>"; };
 		4A5FA0B31DFE138D00795630 /* readtex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = readtex.c; sourceTree = "<group>"; };
@@ -358,6 +360,7 @@
 		4A9142141DF6453500DF4FEE /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				4A0EBFD01EC3EA9500B0D585 /* prefDefaults.plist */,
 				4A0720F81E6637FE00084FB6 /* PrefsWindow.xib */,
 				4A9142091DF6450200DF4FEE /* Assets.xcassets */,
 				4A91420E1DF6450200DF4FEE /* Info.plist */,
@@ -886,6 +889,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A0EBFD11EC3EA9500B0D585 /* prefDefaults.plist in Resources */,
 				4A0720F91E6637FE00084FB6 /* PrefsWindow.xib in Resources */,
 				4A91420A1DF6450200DF4FEE /* Assets.xcassets in Resources */,
 			);

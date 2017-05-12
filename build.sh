@@ -135,8 +135,11 @@ if [ $BUILD_LINUX ] ; then
     sudo dpkg -i "${SDK_FILENAME}"
 
     (cd linux
-    cmake ..
+	mkdir -p build
+	cd build
+	cmake .. -DCMAKE_BUILD_TYPE=Release
     make
+	make install
     )
 
 fi

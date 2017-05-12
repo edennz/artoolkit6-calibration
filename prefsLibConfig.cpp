@@ -58,6 +58,9 @@ typedef struct {
     char *prefsPath;
     config_t config;
     config_setting_t *settingCOT;
+    config_setting_t *settingCalibrationSave;
+    config_setting_t *settingCalibSaveDir;
+    config_setting_t *settingCalibrationUpload;
     config_setting_t *settingCSUU;
     config_setting_t *settingCSAT;
     config_setting_t *settingCalibrationPatternType;
@@ -67,6 +70,9 @@ typedef struct {
 } prefsLibConfig_t;
 
 static const char *kSettingCameraOpenToken = "cameraOpenToken";
+static const char *kSettingCalibrationSave = "calibrationSave";
+static const char *kSettingCalibSaveDir = "calibSaveDir";
+static const char *kSettingCalibrationUpload = "calibrationUpload";
 static const char *kSettingCalibrationServerUploadURL = "calibrationServerUploadURL";
 static const char *kSettingCalibrationServerAuthenticationToken = "calibrationServerAuthenticationToken";
 static const char *kSettingCalibrationPatternType = "calibrationPatternType";
@@ -109,6 +115,9 @@ void *initPreferences(void)
             goto bail;
         }
         prefs->settingCOT = config_setting_get_member(root, kSettingCameraOpenToken);
+        prefs->settingCalibrationSave = config_setting_get_member(root, kSettingCalibrationSave);
+        prefs->settingCalibSaveDir = config_setting_get_member(root, kSettingCalibSaveDir);
+        prefs->settingCalibrationUpload = config_setting_get_member(root, kSettingCalibrationUpload);
         prefs->settingCSUU = config_setting_get_member(root, kSettingCalibrationServerUploadURL);
         prefs->settingCSAT = config_setting_get_member(root, kSettingCalibrationServerAuthenticationToken);
         prefs->settingCalibrationPatternType = config_setting_get_member(root, kSettingCalibrationPatternType);
@@ -117,6 +126,14 @@ void *initPreferences(void)
         prefs->settingCalibrationPatternSpacing = config_setting_get_member(root, kSettingCalibrationPatternSpacing);
     }
     if (!prefs->settingCOT) prefs->settingCOT = config_setting_add(root, kSettingCameraOpenToken, CONFIG_TYPE_STRING);
+    if (!prefs->settingCalibrationSave) prefs->settingCalibrationSave = config_setting_add(root, kSettingCalibrationSave, CONFIG_TYPE_BOOL);
+    if (!prefs->settingCalibSaveDir) prefs->settingCalibSaveDir = config_setting_add(root, kSettingCalibSaveDir, CONFIG_TYPE_STRING);
+    if (!prefs->settingCalibrationUpload) {
+        prefs->settingCalibrationUpload = config_setting_add(root, kSettingCalibrationUpload, CONFIG_TYPE_BOOL);
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+        config_setting_set_bool(prefs->settingCalibrationUpload, true);
+#endif
+    }
     if (!prefs->settingCSUU) prefs->settingCSUU = config_setting_add(root, kSettingCalibrationServerUploadURL, CONFIG_TYPE_STRING);
     if (!prefs->settingCSAT) prefs->settingCSAT = config_setting_add(root, kSettingCalibrationServerAuthenticationToken, CONFIG_TYPE_STRING);
     if (!prefs->settingCalibrationPatternType) prefs->settingCalibrationPatternType = config_setting_add(root, kSettingCalibrationPatternType, CONFIG_TYPE_STRING);
@@ -149,12 +166,17 @@ void *showPreferencesThread(void *arg)
 {
     enum state {
         PREFS_BEGIN,
-        PREFS_OPTION_1,
-        PREFS_OPTION_2,
-        PREFS_OPTION_3,
-        PREFS_OPTION_4,
-        PREFS_OPTION_5,
-        PREFS_OPTION_6,
+        PREFS_OPTION_CAMERA,
+        PREFS_OPTION_CALIB_SAVE,
+        PREFS_OPTION_CALIB_SAVE_DIR,
+        PREFS_OPTION_CALIB_UPLOAD,
+#if !(defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT))
+        PREFS_OPTION_CSUU,
+        PREFS_OPTION_CSAT,
+#endif
+        PREFS_OPTION_CALIB_PATT_TYPE,
+        PREFS_OPTION_CALIB_PATT_SIZE,
+        PREFS_OPTION_CALIB_PATT_SPACING,
         PREFS_END
     };
     enum state state = PREFS_BEGIN;
@@ -175,11 +197,21 @@ void *showPreferencesThread(void *arg)
                 "Preferences\n"
                 "\n"
                 "1. Camera.\n"
-                "2. Calibration server URL.\n"
-                "3. Calibration server authentication token.\n"
-                "4. Calibration pattern type.\n"
-                "5. Calibration pattern size.\n"
-                "6. Calibration pattern spacing.\n"
+                "2. Save calibration on/off.\n"
+                "3. Save calibration destination directory.\n"
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+                "4. Upload calibration to artoolkit.org on/off.\n"
+                "5. Calibration pattern type.\n"
+                "6. Calibration pattern size.\n"
+                "7. Calibration pattern spacing.\n"
+#else
+                "4. Upload calibration to my server on/off.\n"
+                "5. My calibration server URL.\n"
+                "6. My calibration server authentication token.\n"
+                "7. Calibration pattern type.\n"
+                "8. Calibration pattern size.\n"
+                "9. Calibration pattern spacing.\n"
+#endif
                 "\n"
                 "Press [esc] to finish or type number and press [return] ";
             EdenMessageInput((const unsigned char *)prompt, 1, 1, 1, 0, 0);
@@ -190,14 +222,23 @@ void *showPreferencesThread(void *arg)
                 state = PREFS_END;
             } else {
                 free(inputa);
-                if (inputi == 1) state = PREFS_OPTION_1;
-                else if (inputi == 2) state = PREFS_OPTION_2;
-                else if (inputi == 3) state = PREFS_OPTION_3;
-                else if (inputi == 4) state = PREFS_OPTION_4;
-                else if (inputi == 5) state = PREFS_OPTION_5;
-                else if (inputi == 6) state = PREFS_OPTION_6;
+                if (inputi == 1) state = PREFS_OPTION_CAMERA;
+                else if (inputi == 2) state = PREFS_OPTION_CALIB_SAVE;
+                else if (inputi == 3) state = PREFS_OPTION_CALIB_SAVE_DIR;
+                else if (inputi == 4) state = PREFS_OPTION_CALIB_UPLOAD;
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+                else if (inputi == 5) state = PREFS_OPTION_CALIB_PATT_TYPE;
+                else if (inputi == 6) state = PREFS_OPTION_CALIB_PATT_SIZE;
+                else if (inputi == 7) state = PREFS_OPTION_CALIB_PATT_SPACING;
+#else
+                else if (inputi == 5) state = PREFS_OPTION_CSUU;
+                else if (inputi == 6) state = PREFS_OPTION_CSAT;
+                else if (inputi == 7) state = PREFS_OPTION_CALIB_PATT_TYPE;
+                else if (inputi == 8) state = PREFS_OPTION_CALIB_PATT_SIZE;
+                else if (inputi == 9) state = PREFS_OPTION_CALIB_PATT_SPACING;
+#endif
             }
-        } else if (state == PREFS_OPTION_1) {
+        } else if (state == PREFS_OPTION_CAMERA) {
             ARVideoSourceInfoListT *sil = ar2VideoCreateSourceInfoList("");
             if (!sil) {
                 ARLOGe("Unable to get ARVideoSourceInfoListT.\n");
@@ -230,9 +271,59 @@ void *showPreferencesThread(void *arg)
                 }
                 state = PREFS_BEGIN;
             }
-        } else if (state == PREFS_OPTION_2) {
+        } else if (state == PREFS_OPTION_CALIB_SAVE) {
+            bool b = config_setting_get_bool(prefs->settingCalibrationSave);
+            char prompt[4096] = "Preferences: Save calibration.\n\n";
+            size_t len;
+            len = strlen(prompt);
+            snprintf(prompt + len, sizeof(prompt) - len, "Saving is %s.\n\nPress [esc] to leave unchanged, or press [return] to toggle ", (b ? "on" : "off"));
+            EdenMessageInput((const unsigned char *)prompt, 0, 0, 0, 0, 0);
+            inputa = EdenMessageInputGetInput();
+            if (!inputa) state = PREFS_BEGIN;
+            else {
+                free(inputa);
+                config_setting_set_bool(prefs->settingCalibrationSave, !b);
+                ARLOGd("User chose calibration save %s.\n", (!b ? "on" : "off"));
+            }
+        } else if (state == PREFS_OPTION_CALIB_SAVE_DIR) {
+            const char *s = config_setting_get_string(prefs->settingCalibSaveDir);
+            char prompt[4096] = "Preferences: save calibration destination directory.\n\n";
+            size_t len;
+            len = strlen(prompt);
+            snprintf(prompt + len, sizeof(prompt) - len, "Current value is '%s'.\n\nPress [esc] to leave unchanged, [return] to use default, or type new setting and press [return] ", s ? s : "");
+            EdenMessageInput((const unsigned char *)prompt, 0, 2048, 0, 0, 0);
+            inputa = EdenMessageInputGetInput();
+            if (!inputa) state = PREFS_BEGIN;
+            else {
+                if (inputa[0]) {
+                    config_setting_set_string(prefs->settingCalibSaveDir, (const char *)inputa);
+                    ARLOGd("User chose save calibration destination directory '%s'.\n", (const char *)inputa);
+                }
+                free(inputa);
+                state = PREFS_BEGIN;
+            }
+        } else if (state == PREFS_OPTION_CALIB_UPLOAD) {
+            bool b = config_setting_get_bool(prefs->settingCalibrationUpload);
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+            char prompt[4096] = "Preferences: Upload calibration to artoolkit.org.\n\n";
+#else
+            char prompt[4096] = "Preferences: Upload calibration to my server.\n\n";
+#endif
+            size_t len;
+            len = strlen(prompt);
+            snprintf(prompt + len, sizeof(prompt) - len, "Upload is %s.\n\nPress [esc] to leave unchanged, or press [return] to toggle ", (b ? "on" : "off"));
+            EdenMessageInput((const unsigned char *)prompt, 0, 0, 0, 0, 0);
+            inputa = EdenMessageInputGetInput();
+            if (!inputa) state = PREFS_BEGIN;
+            else {
+                free(inputa);
+                config_setting_set_bool(prefs->settingCalibrationUpload, !b);
+                ARLOGd("User chose calibration upload %s.\n", (!b ? "on" : "off"));
+            }
+#if !defined(ARTOOLKIT6_CSUU) && !defined(ARTOOLKIT6_CSAT)
+        } else if (state == PREFS_OPTION_CSUU) {
             const char *s = config_setting_get_string(prefs->settingCSUU);
-            char prompt[4096] = "Preferences: Calibration server URL.\n\n";
+            char prompt[4096] = "Preferences: My calibration server URL.\n\n";
             size_t len;
             len = strlen(prompt);
             snprintf(prompt + len, sizeof(prompt) - len, "Current value is '%s'.\n\nPress [esc] to leave unchanged, [return] to use default, or type new setting and press [return] ", s ? s : "");
@@ -247,9 +338,9 @@ void *showPreferencesThread(void *arg)
                 free(inputa);
                 state = PREFS_BEGIN;
             }
-        } else if (state == PREFS_OPTION_3) {
+        } else if (state == PREFS_OPTION_CSAT) {
             const char *s = config_setting_get_string(prefs->settingCSAT);
-            char prompt[4096] = "Preferences: Calibration server authentication token.\n\n";
+            char prompt[4096] = "Preferences: My calibration server authentication token.\n\n";
             size_t len;
             len = strlen(prompt);
             snprintf(prompt + len, sizeof(prompt) - len, "Current value is '%s'.\n\nPress [esc] to leave unchanged, [return] to use default, or type new setting and press [return] ", s ? s : "");
@@ -264,7 +355,8 @@ void *showPreferencesThread(void *arg)
                 free(inputa);
                 state = PREFS_BEGIN;
             }
-        } else if (state == PREFS_OPTION_4) {
+#endif
+        } else if (state == PREFS_OPTION_CALIB_PATT_TYPE) {
             const char *s = config_setting_get_string(prefs->settingCalibrationPatternType);
             char prompt[4096] = "Preferences: Calibration pattern type.\n\n1. Chessboard\n2. Circles\n3. Asymmetric circles.\n";
             size_t len;
@@ -299,7 +391,7 @@ void *showPreferencesThread(void *arg)
                 }
                 state = PREFS_BEGIN;
             }
-        } else if (state == PREFS_OPTION_5) {
+        } else if (state == PREFS_OPTION_CALIB_PATT_SIZE) {
             int w = config_setting_get_int(prefs->settingCalibrationPatternSizeWidth);
             int h = config_setting_get_int(prefs->settingCalibrationPatternSizeHeight);
             char prompt[4096] = "Preferences: Calibration pattern size.\n\n";
@@ -319,7 +411,7 @@ void *showPreferencesThread(void *arg)
                 ARLOGd("User chose calibration pattern size %dx%d.\n", w, h);
                 state = PREFS_BEGIN;
             }
-        } else if (state == PREFS_OPTION_6) {
+        } else if (state == PREFS_OPTION_CALIB_PATT_SPACING) {
             float f = config_setting_get_float(prefs->settingCalibrationPatternSpacing);
             char prompt[4096] = "Preferences: Calibration pattern spacing.\n\n";
             size_t len;
@@ -375,14 +467,39 @@ char *getPreferenceCameraResolutionToken(void *preferences)
     return NULL;
 }
 
+bool getPreferenceCalibrationSave(void *preferences)
+{
+    prefsLibConfig_t *prefs = (prefsLibConfig_t *)preferences;
+    if (!prefs) return false;
+    
+    bool uploadOn = config_setting_get_bool(prefs->settingCalibrationUpload);
+    return (uploadOn ? config_setting_get_bool(prefs->settingCalibrationSave) : true);
+}
+
+char *getPreferenceCalibSaveDir(void *preferences)
+{
+    prefsLibConfig_t *prefs = (prefsLibConfig_t *)preferences;
+    if (prefs) {
+        const char *s = config_setting_get_string(prefs->settingCalibSaveDir);
+        if (s && s[0]) return strdup(s);
+    }
+    return (arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_USER_ROOT));
+}
+
 char *getPreferenceCalibrationServerUploadURL(void *preferences)
 {
     prefsLibConfig_t *prefs = (prefsLibConfig_t *)preferences;
     if (!prefs) return NULL;
     
+    bool uploadOn = config_setting_get_bool(prefs->settingCalibrationUpload);
+    if (!uploadOn) return (NULL);
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    return (strdup(ARTOOLKIT6_CSUU));
+#else
     const char *s = config_setting_get_string(prefs->settingCSUU);
     if (s && s[0]) return strdup(s);
-    return (strdup(CALIBRATION_SERVER_UPLOAD_URL_DEFAULT));
+    return (NULL);
+#endif
 }
 
 char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
@@ -390,9 +507,15 @@ char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
     prefsLibConfig_t *prefs = (prefsLibConfig_t *)preferences;
     if (!prefs) return NULL;
     
+    bool uploadOn = config_setting_get_bool(prefs->settingCalibrationUpload);
+    if (!uploadOn) return (NULL);
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    return (strdup(ARTOOLKIT6_CSAT));
+#else
     const char *s = config_setting_get_string(prefs->settingCSAT);
     if (s && s[0]) return strdup(s);
-    return (strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT));
+    return (NULL);
+#endif
 }
 
 Calibration::CalibrationPatternType getPreferencesCalibrationPatternType(void *preferences)

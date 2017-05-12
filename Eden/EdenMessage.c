@@ -92,8 +92,6 @@ typedef struct _boxSettings {
 	int lineCount;
 } boxSettings_t;
 
-#define EDEN_MESSAGE_INPUT_MAX_LENGTH_DEFAULT 1023
-
 //#define DEBUG_MESSAGE					// Uncomment to show extra debugging info.
 
 #pragma mark -
@@ -456,14 +454,12 @@ EDEN_E_t EdenMessageInputShow(const unsigned char *prompt, const unsigned int mi
 
     pthread_mutex_lock(&gInputLock);
     
-    if (maxLength == 0) gInputLengthMax = EDEN_MESSAGE_INPUT_MAX_LENGTH_DEFAULT;
-    else gInputLengthMax = maxLength;
-    
-    if (minLength > gInputLengthMax) {
+    if (minLength > maxLength) {
         messageErr = EDEN_E_OVERFLOW;
         goto done;
-    } else gInputLengthMin = minLength;
-    
+    }
+    gInputLengthMin = minLength;
+    gInputLengthMax = maxLength;
     if (prompt) {
         gInputPromptLength = (unsigned int)strlen((const char *)prompt);
     }

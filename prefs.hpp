@@ -59,7 +59,7 @@ char *getPreferenceCalibrationServerAuthenticationToken(void *preferences);
 Calibration::CalibrationPatternType getPreferencesCalibrationPatternType(void *preferences);
 cv::Size getPreferencesCalibrationPatternSize(void *preferences);
 float getPreferencesCalibrationPatternSpacing(void *preferences);
-
+char *getPreferenceCalibSaveDir(void *preferences);
 
 #ifdef __cplusplus
 }

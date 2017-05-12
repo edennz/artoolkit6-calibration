@@ -94,3 +94,10 @@ float getPreferencesCalibrationPatternSpacing(void *preferences)
     return Calibration::CalibrationPatternSpacings[CALIBRATION_PATTERN_TYPE_DEFAULT];
 }
 #endif
+
+#if !TARGET_PLATFORM_MACOS && !TARGET_PLATFORM_LINUX
+char *getPreferenceCalibSaveDir(void *preferences)
+{
+    return arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_USER_ROOT);
+}
+#endif

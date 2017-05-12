@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12120" systemVersion="16E195" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12120"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefsWindowController">
             <connections>
+                <outlet property="calibSaveDirLabel" destination="Uuw-DL-XNp" id="k21-8J-EKz"/>
                 <outlet property="calibrationPatternSizeHeightLabel" destination="3cY-u2-2hD" id="sLZ-MN-lXd"/>
                 <outlet property="calibrationPatternSizeHeightStepper" destination="Eo3-zi-84a" id="sSM-cF-7Xk"/>
                 <outlet property="calibrationPatternSizeWidthLabel" destination="Qxm-b1-SWS" id="VJh-ds-dgy"/>
@@ -18,7 +19,10 @@
                 <outlet property="calibrationServerUploadURL" destination="CeU-9l-p2K" id="67f-OI-sCB"/>
                 <outlet property="cameraInputPopup" destination="aMP-Am-gla" id="AWV-A1-fhy"/>
                 <outlet property="cameraPresetPopup" destination="gMt-Y3-7ei" id="iJZ-GI-Kin"/>
+                <outlet property="saveCalibrationSwitch" destination="UY3-fY-W6W" id="gL0-Dr-UfA"/>
                 <outlet property="showPrefsOnStartup" destination="10P-u0-X5C" id="1qf-WH-mU0"/>
+                <outlet property="uploadCalibrationCanonicalSwitch" destination="e8F-vF-S4B" id="nNe-Yn-CPR"/>
+                <outlet property="uploadCalibrationUserSwitch" destination="fQZ-7J-lX9" id="06a-R8-lkM"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="xhk-27-pWa"/>
             </connections>
         </customObject>
@@ -34,7 +38,7 @@
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CeU-9l-p2K">
-                        <rect key="frame" x="20" y="322" width="436" height="22"/>
+                        <rect key="frame" x="20" y="265" width="436" height="22"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="" drawsBackground="YES" id="4cU-vH-g5T">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -77,8 +81,8 @@ DQ
                         </connections>
                     </button>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ZFG-1D-LRf">
-                        <rect key="frame" x="18" y="352" width="185" height="17"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Calibration server upload URL" id="XDh-Pm-b6p">
+                        <rect key="frame" x="18" y="295" width="205" height="17"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="My calibration server upload URL" id="XDh-Pm-b6p">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -92,15 +96,15 @@ DQ
                         </buttonCell>
                     </button>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gxJ-Fx-Kcu">
-                        <rect key="frame" x="20" y="297" width="239" height="17"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Calibration server authentication token" id="Pqb-8G-zzm">
+                        <rect key="frame" x="20" y="240" width="259" height="17"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="My calibration server authentication token" id="Pqb-8G-zzm">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FTf-mQ-BQV">
-                        <rect key="frame" x="18" y="224" width="118" height="17"/>
+                        <rect key="frame" x="18" y="177" width="118" height="17"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Calibration pattern" id="jX1-Dd-Dtj">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -108,7 +112,7 @@ DQ
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hCV-wf-SN8">
-                        <rect key="frame" x="18" y="167" width="40" height="17"/>
+                        <rect key="frame" x="18" y="120" width="40" height="17"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Width" id="XbJ-FM-g20">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -116,7 +120,7 @@ DQ
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wOa-de-V7E">
-                        <rect key="frame" x="18" y="136" width="45" height="17"/>
+                        <rect key="frame" x="18" y="89" width="45" height="17"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Height" id="cxg-xO-hZw">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -124,7 +128,7 @@ DQ
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lZb-Ac-rYA">
-                        <rect key="frame" x="18" y="105" width="53" height="17"/>
+                        <rect key="frame" x="18" y="58" width="53" height="17"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Spacing" id="WBi-ha-xfk">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -171,7 +175,7 @@ DQ
                         </textFieldCell>
                     </textField>
                     <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="1v1-i0-3uY">
-                        <rect key="frame" x="18" y="193" width="298" height="24"/>
+                        <rect key="frame" x="18" y="146" width="298" height="24"/>
                         <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="8kb-1i-ed6">
                             <font key="font" metaFont="system"/>
                             <segments>
@@ -185,21 +189,21 @@ DQ
                         </connections>
                     </segmentedControl>
                     <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="024-qN-cbI">
-                        <rect key="frame" x="298" y="162" width="19" height="27"/>
+                        <rect key="frame" x="298" y="115" width="19" height="27"/>
                         <stepperCell key="cell" continuous="YES" alignment="left" minValue="1" maxValue="100" doubleValue="1" id="gaE-io-sdA"/>
                         <connections>
                             <action selector="takeIntValueFrom:" target="Qxm-b1-SWS" id="ZRI-8q-LpQ"/>
                         </connections>
                     </stepper>
                     <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Eo3-zi-84a">
-                        <rect key="frame" x="298" y="131" width="19" height="27"/>
+                        <rect key="frame" x="298" y="84" width="19" height="27"/>
                         <stepperCell key="cell" continuous="YES" alignment="left" minValue="1" maxValue="100" doubleValue="1" id="DGf-a9-kuj"/>
                         <connections>
                             <action selector="takeIntValueFrom:" target="3cY-u2-2hD" id="OBx-Sr-cJz"/>
                         </connections>
                     </stepper>
-                    <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Qxm-b1-SWS">
-                        <rect key="frame" x="203" y="164" width="96" height="22"/>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Qxm-b1-SWS">
+                        <rect key="frame" x="203" y="117" width="96" height="22"/>
                         <constraints>
                             <constraint firstAttribute="width" constant="96" id="1AX-bc-aJX"/>
                         </constraints>
@@ -213,8 +217,8 @@ DQ
                             <action selector="takeIntValueFrom:" target="024-qN-cbI" id="TuH-Xj-Jb4"/>
                         </connections>
                     </textField>
-                    <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="3cY-u2-2hD">
-                        <rect key="frame" x="203" y="133" width="96" height="22"/>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3cY-u2-2hD">
+                        <rect key="frame" x="203" y="86" width="96" height="22"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="kyq-aM-cop">
                             <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="73M-bo-4Qy"/>
                             <font key="font" metaFont="system"/>
@@ -225,8 +229,8 @@ DQ
                             <action selector="takeIntValueFrom:" target="Eo3-zi-84a" id="ZGX-Rd-JH9"/>
                         </connections>
                     </textField>
-                    <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="uOi-8b-tMo">
-                        <rect key="frame" x="203" y="103" width="111" height="22"/>
+                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="uOi-8b-tMo">
+                        <rect key="frame" x="203" y="56" width="111" height="22"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="yfr-fh-eny">
                             <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="TxS-3h-xwx"/>
                             <font key="font" metaFont="system"/>
@@ -235,11 +239,64 @@ DQ
                         </textFieldCell>
                     </textField>
                     <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Vx9-zf-SZR">
-                        <rect key="frame" x="20" y="267" width="436" height="22"/>
+                        <rect key="frame" x="20" y="210" width="436" height="22"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="" drawsBackground="YES" id="lHj-EQ-ybQ">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="UY3-fY-W6W">
+                        <rect key="frame" x="18" y="346" width="134" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" title="Save calibration to" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="9Xu-8u-b1X">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="saveCalibrationChanged:" target="-2" id="Bhr-Qr-DEk"/>
+                        </connections>
+                    </button>
+                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fQZ-7J-lX9">
+                        <rect key="frame" x="18" y="318" width="212" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" title="Upload calibration to my server" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="dF4-OG-YMA">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="uploadCalibrationUserChanged:" target="-2" id="dCn-kd-sG0"/>
+                        </connections>
+                    </button>
+                    <button hidden="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="e8F-vF-S4B">
+                        <rect key="frame" x="18" y="318" width="226" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" title="Upload calibration to artoolkit.org" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="aDI-Kt-DEp">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="uploadCalibrationCanonicalChanged:" target="-2" id="E2P-jQ-IPf"/>
+                        </connections>
+                    </button>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8uS-Tu-Rxs">
+                        <rect key="frame" x="321" y="337" width="141" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="Select location…" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="PpT-x3-a1s">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="calibSaveDirSelectButton:" target="-2" id="cno-70-H93"/>
+                        </connections>
+                    </button>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Uuw-DL-XNp">
+                        <rect key="frame" x="156" y="347" width="152" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Label" id="FAX-3s-ujk">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
                 </subviews>
@@ -260,7 +317,7 @@ DQ
                     <constraint firstItem="Vx9-zf-SZR" firstAttribute="leading" secondItem="lZb-Ac-rYA" secondAttribute="leading" id="JWg-Eg-F8T"/>
                     <constraint firstItem="Vx9-zf-SZR" firstAttribute="leading" secondItem="1v1-i0-3uY" secondAttribute="leading" id="JxN-be-yEM"/>
                     <constraint firstItem="aMP-Am-gla" firstAttribute="leading" secondItem="EiT-Mj-1SZ" secondAttribute="leading" constant="20" symbolic="YES" id="KOH-Ti-RIk"/>
-                    <constraint firstItem="FTf-mQ-BQV" firstAttribute="top" secondItem="Vx9-zf-SZR" secondAttribute="bottom" constant="26" id="QQm-Ma-CyF"/>
+                    <constraint firstItem="FTf-mQ-BQV" firstAttribute="top" secondItem="Vx9-zf-SZR" secondAttribute="bottom" constant="16" id="QQm-Ma-CyF"/>
                     <constraint firstItem="aMP-Am-gla" firstAttribute="leading" secondItem="ZFG-1D-LRf" secondAttribute="leading" id="U1B-Yv-y9D"/>
                     <constraint firstItem="Vx9-zf-SZR" firstAttribute="leading" secondItem="FTf-mQ-BQV" secondAttribute="leading" id="Uq1-w9-PO5"/>
                     <constraint firstAttribute="trailing" secondItem="gMt-Y3-7ei" secondAttribute="trailing" constant="20" id="Uvh-w8-bW8"/>
@@ -271,7 +328,7 @@ DQ
                     <constraint firstItem="024-qN-cbI" firstAttribute="leading" secondItem="Qxm-b1-SWS" secondAttribute="trailing" constant="2" id="gMO-Y1-f9O"/>
                     <constraint firstItem="Vx9-zf-SZR" firstAttribute="top" secondItem="gxJ-Fx-Kcu" secondAttribute="bottom" constant="8" symbolic="YES" id="gY1-xi-ljU"/>
                     <constraint firstItem="lZb-Ac-rYA" firstAttribute="top" secondItem="wOa-de-V7E" secondAttribute="bottom" constant="14" id="jNi-Xs-4Hm"/>
-                    <constraint firstItem="ZFG-1D-LRf" firstAttribute="top" secondItem="aMP-Am-gla" secondAttribute="bottom" constant="30" id="kMK-34-U7e"/>
+                    <constraint firstItem="ZFG-1D-LRf" firstAttribute="top" secondItem="aMP-Am-gla" secondAttribute="bottom" constant="87" id="kMK-34-U7e"/>
                     <constraint firstItem="0nN-qx-E1Q" firstAttribute="leading" secondItem="10P-u0-X5C" secondAttribute="trailing" constant="20" id="kTJ-Hj-kGE"/>
                     <constraint firstItem="aMP-Am-gla" firstAttribute="trailing" secondItem="ANx-b9-auz" secondAttribute="trailing" id="lUm-ex-2YI"/>
                     <constraint firstItem="1v1-i0-3uY" firstAttribute="trailing" secondItem="024-qN-cbI" secondAttribute="trailing" id="lsG-WT-Dbh"/>

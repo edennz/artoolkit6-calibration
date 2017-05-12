@@ -41,7 +41,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface PrefsWindowController : NSWindowController
+@interface PrefsWindowController : NSWindowController <NSOpenSavePanelDelegate>
 {
 }
 @end

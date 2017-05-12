@@ -63,6 +63,7 @@
 #include <AR6/ARUtil/system.h>
 #include <AR6/ARUtil/thread_sub.h>
 #include <AR6/ARUtil/time.h>
+#include <AR6/ARUtil/file_utils.h>
 #include <AR6/ARG/arg.h>
 
 #include "fileUploader.h"
@@ -129,6 +130,8 @@ static void *gPreferences = NULL;
 Uint32 gSDLEventPreferencesChanged = 0;
 static char *gPreferenceCameraOpenToken = NULL;
 static char *gPreferenceCameraResolutionToken = NULL;
+static bool gCalibrationSave = false;
+static char *gCalibrationSaveDir = NULL;
 static char *gCalibrationServerUploadURL = NULL;
 static char *gCalibrationServerAuthenticationToken = NULL;
 static int gPreferencesCalibImageCountMax = CALIB_IMAGE_NUM;
@@ -227,6 +230,14 @@ static void stopVideo(void)
 static void rereadPreferences(void)
 {
     // Re-read preferences.
+    gCalibrationSave = getPreferenceCalibrationSave(gPreferences);
+    char *csd = getPreferenceCalibSaveDir(gPreferences);
+    if (csd && gCalibrationSaveDir && strcmp(gCalibrationSaveDir, csd) == 0) {
+        free(csd);
+    } else {
+        free(gCalibrationSaveDir);
+        gCalibrationSaveDir = csd;
+    }
     char *csuu = getPreferenceCalibrationServerUploadURL(gPreferences);
     if (csuu && gCalibrationServerUploadURL && strcmp(gCalibrationServerUploadURL, csuu) == 0) {
         free(csuu);
@@ -234,9 +245,11 @@ static void rereadPreferences(void)
         free(gCalibrationServerUploadURL);
         gCalibrationServerUploadURL = csuu;
         fileUploaderFinal(&fileUploadHandle);
-        fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
-        if (!fileUploadHandle) {
-            ARLOGe("Error: Could not initialise fileUploadHandle.\n");
+        if (csuu) {
+            fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
+            if (!fileUploadHandle) {
+                ARLOGe("Error: Could not initialise fileUploadHandle.\n");
+            }
         }
     }
     char *csat = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
@@ -272,7 +285,7 @@ static void rereadPreferences(void)
         gCalibrationPatternSpacing = patternSpacing;
         changedCameraSettings = true;
     }
-
+    
     if (changedCameraSettings) {
         // Changing camera settings requires complete cancelation of calibration flow,
         // closing of video source, and re-init.
@@ -297,6 +310,8 @@ int main(int argc, char *argv[])
     gPreferences = initPreferences();
     gPreferenceCameraOpenToken = getPreferenceCameraOpenToken(gPreferences);
     gPreferenceCameraResolutionToken = getPreferenceCameraResolutionToken(gPreferences);
+    gCalibrationSave = getPreferenceCalibrationSave(gPreferences);
+    gCalibrationSaveDir = getPreferenceCalibSaveDir(gPreferences);
     gCalibrationServerUploadURL = getPreferenceCalibrationServerUploadURL(gPreferences);
     gCalibrationServerAuthenticationToken = getPreferenceCalibrationServerAuthenticationToken(gPreferences);
     gCalibrationPatternType = getPreferencesCalibrationPatternType(gPreferences);
@@ -338,11 +353,13 @@ int main(int argc, char *argv[])
         exit(-1);
     }
     
-    fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
-    if (!fileUploadHandle) {
-        ARLOGe("Error: Could not initialise fileUploadHandle.\n");
+    if (gCalibrationServerUploadURL) {
+        fileUploadHandle = fileUploaderInit(gFileUploadQueuePath, QUEUE_INDEX_FILE_EXTENSION, gCalibrationServerUploadURL, UPLOAD_STATUS_HIDE_AFTER_SECONDS);
+        if (!fileUploadHandle) {
+            ARLOGe("Error: Could not initialise fileUploadHandle.\n");
+        }
+        fileUploaderTickle(fileUploadHandle);
     }
-    fileUploaderTickle(fileUploadHandle);
     
     // Calibration prefs.
     ARLOGi("Calbration pattern size X = %d\n", gCalibrationPatternSize.width);
@@ -676,7 +693,7 @@ static void drawBusyIndicator(int positionX, int positionY, int squareSize, stru
         glLoadIdentity();
         glTranslatef((float)(positionX + ((i + 1)/2 != 1 ? -squareSize : 0.0f)), (float)(positionY + (i / 2 == 0 ? 0.0f : -squareSize)), 0.0f); // Order: UL, UR, LR, LL.
         if (i == hundredthSeconds / 25) {
-            char r, g, b;
+            unsigned char r, g, b;
             int secDiv255 = (int)tp->tv_usec / 3921;
             int secMod6 = tp->tv_sec % 6;
             if (secMod6 == 0) {
@@ -866,19 +883,21 @@ void drawView(void)
     }
     
     // If background tasks are proceeding, draw a status box.
-    char uploadStatus[UPLOAD_STATUS_BUFFER_LEN];
-    int status = fileUploaderStatusGet(fileUploadHandle, uploadStatus, &time);
-    if (status > 0) {
-        const int squareSize = (int)(16.0f * (float)gDisplayDPI / 160.f) ;
-        float x, y, w, h;
-        float textWidth = EdenGLFontGetLineWidth((unsigned char *)uploadStatus);
-        w = textWidth + 3*squareSize + 2*4.0f /*text margin*/ + 2*4.0f /* box margin */;
-        h = MAX(FONT_SIZE, 3*squareSize) + 2*4.0f /* box margin */;
-        x = right - (w + 2.0f);
-        y = statusBarHeight + 2.0f;
-        drawBackground(w, h, x, y, true);
-        if (status == 1) drawBusyIndicator((int)(x + 4.0f + 1.5f*squareSize), (int)(y + 4.0f + 1.5f*squareSize), squareSize, &time);
-        EdenGLFontDrawLine(0, NULL, (unsigned char *)uploadStatus, x + 4.0f + 3*squareSize, y + (h - FONT_SIZE)/2.0f, H_OFFSET_VIEW_LEFT_EDGE_TO_TEXT_LEFT_EDGE, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
+    if (fileUploadHandle) {
+        char uploadStatus[UPLOAD_STATUS_BUFFER_LEN];
+        int status = fileUploaderStatusGet(fileUploadHandle, uploadStatus, &time);
+        if (status > 0) {
+            const int squareSize = (int)(16.0f * (float)gDisplayDPI / 160.f) ;
+            float x, y, w, h;
+            float textWidth = EdenGLFontGetLineWidth((unsigned char *)uploadStatus);
+            w = textWidth + 3*squareSize + 2*4.0f /*text margin*/ + 2*4.0f /* box margin */;
+            h = MAX(FONT_SIZE, 3*squareSize) + 2*4.0f /* box margin */;
+            x = right - (w + 2.0f);
+            y = statusBarHeight + 2.0f;
+            drawBackground(w, h, x, y, true);
+            if (status == 1) drawBusyIndicator((int)(x + 4.0f + 1.5f*squareSize), (int)(y + 4.0f + 1.5f*squareSize), squareSize, &time);
+            EdenGLFontDrawLine(0, NULL, (unsigned char *)uploadStatus, x + 4.0f + 3*squareSize, y + (h - FONT_SIZE)/2.0f, H_OFFSET_VIEW_LEFT_EDGE_TO_TEXT_LEFT_EDGE, V_OFFSET_VIEW_BOTTOM_TO_TEXT_BASELINE);
+        }
     }
     
     // If a message should be onscreen, draw it.
@@ -921,6 +940,23 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         
     } else {
         
+        if (gCalibrationSave) {
+            char *calibrationSavePathname;
+            if (asprintf(&calibrationSavePathname, "%s/camera_para.dat", gCalibrationSaveDir) < 0) {
+                ARLOGe("Error asprintf.\n");
+            } else {
+                if (cp_f(paramPathname, calibrationSavePathname) != 0) {
+                    ARLOGe("Error saving calibration to '%s'", calibrationSavePathname);
+                    ARLOGperror(NULL);
+                } else {
+                    ARLOGi("Saved calibration to '%s'.\n", calibrationSavePathname);
+                }
+                free(calibrationSavePathname);
+            }
+        }
+
+        if (!gCalibrationServerUploadURL) return;
+
         //
         // Write an upload index file with the data for the server database entry.
         //

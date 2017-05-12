@@ -155,6 +155,11 @@ target_link_libraries(artoolkit6_calib_camera
     m
 )
 
+get_directory_property(AR6CC_DEFINES DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
+foreach(d ${AR6CC_DEFINES})
+    message(STATUS "Defined: " ${d})
+endforeach()
+
 install(TARGETS artoolkit6_calib_camera
     RUNTIME DESTINATION .
 )

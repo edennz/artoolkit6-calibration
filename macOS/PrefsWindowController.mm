@@ -44,8 +44,12 @@ static NSString *const kSettingCalibrationPatternType = @"calibrationPatternType
 static NSString *const kSettingCalibrationPatternSizeWidth = @"calibrationPatternSizeWidth";
 static NSString *const kSettingCalibrationPatternSizeHeight = @"calibrationPatternSizeHeight";
 static NSString *const kSettingCalibrationPatternSpacing = @"calibrationPatternSpacing";
+static NSString *const kSettingCalibrationSave = @"calibrationSave";
+static NSString *const kSettingCalibrationServerUploadCanonical = @"calibrationServerUploadCanonical";
+static NSString *const kSettingCalibrationServerUploadUser = @"calibrationServerUploadUser";
 static NSString *const kSettingCalibrationServerUploadURL = @"calibrationServerUploadURL";
 static NSString *const kSettingCalibrationServerAuthenticationToken = @"calibrationServerAuthenticationToken";
+static NSString *const kSettingCalibSaveDir = @"kSettingCalibSaveDir";
 
 static NSString *const kCalibrationPatternTypeChessboardStr = @"Chessboard";
 static NSString *const kCalibrationPatternTypeCirclesStr = @"Circles";
@@ -54,6 +58,9 @@ static NSString *const kCalibrationPatternTypeAsymmetricCirclesStr = @"Asymmetri
 @interface PrefsWindowController ()
 {
     IBOutlet NSButton *showPrefsOnStartup;
+    __weak IBOutlet NSButton *saveCalibrationSwitch;
+    __weak IBOutlet NSButton *uploadCalibrationCanonicalSwitch;
+    __weak IBOutlet NSButton *uploadCalibrationUserSwitch;
     IBOutlet NSTextField *calibrationServerUploadURL;
     IBOutlet NSTextField *calibrationServerAuthenticationToken;
     IBOutlet NSPopUpButton *cameraInputPopup;
@@ -64,9 +71,11 @@ static NSString *const kCalibrationPatternTypeAsymmetricCirclesStr = @"Asymmetri
     __weak IBOutlet NSTextField *calibrationPatternSizeHeightLabel;
     __weak IBOutlet NSTextField *calibrationPatternSpacing;
     __weak IBOutlet NSSegmentedControl *calibrationPatternTypeControl;
+    __weak IBOutlet NSTextField *calibSaveDirLabel;
 }
 - (IBAction)calibrationPatternTypeChanged:(NSSegmentedControl *)sender;
 - (IBAction)okSelected:(NSButton *)sender;
+- (IBAction)calibSaveDirSelectButton:(NSButton *)sender;
 @end
 
 @implementation PrefsWindowController
@@ -116,12 +125,21 @@ static NSString *const kCalibrationPatternTypeAsymmetricCirclesStr = @"Asymmetri
     NSString *cp = [defaults stringForKey:@"cameraPreset"];
     if (cp) [cameraPresetPopup selectItemWithTitle:cp];
     
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    BOOL uploadOn = [defaults boolForKey:kSettingCalibrationServerUploadCanonical];
+    uploadCalibrationCanonicalSwitch.state = uploadOn;
+#else
+    BOOL uploadOn = [defaults boolForKey:kSettingCalibrationServerUploadUser];
+    uploadCalibrationUserSwitch.state = uploadOn;
+#endif
+    saveCalibrationSwitch.enabled = uploadOn;
+    saveCalibrationSwitch.state = (uploadOn ? [defaults boolForKey:kSettingCalibrationSave] : TRUE);
     NSString *csuu = [defaults stringForKey:kSettingCalibrationServerUploadURL];
     calibrationServerUploadURL.stringValue = (csuu ? csuu : @"");
-    calibrationServerUploadURL.placeholderString = @CALIBRATION_SERVER_UPLOAD_URL_DEFAULT;
+    calibrationServerUploadURL.placeholderString = @"https://example.com/upload.php";
     NSString *csat = [defaults stringForKey:kSettingCalibrationServerAuthenticationToken];
     calibrationServerAuthenticationToken.stringValue = (csat ? csat : @"");
-    calibrationServerAuthenticationToken.placeholderString = @CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT;
+    calibrationServerAuthenticationToken.placeholderString = @"";
     
     showPrefsOnStartup.state = [defaults boolForKey:@"showPrefsOnStartup"];
     
@@ -152,6 +170,35 @@ static NSString *const kCalibrationPatternTypeAsymmetricCirclesStr = @"Asymmetri
     float f = [defaults floatForKey:kSettingCalibrationPatternSpacing];
     if (f <= 0.0f) f = Calibration::CalibrationPatternSpacings[patternType];
     calibrationPatternSpacing.stringValue = [NSString stringWithFormat:@"%.2f", f];
+    
+    char *dir = getPreferenceCalibSaveDir(NULL);
+    NSURL *dirURL = [NSURL fileURLWithPath:[NSString stringWithUTF8String:dir]];
+    free(dir);
+    calibSaveDirLabel.stringValue = dirURL.lastPathComponent;
+}
+
+- (IBAction)saveCalibrationChanged:(NSButton *)sender
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setBool:sender.state forKey:kSettingCalibrationSave];
+}
+
+- (IBAction)uploadCalibrationUserChanged:(NSButton *)sender
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setBool:sender.state forKey:kSettingCalibrationServerUploadUser];
+    saveCalibrationSwitch.enabled = sender.state;
+    if (sender.state) saveCalibrationSwitch.state = [defaults boolForKey:kSettingCalibrationSave];
+    else saveCalibrationSwitch.state = TRUE;
+}
+
+- (IBAction)uploadCalibrationCanonicalChanged:(NSButton *)sender
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setBool:sender.state forKey:kSettingCalibrationServerUploadCanonical];
+    saveCalibrationSwitch.enabled = sender.state;
+    if (sender.state) saveCalibrationSwitch.state = [defaults boolForKey:kSettingCalibrationSave];
+    else saveCalibrationSwitch.state = TRUE;
 }
 
 - (IBAction)calibrationPatternTypeChanged:(NSSegmentedControl *)sender
@@ -227,6 +274,31 @@ static NSString *const kCalibrationPatternTypeAsymmetricCirclesStr = @"Asymmetri
     SDL_PushEvent(&event);
 }
 
+- (IBAction)calibSaveDirSelectButton:(NSButton *)sender
+{
+    NSOpenPanel *openDlg = [NSOpenPanel openPanel];
+    openDlg.canChooseFiles = NO;
+    openDlg.canChooseDirectories = YES;
+    openDlg.allowsMultipleSelection = NO;
+    openDlg.canCreateDirectories = YES;
+    openDlg.prompt = @"Select";
+    openDlg.delegate = self;
+    [openDlg beginSheetModalForWindow:sender.window completionHandler:^(NSInteger result) {
+        if (result == NSFileHandlingPanelOKButton) {
+            NSURL *dirURL = [[openDlg URLs] objectAtIndex:0];
+            NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+            [defaults setObject:dirURL.path forKey:kSettingCalibSaveDir];
+            calibSaveDirLabel.stringValue = dirURL.lastPathComponent;
+        }
+    }];
+}
+
+// NSOpenSavePanelDelegate method.
+- (BOOL)panel:(id)sender shouldEnableURL:(NSURL *)url
+{
+    return [[NSFileManager defaultManager] isWritableFileAtPath:[url path]];
+}
+
 -(void) showHelp:(id)sender
 {
     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/artoolkit/artoolkit6/wiki/Camera-calibration-macOS"]];
@@ -241,8 +313,7 @@ static NSString *const kCalibrationPatternTypeAsymmetricCirclesStr = @"Asymmetri
 void *initPreferences(void)
 {
     // Register the preference defaults early.
-    NSDictionary *appDefaults = @{@"showPrefsOnStartup": @YES};
-    [[NSUserDefaults standardUserDefaults] registerDefaults:appDefaults];
+    [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary                                                           dictionaryWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"prefDefaults" ofType:@"plist"]]];
 
     //NSLog(@"showPrefsOnStartup=%s.\n", ([[NSUserDefaults standardUserDefaults] boolForKey:@"showPrefsOnStartup"] ? "true" : "false"));
     
@@ -303,18 +374,55 @@ char *getPreferenceCameraResolutionToken(void *preferences)
     return NULL;
 }
 
+bool getPreferenceCalibrationSave(void *preferences)
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    BOOL uploadOn = [defaults boolForKey:kSettingCalibrationServerUploadCanonical];
+#else
+    BOOL uploadOn = [defaults boolForKey:kSettingCalibrationServerUploadUser];
+#endif
+    return (uploadOn ? [defaults boolForKey:kSettingCalibrationSave] : TRUE);
+}
+
+char *getPreferenceCalibSaveDir(void *preferences)
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    NSString *csd = [defaults stringForKey:kSettingCalibSaveDir];
+    if (csd.length != 0) return (strdup(csd.UTF8String));
+    return (arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_USER_ROOT));
+}
+
 char *getPreferenceCalibrationServerUploadURL(void *preferences)
 {
-    NSString *csuu = [[NSUserDefaults standardUserDefaults] stringForKey:kSettingCalibrationServerUploadURL];
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    if (![defaults boolForKey:kSettingCalibrationServerUploadCanonical]) return (NULL);
+    return (strdup(ARTOOLKIT6_CSUU));
+#else
+    if (![defaults boolForKey:kSettingCalibrationServerUploadUser]) return (NULL);
+    NSString *csuu = [defaults stringForKey:kSettingCalibrationServerUploadURL];
     if (csuu.length != 0) return (strdup(csuu.UTF8String));
-    return (strdup(CALIBRATION_SERVER_UPLOAD_URL_DEFAULT));
+    return (NULL);
+#endif
 }
 
 char *getPreferenceCalibrationServerAuthenticationToken(void *preferences)
 {
-    NSString *csat = [[NSUserDefaults standardUserDefaults] stringForKey:kSettingCalibrationServerAuthenticationToken];
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+#if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
+    if (![defaults boolForKey:kSettingCalibrationServerUploadCanonical]) return (NULL);
+    return (strdup(ARTOOLKIT6_CSAT));
+#else
+    if (![defaults boolForKey:kSettingCalibrationServerUploadUser]) return (NULL);
+    NSString *csat = [defaults stringForKey:kSettingCalibrationServerAuthenticationToken];
     if (csat.length != 0) return (strdup(csat.UTF8String));
-    return (strdup(CALIBRATION_SERVER_AUTHENTICATION_TOKEN_DEFAULT));
+    return (NULL);
+#endif
 }
 
 Calibration::CalibrationPatternType getPreferencesCalibrationPatternType(void *preferences)
