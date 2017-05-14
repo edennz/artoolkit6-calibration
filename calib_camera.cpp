@@ -940,28 +940,88 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         
     } else {
         
-        if (gCalibrationSave) {
-            char *calibrationSavePathname;
-            if (asprintf(&calibrationSavePathname, "%s/camera_para.dat", gCalibrationSaveDir) < 0) {
-                ARLOGe("Error asprintf.\n");
-            } else {
-                if (cp_f(paramPathname, calibrationSavePathname) != 0) {
-                    ARLOGe("Error saving calibration to '%s'", calibrationSavePathname);
-                    ARLOGperror(NULL);
-                } else {
-                    ARLOGi("Saved calibration to '%s'.\n", calibrationSavePathname);
+        bool goodWrite = true;
+
+        // Get main device identifier and focal length from video module.
+        char *device_id = NULL;
+        char *focal_length = NULL;
+        
+        AR2VideoParamT *vid = vs->getAR2VideoParam();
+        if (ar2VideoGetParams(vid, AR_VIDEO_PARAM_DEVICEID, &device_id) < 0 || !device_id) {
+            ARLOGe("Error fetching camera device identification.\n");
+            goodWrite = false;
+        }
+        
+        if (goodWrite) {
+            if (vid->module == AR_VIDEO_MODULE_AVFOUNDATION) {
+                int focalPreset;
+                ar2VideoGetParami(vid, AR_VIDEO_PARAM_AVFOUNDATION_FOCUS_PRESET, &focalPreset);
+                switch (focalPreset) {
+                    case AR_VIDEO_AVFOUNDATION_FOCUS_MACRO:
+                        focal_length = strdup("0.01");
+                        break;
+                    case AR_VIDEO_AVFOUNDATION_FOCUS_0_3M:
+                        focal_length = strdup("0.3");
+                        break;
+                    case AR_VIDEO_AVFOUNDATION_FOCUS_1_0M:
+                        focal_length = strdup("1.0");
+                        break;
+                    case AR_VIDEO_AVFOUNDATION_FOCUS_INF:
+                        focal_length = strdup("1000000.0");
+                        break;
+                    default:
+                        break;
                 }
-                free(calibrationSavePathname);
+            }
+            if (!focal_length) {
+                // Not known at present, so just send 0.000.
+                focal_length = strdup("0.000");
+            }
+        }
+        
+        if (goodWrite && gCalibrationSave) {
+            
+            // Assemble the filename.
+            char calibrationSavePathname[SAVEPARAM_PATHNAME_LEN];
+            snprintf(calibrationSavePathname, SAVEPARAM_PATHNAME_LEN, "%s/camera_para-", gCalibrationSaveDir);
+            size_t len = strlen(calibrationSavePathname);
+            int i = 0;
+            while (device_id[i] && (len + i + 2 < SAVEPARAM_PATHNAME_LEN)) {
+                calibrationSavePathname[len + i] = (device_id[i] == '/' || device_id[i] == '\\' ? '_' : device_id[i]);
+                i++;
+            }
+            calibrationSavePathname[len + i] = '\0';
+            len = strlen(calibrationSavePathname);
+            snprintf(&calibrationSavePathname[len], SAVEPARAM_PATHNAME_LEN - len, "-0-%dx%d", vs->getVideoWidth(), vs->getVideoHeight()); // camera_index is always 0 for desktop platforms.
+            len = strlen(calibrationSavePathname);
+            if (strcmp(focal_length, "0.000") != 0) {
+                snprintf(&calibrationSavePathname[len], SAVEPARAM_PATHNAME_LEN - len, "-%s", focal_length);
+                len = strlen(calibrationSavePathname);
+            }
+            snprintf(&calibrationSavePathname[len], SAVEPARAM_PATHNAME_LEN - len, ".dat");
+            
+            if (cp_f(paramPathname, calibrationSavePathname) != 0) {
+                ARLOGe("Error saving calibration to '%s'", calibrationSavePathname);
+                ARLOGperror(NULL);
+            } else {
+                ARLOGi("Saved calibration to '%s'.\n", calibrationSavePathname);
             }
         }
 
-        if (!gCalibrationServerUploadURL) return;
+        // Check for early exit.
+        if (!goodWrite || !gCalibrationServerUploadURL) {
+            if (remove(paramPathname) < 0) {
+                ARLOGe("Error removing temporary file '%s'.\n", paramPathname);
+                ARLOGperror(NULL);
+            }
+            free(device_id);
+            free(focal_length);
+            return;
+        };
 
         //
         // Write an upload index file with the data for the server database entry.
         //
-        
-        bool goodWrite = true;
         
         // Open the file.
         snprintf(indexPathname, SAVEPARAM_PATHNAME_LEN, "%s/%s/%06d-index", arUtilGetResourcesDirectoryPath(AR_UTIL_RESOURCES_DIRECTORY_BEHAVIOR_USE_APP_CACHE_DIR), QUEUE_DIR, ID);
@@ -998,47 +1058,12 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         
         // Camera identifier.
         if (goodWrite) {
-            char *device_id = NULL;
-            AR2VideoParamT *vid = vs->getAR2VideoParam();
-            if (ar2VideoGetParams(vid, AR_VIDEO_PARAM_DEVICEID, &device_id) < 0 || !device_id) {
-                ARLOGe("Error fetching camera device identification.\n");
-                goodWrite = false;
-            } else {
-                fprintf(fp, "device_id,%s\n", device_id);
-                free(device_id);
-            }
+            fprintf(fp, "device_id,%s\n", device_id);
         }
         
         // Focal length in metres.
         if (goodWrite) {
-            char *focal_length = NULL;
-            AR2VideoParamT *vid = vs->getAR2VideoParam();
-            if (vid->module == AR_VIDEO_MODULE_AVFOUNDATION) {
-                int focalPreset;
-                ar2VideoGetParami(vid, AR_VIDEO_PARAM_AVFOUNDATION_FOCUS_PRESET, &focalPreset);
-                switch (focalPreset) {
-                    case AR_VIDEO_AVFOUNDATION_FOCUS_MACRO:
-                        focal_length = strdup("0.01");
-                        break;
-                    case AR_VIDEO_AVFOUNDATION_FOCUS_0_3M:
-                        focal_length = strdup("0.3");
-                        break;
-                    case AR_VIDEO_AVFOUNDATION_FOCUS_1_0M:
-                        focal_length = strdup("1.0");
-                        break;
-                    case AR_VIDEO_AVFOUNDATION_FOCUS_INF:
-                        focal_length = strdup("1000000.0");
-                        break;
-                    default:
-                        break;
-                }
-            }
-            if (!focal_length) {
-                // Not known at present, so just send 0.000.
-                focal_length = strdup("0.000");
-            }
             fprintf(fp, "focal_length,%s\n", focal_length);
-            free(focal_length);
         }
         
         // Camera index.
@@ -1110,15 +1135,20 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
         
         if (!goodWrite) {
             // If something went wrong, delete the index and param files.
-            if (remove(indexPathname) < 0) {
-                ARLOGe("Error removing temporary file '%s'.\n", indexPathname);
-                ARLOGperror(NULL);
+            if (indexPathname[0]) {
+                if (remove(indexPathname) < 0) {
+                    ARLOGe("Error removing temporary file '%s'.\n", indexPathname);
+                    ARLOGperror(NULL);
+                }
             }
             if (remove(paramPathname) < 0) {
                 ARLOGe("Error removing temporary file '%s'.\n", paramPathname);
                 ARLOGperror(NULL);
             }
         }
+
+        free(device_id);
+        free(focal_length);
     }
 }
 
