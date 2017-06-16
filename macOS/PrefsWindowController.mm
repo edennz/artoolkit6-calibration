@@ -301,7 +301,7 @@ static NSString *const kCalibrationPatternTypeAsymmetricCirclesStr = @"Asymmetri
 
 -(void) showHelp:(id)sender
 {
-    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/artoolkit/artoolkit6/wiki/Camera-calibration-macOS"]];
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://github.com/artoolkit/ar6-wiki/wiki/Camera-calibration-macOS"]];
 }
 
 @end

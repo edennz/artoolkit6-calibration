@@ -166,6 +166,7 @@ void *showPreferencesThread(void *arg)
 {
     enum state {
         PREFS_BEGIN,
+        PREFS_OPTION_HELP,
         PREFS_OPTION_CAMERA,
         PREFS_OPTION_CALIB_SAVE,
         PREFS_OPTION_CALIB_SAVE_DIR,
@@ -196,21 +197,22 @@ void *showPreferencesThread(void *arg)
             const char prompt[] =
                 "Preferences\n"
                 "\n"
-                "1. Camera.\n"
-                "2. Save calibration on/off.\n"
-                "3. Save calibration destination directory.\n"
+                "1. Help.\n"
+                "2. Camera.\n"
+                "3. Save calibration on/off.\n"
+                "4. Save calibration destination directory.\n"
 #if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
-                "4. Upload calibration to artoolkit.org on/off.\n"
-                "5. Calibration pattern type.\n"
-                "6. Calibration pattern size.\n"
-                "7. Calibration pattern spacing.\n"
+                "5. Upload calibration to artoolkit.org on/off.\n"
+                "6. Calibration pattern type.\n"
+                "7. Calibration pattern size.\n"
+                "8. Calibration pattern spacing.\n"
 #else
-                "4. Upload calibration to my server on/off.\n"
-                "5. My calibration server URL.\n"
-                "6. My calibration server authentication token.\n"
-                "7. Calibration pattern type.\n"
-                "8. Calibration pattern size.\n"
-                "9. Calibration pattern spacing.\n"
+                "5. Upload calibration to my server on/off.\n"
+                "6. My calibration server URL.\n"
+                "7. My calibration server authentication token.\n"
+                "8. Calibration pattern type.\n"
+                "9. Calibration pattern size.\n"
+                "10. Calibration pattern spacing.\n"
 #endif
                 "\n"
                 "Press [esc] to finish or type number and press [return] ";
@@ -222,22 +224,33 @@ void *showPreferencesThread(void *arg)
                 state = PREFS_END;
             } else {
                 free(inputa);
-                if (inputi == 1) state = PREFS_OPTION_CAMERA;
-                else if (inputi == 2) state = PREFS_OPTION_CALIB_SAVE;
-                else if (inputi == 3) state = PREFS_OPTION_CALIB_SAVE_DIR;
-                else if (inputi == 4) state = PREFS_OPTION_CALIB_UPLOAD;
+                if (inputi == 1) state = PREFS_OPTION_HELP;
+                else if (inputi == 2) state = PREFS_OPTION_CAMERA;
+                else if (inputi == 3) state = PREFS_OPTION_CALIB_SAVE;
+                else if (inputi == 4) state = PREFS_OPTION_CALIB_SAVE_DIR;
+                else if (inputi == 5) state = PREFS_OPTION_CALIB_UPLOAD;
 #if defined(ARTOOLKIT6_CSUU) && defined(ARTOOLKIT6_CSAT)
-                else if (inputi == 5) state = PREFS_OPTION_CALIB_PATT_TYPE;
-                else if (inputi == 6) state = PREFS_OPTION_CALIB_PATT_SIZE;
-                else if (inputi == 7) state = PREFS_OPTION_CALIB_PATT_SPACING;
+                else if (inputi == 6) state = PREFS_OPTION_CALIB_PATT_TYPE;
+                else if (inputi == 7) state = PREFS_OPTION_CALIB_PATT_SIZE;
+                else if (inputi == 8) state = PREFS_OPTION_CALIB_PATT_SPACING;
 #else
-                else if (inputi == 5) state = PREFS_OPTION_CSUU;
-                else if (inputi == 6) state = PREFS_OPTION_CSAT;
-                else if (inputi == 7) state = PREFS_OPTION_CALIB_PATT_TYPE;
-                else if (inputi == 8) state = PREFS_OPTION_CALIB_PATT_SIZE;
-                else if (inputi == 9) state = PREFS_OPTION_CALIB_PATT_SPACING;
+                else if (inputi == 6) state = PREFS_OPTION_CSUU;
+                else if (inputi == 7) state = PREFS_OPTION_CSAT;
+                else if (inputi == 8) state = PREFS_OPTION_CALIB_PATT_TYPE;
+                else if (inputi == 9) state = PREFS_OPTION_CALIB_PATT_SIZE;
+                else if (inputi == 10) state = PREFS_OPTION_CALIB_PATT_SPACING;
 #endif
             }
+        } else if (state == PREFS_OPTION_HELP) {
+            int ret = system("which xdg-open");
+            if (ret != 0) {
+                EdenMessageInput((const unsigned char *)"Unable to open help (missing xdg-open command). Press [return] to continue. ", 0, 0, 0, 0, 0);
+                inputa = EdenMessageInputGetInput();
+                free(inputa);
+            } else {
+                system("xdg-open https://github.com/artoolkit/ar6-wiki/wiki/Camera-calibration-Linux");
+            }
+            state = PREFS_BEGIN;
         } else if (state == PREFS_OPTION_CAMERA) {
             ARVideoSourceInfoListT *sil = ar2VideoCreateSourceInfoList("");
             if (!sil) {

@@ -1299,7 +1299,7 @@ static void saveParam(const ARParam *param, ARdouble err_min, ARdouble err_avg, 
                                 ]];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:
                                 ^(UIAlertAction *action) {
-                                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/artoolkit/artoolkit6/wiki/Camera-calibration-iOS"]];
+                                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/artoolkit/ar6-wiki/wiki/Camera-calibration-iOS"]];
                                 }
                                 ]];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Print" style:UIAlertActionStyleDefault handler:

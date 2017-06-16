@@ -35,7 +35,9 @@
  *
  */
 
-#define _GNU_SOURCE // asprintf()
+#ifndef _GNU_SOURCE
+#  define _GNU_SOURCE // asprintf()
+#endif
 
 #include "flow.hpp"
 
