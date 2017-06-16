@@ -165,7 +165,7 @@ if [ $BUILD_LINUX ] ; then
     curl -f -o "${SDK_FILENAME}" "${SDK_URL_DIR}$(rawurlencode "${SDK_FILENAME}")"
     sudo dpkg -i "${SDK_FILENAME}"
 
-    (cd linux
+    (cd Linux
 	mkdir -p build
 	cd build
 	cmake .. -DCMAKE_BUILD_TYPE=Release "-DVERSION=${VERSION}"
