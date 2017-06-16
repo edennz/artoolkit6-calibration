@@ -97,6 +97,7 @@
 		4A5FA0BC1DFE155D00795630 /* EdenUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EdenUtil.c; sourceTree = "<group>"; };
 		4A5FA0BE1DFE156B00795630 /* EdenUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EdenUtil.h; sourceTree = "<group>"; };
 		4A5FA0BF1DFE160500795630 /* calib_camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = calib_camera.h; path = ../calib_camera.h; sourceTree = "<group>"; };
+		4A60A98E1EF3675000BEBF8A /* user-config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "user-config.xcconfig"; sourceTree = "<group>"; };
 		4A6223CF1E6CFBA8002F0096 /* prefsLibConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = prefsLibConfig.cpp; path = ../prefsLibConfig.cpp; sourceTree = "<group>"; };
 		4A6FD7271E42C7A900C6471A /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
 		4A6FD7291E42C7C200C6471A /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
@@ -341,6 +342,7 @@
 		4A9141F71DF6450200DF4FEE = {
 			isa = PBXGroup;
 			children = (
+				4A60A98E1EF3675000BEBF8A /* user-config.xcconfig */,
 				4A9142151DF6459900DF4FEE /* Source */,
 				4A91421E1DF6466A00DF4FEE /* Dependencies */,
 				4A9142141DF6453500DF4FEE /* Resources */,
@@ -938,6 +940,7 @@
 /* Begin XCBuildConfiguration section */
 		4A91420F1DF6450200DF4FEE /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A60A98E1EF3675000BEBF8A /* user-config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -996,6 +999,7 @@
 		};
 		4A9142101DF6450200DF4FEE /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A60A98E1EF3675000BEBF8A /* user-config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

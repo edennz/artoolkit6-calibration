@@ -152,6 +152,7 @@
 		4A4793C81E80D945002C3631 /* gluttext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gluttext.h; sourceTree = "<group>"; };
 		4A4793C91E80D945002C3631 /* readtex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = readtex.c; sourceTree = "<group>"; };
 		4A4793CA1E80D945002C3631 /* readtex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = readtex.h; sourceTree = "<group>"; };
+		4A60A98F1EF367EF00BEBF8A /* user-config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "user-config.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -213,6 +214,7 @@
 		4A47933E1E80CDBE002C3631 = {
 			isa = PBXGroup;
 			children = (
+				4A60A98F1EF367EF00BEBF8A /* user-config.xcconfig */,
 				4A4793611E80CF24002C3631 /* Source */,
 				4A47936F1E80CF9B002C3631 /* Resources */,
 				4A4793961E80D072002C3631 /* Dependencies */,
@@ -493,6 +495,7 @@
 /* Begin XCBuildConfiguration section */
 		4A47935C1E80CDBF002C3631 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A60A98F1EF367EF00BEBF8A /* user-config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -548,6 +551,7 @@
 		};
 		4A47935D1E80CDBF002C3631 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4A60A98F1EF367EF00BEBF8A /* user-config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

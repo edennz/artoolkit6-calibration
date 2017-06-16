@@ -7,12 +7,15 @@
 # Author(s): Philip Lamb, Thorsten Bux, John Wolf, Dan Bell.
 #
 
-SDK_VERSION='6.0.1'
-SDK_URL_DIR='http://artoolkit-dist.s3.amazonaws.com/artoolkit6/6.0/'
-
-
 # Get our location.
 OURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+SDK_VERSION='6.0.2'
+SDK_URL_DIR='http://artoolkit-dist.s3.amazonaws.com/artoolkit6/6.0/'
+
+VERSION=`sed -En -e 's/.*VERSION_STRING[[:space:]]+"([0-9]+\.[0-9]+(\.[0-9]+)*)".*/\1/p' ${OURDIR}/version.h`
+# If the tiny version number is 0, drop it.
+VERSION=`echo -n "${VERSION}" | sed -E -e 's/([0-9]+\.[0-9]+)\.0/\1/'`
 
 function usage {
     echo "Usage: $(basename $0) (macos | linux)... "
@@ -33,6 +36,8 @@ do
         osx) BUILD_MACOS=1
             ;;
         macos) BUILD_MACOS=1
+            ;;
+        ios) BUILD_IOS=1
             ;;
         linux) BUILD_LINUX=1
             ;;
@@ -109,11 +114,37 @@ if [ $BUILD_MACOS ] ; then
     SDK_FILENAME="ARToolKit for macOS v${SDK_VERSION}.dmg"
     curl -f -o "${SDK_FILENAME}" "${SDK_URL_DIR}$(rawurlencode "${SDK_FILENAME}")"
     hdiutil attach "${SDK_FILENAME}" -noautoopen -quiet -mountpoint "SDK"
+    rm -rf depends/macOS/Frameworks/AR6.framework
     cp -af SDK/artoolkit6/SDK/Frameworks/AR6.framework depends/macOS/Frameworks
     hdiutil detach "SDK" -quiet -force
     
+    # Make the version number available to Xcode.
+    sed -E -i.bak "s/@VERSION@/${VERSION}/" macOS/user-config.xcconfig
+    
     (cd macOS
     xcodebuild -target "ARToolKit6 Camera Calibration Utility" -configuration Release
+    )
+fi
+# /BUILD_MACOS
+
+# iOS
+if [ $BUILD_IOS ] ; then
+    
+    # Fetch libAR6 from latest build into a location where Xcode will find it.
+    SDK_FILENAME="ARToolKit for iOS v${SDK_VERSION}.dmg"
+    curl -f -o "${SDK_FILENAME}" "${SDK_URL_DIR}$(rawurlencode "${SDK_FILENAME}")"
+    hdiutil attach "${SDK_FILENAME}" -noautoopen -quiet -mountpoint "SDK"
+    rm -rf depends/iOS/include/AR6/
+    cp -af SDK/artoolkit6/SDK/include/AR6 depends/iOS/include
+    rm -f depends/iOS/lib/libAR6.a
+    cp -af SDK/artoolkit6/SDK/lib/libAR6.a depends/iOS/lib
+    hdiutil detach "SDK" -quiet -force
+    
+    # Make the version number available to Xcode.
+    sed -E -i.bak "s/@VERSION@/${VERSION}/" iOS/user-config.xcconfig
+    
+    (cd iOS
+    xcodebuild -target "ARToolKit6 Camera Calibration Utility" -configuration Release -destination generic/platform=iOS
     )
 fi
 # /BUILD_MACOS
@@ -137,7 +168,7 @@ if [ $BUILD_LINUX ] ; then
     (cd linux
 	mkdir -p build
 	cd build
-	cmake .. -DCMAKE_BUILD_TYPE=Release
+	cmake .. -DCMAKE_BUILD_TYPE=Release "-DVERSION=${VERSION}"
     make
 	make install
     )
