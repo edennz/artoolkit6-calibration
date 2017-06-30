@@ -216,7 +216,7 @@ void *showPreferencesThread(void *arg)
 #endif
                 "\n"
                 "Press [esc] to finish or type number and press [return] ";
-            EdenMessageInput((const unsigned char *)prompt, 1, 1, 1, 0, 0);
+            EdenMessageInput((const unsigned char *)prompt, 1, 2, 1, 0, 0);
             inputa = EdenMessageInputGetInput();
             if (!inputa) state = PREFS_END;
             else if (!inputa[0] || sscanf((const char *)inputa, "%d", &inputi) < 1) {
