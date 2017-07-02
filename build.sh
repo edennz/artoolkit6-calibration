@@ -160,6 +160,11 @@ if [ "$OS" = "Linux" ] ; then
 # Linux
 if [ $BUILD_LINUX ] ; then
     
+    #Before we can install the artoolkit6-dev package we need to install the -lib. As -dev depends on -lib
+    SDK_FILENAME="artoolkit6-lib_${SDK_VERSION}_amd64.deb"
+    curl -f -o "${SDK_FILENAME}" "${SDK_URL_DIR}$(rawurlencode "${SDK_FILENAME}")"
+    sudo dpkg -i "${SDK_FILENAME}"
+
     # Fetch the artoolkit6-dev package and install it.
     SDK_FILENAME="artoolkit6-dev_${SDK_VERSION}_amd64.deb"
     curl -f -o "${SDK_FILENAME}" "${SDK_URL_DIR}$(rawurlencode "${SDK_FILENAME}")"
